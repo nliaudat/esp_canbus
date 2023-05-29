@@ -1,4 +1,6 @@
 # An ESP32 CanBus shield
+ 
+![alt text](https://github.com/nliaudat/esp_canbus/blob/main/pcb/3d_view.PNG "board")
     
 ## Functionalities : 
 * Compatible with 1000 or 900 mil width ESP devkit
