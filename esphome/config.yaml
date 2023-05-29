@@ -1,0 +1,145 @@
+# for flashing : press boot button for 2-3 seconds before the serial connection initialize
+# After OTA update, the EN (reset) button must be pressed to run firmware
+# do not use gpio12 (MTDI)
+
+substitutions:
+  name: canbus
+  friendly_name: "CanBus Controller"
+
+esphome:
+  name: $name
+  on_boot:
+    priority: 200  
+    then:
+      - wait_until:  
+          condition:
+            wifi.connected: 
+          timeout: 15s
+
+  
+esp32:
+  board: nodemcu-32s
+  framework:
+    type: arduino #esp-idf  not ready missing json and async_tcp
+    version: recommended #latest
+#    sdkconfig_options:
+#      CONFIG_COMPILER_OPTIMIZATION_SIZE: y
+
+preferences:
+  flash_write_interval: 60min
+
+wifi:
+#hidden make use of fast_connect. The downside is that this option connects to the first network the ESP sees
+#highest priority is chosen
+  networks:
+  - ssid: !secret wifi_ssid_1
+    hidden: true 
+    password: !secret wifi_password_1
+    priority : 2
+  - ssid: !secret wifi_ssid_2
+    #hidden: true
+    password: !secret wifi_password_2
+    priority : 1
+  - ssid: !secret wifi_ssid_3
+    password: !secret wifi_password_3
+    priority : 0
+  
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "${name} Fallback"
+    password: !secret fallback_hotspot_password
+    
+    ## low wifi signal = increase power transmission and no sleep
+  power_save_mode : NONE 
+  output_power : 20.5dB
+
+captive_portal:
+
+# Enable logging
+logger:
+  level: DEBUG #NONE# ERROR #INFO #DEBUG  #VERBOSE
+  #baud_rate: 0 #to disable logging via UART
+  logs:
+    sensor: ERROR
+    switch: DEBUG
+    text_sensor : ERROR
+    homeassistant.sensor: ERROR
+
+
+
+# Enable Home Assistant API
+api:
+  reboot_timeout: 30min
+
+ota:
+
+sensor:
+  - platform: wifi_signal
+    name: "${friendly_name} WiFi Signal"
+    update_interval: 60s
+    
+  - platform: uptime
+    name: "${friendly_name} Uptime"    
+    id: uptime_sensor
+    update_interval: 60s
+    internal: true
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? to_string(days) + "d " : "") +
+                (hours ? to_string(hours) + "h " : "") +
+                (minutes ? to_string(minutes) + "m " : "") +
+                (to_string(seconds) + "s")
+              ).c_str();      
+
+text_sensor:  
+  - platform: template
+    name: "${friendly_name} uptime"
+    id: uptime_human
+    icon: mdi:clock-start
+
+  # - platform: wifi_info
+    # ip_address:
+      # name: "${friendly_name} IP Address"
+    # ssid:
+      # name: "${friendly_name} SSID"
+    # bssid:
+      # name: "${friendly_name} BSSID"
+    # mac_address:
+      # name: "${friendly_name} MAC"
+      
+# (Optional) For displaying time:
+time:
+- platform: sntp
+  timezone : Europe/Zurich
+  #timezone: UTC+1
+  servers:  [0.pool.ntp.org, 1.pool.ntp.org , 2.pool.ntp.org]
+  on_time:
+  - seconds: 0
+    minutes: 0
+    hours: 6
+    days_of_week: MON #-SUN
+    then:
+      - switch.toggle: canbus_controller_reboot
+  id: canbus_controller_time
+
+
+switch:  
+  - platform: restart
+    name: "canbus controller Restart"
+    id: canbus_controller_reboot    
+
+
+# web_server:
+   # port: 80
