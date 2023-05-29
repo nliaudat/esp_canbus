@@ -16,7 +16,7 @@
 * Box is 3D printed or fit in a 86x86 electrical box
 
 ## Firmware : 
-* Esphome : TODO
+* Esphome : Under dev
 
 ## Licence: 
 * Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC-BY-NC-SA)
