@@ -141,5 +141,16 @@ switch:
     id: canbus_controller_reboot    
 
 
+#https://esphome.io/components/canbus.html?highlight=canbus
+# samples : https://github.com/Uksa007/esphome-jk-bms-can/blob/main/esp32-example-can.yaml
+canbus:
+  - platform: esp32_can
+    tx_pin: GPIO22
+    rx_pin: GPIO21
+    can_id: 4
+    bit_rate: 50kbps
+
+
+
 # web_server:
    # port: 80
