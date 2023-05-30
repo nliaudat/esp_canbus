@@ -1,0 +1,261 @@
+# for flashing : press boot button for 2-3 seconds before the serial connection initialize
+# After OTA update, the EN (reset) button must be pressed to run firmware
+# do not use gpio12 (MTDI)
+
+substitutions:
+  name: canbus
+  friendly_name: "CanBus Controller"
+
+esphome:
+  name: $name
+  on_boot:
+    priority: 200  
+    then:
+      - wait_until:  
+          condition:
+            wifi.connected: 
+          timeout: 15s
+
+  
+esp32:
+  board: nodemcu-32s
+  framework:
+    type: arduino #esp-idf  not ready missing json and async_tcp
+    version: recommended #latest
+#    sdkconfig_options:
+#      CONFIG_COMPILER_OPTIMIZATION_SIZE: y
+
+preferences:
+  flash_write_interval: 60min
+
+wifi:
+#hidden make use of fast_connect. The downside is that this option connects to the first network the ESP sees
+#highest priority is chosen
+  networks:
+  - ssid: !secret wifi_ssid_1
+    hidden: true 
+    password: !secret wifi_password_1
+    priority : 2
+  - ssid: !secret wifi_ssid_2
+    #hidden: true
+    password: !secret wifi_password_2
+    priority : 1
+  - ssid: !secret wifi_ssid_3
+    password: !secret wifi_password_3
+    priority : 0
+  
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "${name} Fallback"
+    password: !secret fallback_hotspot_password
+    
+    ## low wifi signal = increase power transmission and no sleep
+  power_save_mode : NONE 
+  output_power : 20.5dB
+
+captive_portal:
+
+# Enable logging
+logger:
+  level: DEBUG #NONE# ERROR #INFO #DEBUG  #VERBOSE
+  #baud_rate: 0 #to disable logging via UART
+  logs:
+    sensor: ERROR
+    switch: DEBUG
+    text_sensor : ERROR
+    homeassistant.sensor: ERROR
+
+
+
+# Enable Home Assistant API
+api:
+  reboot_timeout: 30min
+
+ota:
+
+sensor:
+  - platform: wifi_signal
+    name: "${friendly_name} WiFi Signal"
+    update_interval: 60s
+    
+  - platform: uptime
+    name: "${friendly_name} Uptime"    
+    id: uptime_sensor
+    update_interval: 60s
+    internal: true
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? to_string(days) + "d " : "") +
+                (hours ? to_string(hours) + "h " : "") +
+                (minutes ? to_string(minutes) + "m " : "") +
+                (to_string(seconds) + "s")
+              ).c_str();      
+
+text_sensor:  
+  - platform: template
+    name: "${friendly_name} uptime"
+    id: uptime_human
+    icon: mdi:clock-start
+
+  # - platform: wifi_info
+    # ip_address:
+      # name: "${friendly_name} IP Address"
+    # ssid:
+      # name: "${friendly_name} SSID"
+    # bssid:
+      # name: "${friendly_name} BSSID"
+    # mac_address:
+      # name: "${friendly_name} MAC"
+      
+# (Optional) For displaying time:
+time:
+- platform: sntp
+  timezone : Europe/Zurich
+  #timezone: UTC+1
+  servers:  [0.pool.ntp.org, 1.pool.ntp.org , 2.pool.ntp.org]
+  on_time:
+  - seconds: 0
+    minutes: 0
+    hours: 6
+    days_of_week: MON #-SUN
+    then:
+      - switch.toggle: canbus_controller_reboot
+  id: canbus_controller_time
+
+
+switch:  
+  - platform: restart
+    name: "canbus controller Restart"
+    id: canbus_controller_reboot    
+
+
+#https://esphome.io/components/canbus.html?highlight=canbus
+# samples : https://github.com/Uksa007/esphome-jk-bms-can/blob/main/esp32-example-can.yaml
+
+# todo : test https://github.com/mrk-its/esphome-canopen
+canbus:
+  - platform: esp32_can
+    tx_pin: GPIO22
+    rx_pin: GPIO21
+    can_id: 8
+    bit_rate: 50kbps #settings found in https://github.com/zittix/Hoval-GW
+    on_frame:
+### HomeVent (from datapoints filtered by unitname=HV & unitId = 520)
+# datapoints download at http://www.hoval.com/misc/TTE/TTE-GW-Modbus-datapoints.xlsx
+    - can_id: 23622
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("Op. choice ventilation", "%s", &b[0] );
+    - can_id: 23623
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("Normal ventilation modulation", "%s", &b[0] );
+    - can_id: 23624
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("Eco ventilation modulation", "%s", &b[0] );
+    - can_id: 23625
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("Ventilation modulation", "%s", &b[0] );      
+    - can_id: 23626
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("Humidity set value", "%s", &b[0] );      
+    - can_id: 23627
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("Humidity extract air", "%s", &b[0] ); 
+    - can_id: 23628
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("VOC extract air", "%s", &b[0] ); 
+    - can_id: 23629
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("VOC outdoor air", "%s", &b[0] ); 
+    - can_id: 23630
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("Air quality control", "%s", &b[0] ); 
+    - can_id: 23631
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("Status vent. regulation", "%s", &b[0] ); 
+    - can_id: 23632
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("Outside air temp.", "%s", &b[0] ); 
+    - can_id: 23633
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("Extract air temp.", "%s", &b[0] ); 
+    - can_id: 23634
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("Fan exhaust air set", "%s", &b[0] ); 
+    - can_id: 23635
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("CO2 extract air", "%s", &b[0] ); 
+    - can_id: 23636
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("CO2 extract air raw value", "%s", &b[0] ); 
+    - can_id: 23637
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("VOC extract air raw value", "%s", &b[0] ); 
+    - can_id: 23638
+      use_extended_id: false
+      then:
+      - lambda: |-
+          std::string b(x.begin(), x.end());
+          ESP_LOGD("VOC outdoor air raw value", "%s", &b[0] ); 
+
+# web_server:
+   # port: 80
