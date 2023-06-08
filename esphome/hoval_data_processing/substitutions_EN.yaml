@@ -1,0 +1,1071 @@
+FW-0-0-0: AF1 - outdoor sensor 1
+FW-0-0-106: Totals setpoint temperature
+FW-0-0-110: Valve setting station
+FW-0-0-128: VE 1
+FW-0-0-129: VE 2
+FW-0-0-132: Operating hours_high
+FW-0-0-200: Info AF
+FW-0-0-201: Info RLF
+FW-0-0-202: Info VF
+FW-0-0-203: Info VF1
+FW-0-0-204: Info SF1
+FW-0-0-205: Info SF2
+FW-0-0-206: Info VE4
+FW-0-0-207: Info VE5
+FW-0-0-208: Info VE6
+FW-0-0-209: Info VE7
+FW-0-0-210: Info VE8
+FW-0-0-21031: DKP HW output
+FW-0-0-21032: YFW+ HW output
+FW-0-0-21033: YFW- HW output
+FW-0-0-21034: MK1 HW output
+FW-0-0-21035: YK1+ HW output
+FW-0-0-21036: YK1- HW output
+FW-0-0-21037: SLP1 HW output
+FW-0-0-21038: SLP2 HW output
+FW-0-0-21039: VA2 HW output
+FW-0-0-21040: VA1 0-10V/0-20mA HW output
+FW-0-0-21041: VA3 0-10V/PWM HW output
+FW-0-0-21042: VA4 0-10V/PWM HW output
+FW-0-0-21043: VA5 0-10V/PWM HW output
+FW-0-0-21044: Activate TTE-FE relay test
+FW-0-0-21045: FE-VA1 HW output
+FW-0-0-21046: FE-VA2 HW output
+FW-0-0-21047: FE-VA3 HW output
+FW-0-0-21048: FE-VA10V/PWM HW output
+FW-0-0-21059: Plant flow sensor actual temp.
+FW-0-0-21092: Buffer fill level
+FW-0-0-21093: Pressure
+FW-0-0-211: Info VE9
+FW-0-0-21100: AF2 - outdoor sensor 2
+FW-0-0-212: Info VE1-FE1
+FW-0-0-213: Info VE2-FE1
+FW-0-0-214: Info VE3-FE1
+FW-0-0-215: Info VE1-FE2
+FW-0-0-216: Info VE2-FE2
+FW-0-0-217: Info VE3-FE2
+FW-0-0-218: Info VE1-FE3
+FW-0-0-219: Info VE2-FE3
+FW-0-0-220: Info VE3-FE3
+FW-0-0-22021: Plant flow sensor set temp.
+FW-0-0-22055: AVP pump
+FW-0-0-22056: YAV pump
+FW-0-0-221: Info VE1-FE4
+FW-0-0-222: Info VE2-FE4
+FW-0-0-223: Info VE3-FE4
+FW-0-0-224: Info VE1-FE5
+FW-0-0-225: Info VE2-FE5
+FW-0-0-226: Info VE3-FE5
+FW-0-0-227: Info VE10/IMP
+FW-0-0-228: Info VE3/IMP-FE1
+FW-0-0-229: Info VE3/IMP-FE2
+FW-0-0-230: Info VE3/IMP-FE3
+FW-0-0-23084: Activate TTE-FW relay test
+FW-0-0-231: Info VE3/IMP-FE4
+FW-0-0-232: Info VE3/IMP-FE5
+FW-0-0-233: Info VE10V-FE1
+FW-0-0-234: Info VE10V-FE2
+FW-0-0-235: Info VE10V-FE3
+FW-0-0-236: Info VE10V-FE4
+FW-0-0-237: Info VE10V-FE5
+FW-0-0-238: Info VE3
+FW-0-0-29042: Active error 1_appearance_time
+FW-0-0-29043: Active error 2_appearance_time
+FW-0-0-29044: Active error 3_appearance_time
+FW-0-0-29045: Active error 4_appearance_time
+FW-0-0-29046: Active error 5_appearance_time
+FW-0-0-98: Return limitation active
+FW-0-0-99: Power limitation active
+FW-1-0-1: Room actual
+FW-1-0-1001: Room setpoint
+FW-1-0-1002: Supply setpoint
+FW-1-0-1020: Pump
+FW-1-0-1021: mixer
+FW-1-0-2: Supply actual
+FW-1-0-2051: Status heating circuit control
+FW-1-0-3050: Heating operation choice
+FW-1-0-3051: Normal room temp. heating oper.
+FW-1-0-3053: Conservation room temp. heating oper.
+FW-1-1-1: Room actual
+FW-1-1-1001: Room setpoint
+FW-1-1-1002: Supply setpoint
+FW-1-1-1020: Pump
+FW-1-1-1021: mixer
+FW-1-1-2: Supply actual
+FW-1-1-2051: Status heating circuit control
+FW-1-1-3050: Heating operation choice
+FW-1-1-3051: Normal room temp. heating oper.
+FW-1-1-3053: Conservation room temp. heating oper.
+FW-1-2-1: Room actual
+FW-1-2-1001: Room setpoint
+FW-1-2-1002: Supply setpoint
+FW-1-2-1020: Pump
+FW-1-2-1021: mixer
+FW-1-2-2: Supply actual
+FW-1-2-2051: Status heating circuit control
+FW-1-2-3050: Heating operation choice
+FW-1-2-3051: Normal room temp. heating oper.
+FW-1-2-3053: Conservation room temp. heating oper.
+FW-1-3-1: Room actual
+FW-1-3-1001: Room setpoint
+FW-1-3-1002: Supply setpoint
+FW-1-3-1020: Pump
+FW-1-3-1021: mixer
+FW-1-3-2: Supply actual
+FW-1-3-2051: Status heating circuit control
+FW-1-3-3050: Heating operation choice
+FW-1-3-3051: Normal room temp. heating oper.
+FW-1-3-3053: Conservation room temp. heating oper.
+FW-1-4-1: Room actual
+FW-1-4-1001: Room setpoint
+FW-1-4-1002: Supply setpoint
+FW-1-4-1020: Pump
+FW-1-4-1021: mixer
+FW-1-4-2: Supply actual
+FW-1-4-2051: Status heating circuit control
+FW-1-4-3050: Heating operation choice
+FW-1-4-3051: Normal room temp. heating oper.
+FW-1-4-3053: Conservation room temp. heating oper.
+FW-2-0-1004: Hot water setpoint
+FW-2-0-1065: Hot water recirculation pump
+FW-2-0-1066: SLP1 hot water charging pump
+FW-2-0-1067: SLP2 hot water charging pump
+FW-2-0-118: Circulation circuit temperature
+FW-2-0-2052: Status domestic hot water control
+FW-2-0-4: Hot water actual SF
+FW-2-0-5050: Hot water operation choice
+FW-2-0-5051: Normal hot water temp.
+FW-2-0-5086: Conservation hot water temp.
+FW-2-1-1004: Hot water setpoint
+FW-2-1-1065: Hot water recirculation pump
+FW-2-1-1066: SLP1 hot water charging pump
+FW-2-1-1067: SLP2 hot water charging pump
+FW-2-1-118: Circulation circuit temperature
+FW-2-1-2052: Status domestic hot water control
+FW-2-1-4: Hot water actual SF
+FW-2-1-5050: Hot water operation choice
+FW-2-1-5051: Normal hot water temp.
+FW-2-1-5086: Conservation hot water temp.
+FW-2-2-1004: Hot water setpoint
+FW-2-2-1065: Hot water recirculation pump
+FW-2-2-1066: SLP1 hot water charging pump
+FW-2-2-1067: SLP2 hot water charging pump
+FW-2-2-118: Circulation circuit temperature
+FW-2-2-2052: Status domestic hot water control
+FW-2-2-4: Hot water actual SF
+FW-2-2-5050: Hot water operation choice
+FW-2-2-5051: Normal hot water temp.
+FW-2-2-5086: Conservation hot water temp.
+FW-2-3-1004: Hot water setpoint
+FW-2-3-1065: Hot water recirculation pump
+FW-2-3-1066: SLP1 hot water charging pump
+FW-2-3-1067: SLP2 hot water charging pump
+FW-2-3-118: Circulation circuit temperature
+FW-2-3-2052: Status domestic hot water control
+FW-2-3-4: Hot water actual SF
+FW-2-3-5050: Hot water operation choice
+FW-2-3-5051: Normal hot water temp.
+FW-2-3-5086: Conservation hot water temp.
+FW-2-4-1004: Hot water setpoint
+FW-2-4-1065: Hot water recirculation pump
+FW-2-4-1066: SLP1 hot water charging pump
+FW-2-4-1067: SLP2 hot water charging pump
+FW-2-4-118: Circulation circuit temperature
+FW-2-4-2052: Status domestic hot water control
+FW-2-4-4: Hot water actual SF
+FW-2-4-5050: Hot water operation choice
+FW-2-4-5051: Normal hot water temp.
+FW-2-4-5086: Conservation hot water temp.
+FW-20-1-0: Current energy_high
+FW-20-1-1: Current power_high
+FW-20-1-11: Current_high
+FW-20-1-12: Voltage
+FW-20-1-13: Cos phi
+FW-20-1-2: Current flow rate_high
+FW-20-1-203: Power total high2
+FW-20-1-250: Energy Import 1_high2
+FW-20-1-252: Energy Export 1_high2
+FW-20-1-3: Current volume_high
+FW-20-1-4: 'Current flow temperature '
+FW-20-1-5: 'Current return temperature '
+FW-20-1-50: Current energy cold_high
+FW-20-1-51: Current output cold_high
+FW-20-1-6: Current differential temperature
+FW-20-1-7: Serial number_high
+FW-20-1-8: Fault message/M-bus status byte
+FW-20-10-0: Current energy_high
+FW-20-10-1: Current power_high
+FW-20-10-11: Current_high
+FW-20-10-12: Voltage
+FW-20-10-13: Cos phi
+FW-20-10-2: Current flow rate_high
+FW-20-10-203: Power total high2
+FW-20-10-250: Energy Import 1_high2
+FW-20-10-252: Energy Export 1_high2
+FW-20-10-3: Current volume_high
+FW-20-10-4: 'Current flow temperature '
+FW-20-10-5: 'Current return temperature '
+FW-20-10-50: Current energy cold_high
+FW-20-10-51: Current output cold_high
+FW-20-10-6: Current differential temperature
+FW-20-10-7: Serial number_high
+FW-20-10-8: Fault message/M-bus status byte
+FW-20-11-0: Current energy_high
+FW-20-11-1: Current power_high
+FW-20-11-11: Current_high
+FW-20-11-12: Voltage
+FW-20-11-13: Cos phi
+FW-20-11-2: Current flow rate_high
+FW-20-11-203: Power total high2
+FW-20-11-250: Energy Import 1_high2
+FW-20-11-252: Energy Export 1_high2
+FW-20-11-3: Current volume_high
+FW-20-11-4: 'Current flow temperature '
+FW-20-11-5: 'Current return temperature '
+FW-20-11-50: Current energy cold_high
+FW-20-11-51: Current output cold_high
+FW-20-11-6: Current differential temperature
+FW-20-11-7: Serial number_high
+FW-20-11-8: Fault message/M-bus status byte
+FW-20-12-0: Current energy_high
+FW-20-12-1: Current power_high
+FW-20-12-11: Current_high
+FW-20-12-12: Voltage
+FW-20-12-13: Cos phi
+FW-20-12-2: Current flow rate_high
+FW-20-12-203: Power total high2
+FW-20-12-250: Energy Import 1_high2
+FW-20-12-252: Energy Export 1_high2
+FW-20-12-3: Current volume_high
+FW-20-12-4: 'Current flow temperature '
+FW-20-12-5: 'Current return temperature '
+FW-20-12-50: Current energy cold_high
+FW-20-12-51: Current output cold_high
+FW-20-12-6: Current differential temperature
+FW-20-12-7: Serial number_high
+FW-20-12-8: Fault message/M-bus status byte
+FW-20-13-0: Current energy_high
+FW-20-13-1: Current power_high
+FW-20-13-11: Current_high
+FW-20-13-12: Voltage
+FW-20-13-13: Cos phi
+FW-20-13-2: Current flow rate_high
+FW-20-13-203: Power total high2
+FW-20-13-250: Energy Import 1_high2
+FW-20-13-252: Energy Export 1_high2
+FW-20-13-3: Current volume_high
+FW-20-13-4: 'Current flow temperature '
+FW-20-13-5: 'Current return temperature '
+FW-20-13-50: Current energy cold_high
+FW-20-13-51: Current output cold_high
+FW-20-13-6: Current differential temperature
+FW-20-13-7: Serial number_high
+FW-20-13-8: Fault message/M-bus status byte
+FW-20-14-0: Current energy_high
+FW-20-14-1: Current power_high
+FW-20-14-11: Current_high
+FW-20-14-12: Voltage
+FW-20-14-13: Cos phi
+FW-20-14-2: Current flow rate_high
+FW-20-14-203: Power total high2
+FW-20-14-250: Energy Import 1_high2
+FW-20-14-252: Energy Export 1_high2
+FW-20-14-3: Current volume_high
+FW-20-14-4: 'Current flow temperature '
+FW-20-14-5: 'Current return temperature '
+FW-20-14-50: Current energy cold_high
+FW-20-14-51: Current output cold_high
+FW-20-14-6: Current differential temperature
+FW-20-14-7: Serial number_high
+FW-20-14-8: Fault message/M-bus status byte
+FW-20-15-0: Current energy_high
+FW-20-15-1: Current power_high
+FW-20-15-11: Current_high
+FW-20-15-12: Voltage
+FW-20-15-13: Cos phi
+FW-20-15-2: Current flow rate_high
+FW-20-15-203: Power total high2
+FW-20-15-250: Energy Import 1_high2
+FW-20-15-252: Energy Export 1_high2
+FW-20-15-3: Current volume_high
+FW-20-15-4: 'Current flow temperature '
+FW-20-15-5: 'Current return temperature '
+FW-20-15-50: Current energy cold_high
+FW-20-15-51: Current output cold_high
+FW-20-15-6: Current differential temperature
+FW-20-15-7: Serial number_high
+FW-20-15-8: Fault message/M-bus status byte
+FW-20-16-0: Current energy_high
+FW-20-16-1: Current power_high
+FW-20-16-11: Current_high
+FW-20-16-12: Voltage
+FW-20-16-13: Cos phi
+FW-20-16-2: Current flow rate_high
+FW-20-16-203: Power total high2
+FW-20-16-250: Energy Import 1_high2
+FW-20-16-252: Energy Export 1_high2
+FW-20-16-3: Current volume_high
+FW-20-16-4: 'Current flow temperature '
+FW-20-16-5: 'Current return temperature '
+FW-20-16-50: Current energy cold_high
+FW-20-16-51: Current output cold_high
+FW-20-16-6: Current differential temperature
+FW-20-16-7: Serial number_high
+FW-20-16-8: Fault message/M-bus status byte
+FW-20-2-0: Current energy_high
+FW-20-2-1: Current power_high
+FW-20-2-11: Current_high
+FW-20-2-12: Voltage
+FW-20-2-13: Cos phi
+FW-20-2-2: Current flow rate_high
+FW-20-2-203: Power total high2
+FW-20-2-250: Energy Import 1_high2
+FW-20-2-252: Energy Export 1_high2
+FW-20-2-3: Current volume_high
+FW-20-2-4: 'Current flow temperature '
+FW-20-2-5: 'Current return temperature '
+FW-20-2-50: Current energy cold_high
+FW-20-2-51: Current output cold_high
+FW-20-2-6: Current differential temperature
+FW-20-2-7: Serial number_high
+FW-20-2-8: Fault message/M-bus status byte
+FW-20-3-0: Current energy_high
+FW-20-3-1: Current power_high
+FW-20-3-11: Current_high
+FW-20-3-12: Voltage
+FW-20-3-13: Cos phi
+FW-20-3-2: Current flow rate_high
+FW-20-3-203: Power total high2
+FW-20-3-250: Energy Import 1_high2
+FW-20-3-252: Energy Export 1_high2
+FW-20-3-3: Current volume_high
+FW-20-3-4: 'Current flow temperature '
+FW-20-3-5: 'Current return temperature '
+FW-20-3-50: Current energy cold_high
+FW-20-3-51: Current output cold_high
+FW-20-3-6: Current differential temperature
+FW-20-3-7: Serial number_high
+FW-20-3-8: Fault message/M-bus status byte
+FW-20-4-0: Current energy_high
+FW-20-4-1: Current power_high
+FW-20-4-11: Current_high
+FW-20-4-12: Voltage
+FW-20-4-13: Cos phi
+FW-20-4-2: Current flow rate_high
+FW-20-4-203: Power total high2
+FW-20-4-250: Energy Import 1_high2
+FW-20-4-252: Energy Export 1_high2
+FW-20-4-3: Current volume_high
+FW-20-4-4: 'Current flow temperature '
+FW-20-4-5: 'Current return temperature '
+FW-20-4-50: Current energy cold_high
+FW-20-4-51: Current output cold_high
+FW-20-4-6: Current differential temperature
+FW-20-4-7: Serial number_high
+FW-20-4-8: Fault message/M-bus status byte
+FW-20-5-0: Current energy_high
+FW-20-5-1: Current power_high
+FW-20-5-11: Current_high
+FW-20-5-12: Voltage
+FW-20-5-13: Cos phi
+FW-20-5-2: Current flow rate_high
+FW-20-5-203: Power total high2
+FW-20-5-250: Energy Import 1_high2
+FW-20-5-252: Energy Export 1_high2
+FW-20-5-3: Current volume_high
+FW-20-5-4: 'Current flow temperature '
+FW-20-5-5: 'Current return temperature '
+FW-20-5-50: Current energy cold_high
+FW-20-5-51: Current output cold_high
+FW-20-5-6: Current differential temperature
+FW-20-5-7: Serial number_high
+FW-20-5-8: Fault message/M-bus status byte
+FW-20-6-0: Current energy_high
+FW-20-6-1: Current power_high
+FW-20-6-11: Current_high
+FW-20-6-12: Voltage
+FW-20-6-13: Cos phi
+FW-20-6-2: Current flow rate_high
+FW-20-6-203: Power total high2
+FW-20-6-250: Energy Import 1_high2
+FW-20-6-252: Energy Export 1_high2
+FW-20-6-3: Current volume_high
+FW-20-6-4: 'Current flow temperature '
+FW-20-6-5: 'Current return temperature '
+FW-20-6-50: Current energy cold_high
+FW-20-6-51: Current output cold_high
+FW-20-6-6: Current differential temperature
+FW-20-6-7: Serial number_high
+FW-20-6-8: Fault message/M-bus status byte
+FW-20-7-0: Current energy_high
+FW-20-7-1: Current power_high
+FW-20-7-11: Current_high
+FW-20-7-12: Voltage
+FW-20-7-13: Cos phi
+FW-20-7-2: Current flow rate_high
+FW-20-7-203: Power total high2
+FW-20-7-250: Energy Import 1_high2
+FW-20-7-252: Energy Export 1_high2
+FW-20-7-3: Current volume_high
+FW-20-7-4: 'Current flow temperature '
+FW-20-7-5: 'Current return temperature '
+FW-20-7-50: Current energy cold_high
+FW-20-7-51: Current output cold_high
+FW-20-7-6: Current differential temperature
+FW-20-7-7: Serial number_high
+FW-20-7-8: Fault message/M-bus status byte
+FW-20-8-0: Current energy_high
+FW-20-8-1: Current power_high
+FW-20-8-11: Current_high
+FW-20-8-12: Voltage
+FW-20-8-13: Cos phi
+FW-20-8-2: Current flow rate_high
+FW-20-8-203: Power total high2
+FW-20-8-250: Energy Import 1_high2
+FW-20-8-252: Energy Export 1_high2
+FW-20-8-3: Current volume_high
+FW-20-8-4: 'Current flow temperature '
+FW-20-8-5: 'Current return temperature '
+FW-20-8-50: Current energy cold_high
+FW-20-8-51: Current output cold_high
+FW-20-8-6: Current differential temperature
+FW-20-8-7: Serial number_high
+FW-20-8-8: Fault message/M-bus status byte
+FW-20-9-0: Current energy_high
+FW-20-9-1: Current power_high
+FW-20-9-11: Current_high
+FW-20-9-12: Voltage
+FW-20-9-13: Cos phi
+FW-20-9-2: Current flow rate_high
+FW-20-9-203: Power total high2
+FW-20-9-250: Energy Import 1_high2
+FW-20-9-252: Energy Export 1_high2
+FW-20-9-3: Current volume_high
+FW-20-9-4: 'Current flow temperature '
+FW-20-9-5: 'Current return temperature '
+FW-20-9-50: Current energy cold_high
+FW-20-9-51: Current output cold_high
+FW-20-9-6: Current differential temperature
+FW-20-9-7: Serial number_high
+FW-20-9-8: Fault message/M-bus status byte
+GLT-0-0-21036: VA1 HW output
+GLT-0-0-21037: VA2 HW output
+GLT-0-0-21038: VA3 HW output
+GLT-0-0-21039: VA1-FE1 HW output
+GLT-0-0-21040: VA2-FE1 HW output
+GLT-0-0-21041: VA3-FE1 HW output
+GLT-0-0-21043: VA1-FE2 HW output
+GLT-0-0-21044: VA2-FE2 HW output
+GLT-0-0-21045: VA3-FE2 HW output
+GLT-0-0-21106: Temperature requirement heating
+GLT-0-0-21107: Temperature requirement cooling
+GLT-0-0-21108: Hot water temp. requirement
+GLT-0-0-21109: Output setpoint heating
+GLT-0-0-21110: Output setpoint cooling
+GLT-0-0-21111: Output setpoint hot water
+GLT-0-0-21120: Info sensor 1
+GLT-0-0-21121: Info sensor 2
+GLT-0-0-21122: Info sensor 3
+GLT-0-0-21123: Info sensor 4
+GLT-0-0-21124: Info sensor 5
+GLT-0-0-21125: Info sensor 1 0-10V
+GLT-0-0-21126: Info sensor 2 0-10V
+GLT-0-0-21127: Info sensor 3 0-10V
+GLT-0-0-23084: Activate relay test
+GLT-0-0-29042: Active error 1_appearance_time
+GLT-0-0-29043: Active error 2_appearance_time
+GLT-0-0-29044: Active error 3_appearance_time
+GLT-0-0-29045: Active error 4_appearance_time
+GLT-0-0-29046: Active error 5_appearance_time
+GW-0-0-21101: AFG1 system outside sensor 1
+GW-0-0-21102: AFG2 system outside sensor 2
+GW-0-1-20: unixtime_high
+GW-0-1-45: Expected global radiation (W/m2)
+HKW-0-0-0: AF1 - outside sensor 1
+HKW-0-0-21036: VA1 HW output
+HKW-0-0-21037: VA2 HW output
+HKW-0-0-21038: VA3 HW output
+HKW-0-0-21039: VA1-FE1 HW output
+HKW-0-0-21040: VA2-FE1 HW output
+HKW-0-0-21041: VA3-FE1 HW output
+HKW-0-0-21043: VA1-FE2 HW output
+HKW-0-0-21044: VA2-FE2 HW output
+HKW-0-0-21045: VA3-FE2 HW output
+HKW-0-0-21059: Plant flow sensor actual temp.
+HKW-0-0-21078: VA0-10V/PWM HW output
+HKW-0-0-21079: VA0-10V/PWM-FE1 HW output
+HKW-0-0-21080: VA0-10V/PWM-FE2 HW output
+HKW-0-0-21100: AF2 - outside sensor 2
+HKW-0-0-21120: Info 1
+HKW-0-0-21121: Info 2
+HKW-0-0-21122: Info 3
+HKW-0-0-21123: Info 4
+HKW-0-0-21124: Info 5
+HKW-0-0-21125: Info 1 0-10V
+HKW-0-0-21126: Info 2 0-10V
+HKW-0-0-21127: Info 3 0-10V
+HKW-0-0-22021: FAV flow sensor set temp.
+HKW-0-0-22055: AVP pump
+HKW-0-0-22056: YAV mixer
+HKW-0-0-23084: Activate relay test
+HKW-0-0-29042: Active error 1_appearance_time
+HKW-0-0-29043: Active error 2_appearance_time
+HKW-0-0-29044: Active error 3_appearance_time
+HKW-0-0-29045: Active error 4_appearance_time
+HKW-0-0-29046: Active error 5_appearance_time
+HKW-1-0-1: Room actual
+HKW-1-0-1001: Room setpoint
+HKW-1-0-1002: Supply setpoint
+HKW-1-0-1020: Pump
+HKW-1-0-1021: mixer
+HKW-1-0-2: Supply actual
+HKW-1-0-2051: Status heating circuit control
+HKW-1-0-3: Return actual
+HKW-1-0-3050: Heating operation choice
+HKW-1-0-3051: Normal room temp. heating oper.
+HKW-1-0-3053: Conservation room temp. heating oper.
+HKW-1-0-7009: Manual mode set temperature
+HKW-1-0-7036: Flow setpoint constant req. heating
+HKW-1-0-7047: Flow setpoint constant req. cooling
+HKW-1-1-1: Room actual
+HKW-1-1-1001: Room setpoint
+HKW-1-1-1002: Supply setpoint
+HKW-1-1-1020: Pump
+HKW-1-1-1021: mixer
+HKW-1-1-2: Supply actual
+HKW-1-1-2051: Status heating circuit control
+HKW-1-1-3: Return actual
+HKW-1-1-3050: Heating operation choice
+HKW-1-1-3051: Normal room temp. heating oper.
+HKW-1-1-3053: Conservation room temp. heating oper.
+HKW-1-1-7009: Manual mode set temperature
+HKW-1-1-7036: Flow setpoint constant req. heating
+HKW-1-1-7047: Flow setpoint constant req. cooling
+HKW-1-2-1: Room actual
+HKW-1-2-1001: Room setpoint
+HKW-1-2-1002: Supply setpoint
+HKW-1-2-1020: Pump
+HKW-1-2-1021: mixer
+HKW-1-2-2: Supply actual
+HKW-1-2-2051: Status heating circuit control
+HKW-1-2-3: Return actual
+HKW-1-2-3050: Heating operation choice
+HKW-1-2-3051: Normal room temp. heating oper.
+HKW-1-2-3053: Conservation room temp. heating oper.
+HKW-1-2-7009: Manual mode set temperature
+HKW-1-2-7036: Flow setpoint constant req. heating
+HKW-1-2-7047: Flow setpoint constant req. cooling
+HKW-2-0-1004: Hot water setpoint
+HKW-2-0-1065: Hot water circulation pump
+HKW-2-0-1066: SLP hot water charging pump
+HKW-2-0-118: Circulation circuit temperature
+HKW-2-0-2052: Status domestic hot water control
+HKW-2-0-4: Hot water actual SF
+HKW-2-0-5050: Hot water operation choice
+HKW-2-0-5051: Normal hot water temp.
+HKW-2-0-5086: Conservation hot water temp.
+HV-0-0-29042: Active error 1_appearance_time
+HV-0-0-29043: Active error 2_appearance_time
+HV-0-0-29044: Active error 3_appearance_time
+HV-0-0-29045: Active error 4_appearance_time
+HV-0-0-29046: Active error 5_appearance_time
+HV-50-0-0: Outside air temp.
+HV-50-0-37600: Humidity extract air
+HV-50-0-37602: Extract air temp.
+HV-50-0-37608: VOC extract air
+HV-50-0-37611: VOC outdoor air
+HV-50-0-38600: Fan exhaust air set
+HV-50-0-38606: Ventilation modulation
+HV-50-0-39600: Air quality control
+HV-50-0-39652: Status vent. regulation
+HV-50-0-40650: Op. choice ventilation
+HV-50-0-40651: Normal ventilation modulation
+HV-50-0-40686: Eco ventilation modulation
+HV-50-0-40687: Humidity set value
+MWA-0-0-29042: Active error 1_appearance_time
+MWA-0-0-29043: Active error 2_appearance_time
+MWA-0-0-29044: Active error 3_appearance_time
+MWA-0-0-29045: Active error 4_appearance_time
+MWA-0-0-29046: Active error 5_appearance_time
+MWA-20-1-0: Current energy_high
+MWA-20-1-1: Current power_high
+MWA-20-1-11: Current_high
+MWA-20-1-12: Voltage
+MWA-20-1-13: Cos phi
+MWA-20-1-2: Current flow rate_high
+MWA-20-1-203: Power total high2
+MWA-20-1-250: Energy Import 1_high2
+MWA-20-1-252: Energy Export 1_high2
+MWA-20-1-3: Current volume_high
+MWA-20-1-4: 'Current flow temperature '
+MWA-20-1-5: 'Current return temperature '
+MWA-20-1-6: Current differential temperature
+MWA-20-1-7: Serial number_high
+MWA-20-10-0: Current energy_high
+MWA-20-10-1: Current power_high
+MWA-20-10-11: Current_high
+MWA-20-10-12: Voltage
+MWA-20-10-13: Cos phi
+MWA-20-10-2: Current flow rate_high
+MWA-20-10-203: Power total high2
+MWA-20-10-250: Energy Import 1_high2
+MWA-20-10-252: Energy Export 1_high2
+MWA-20-10-3: Current volume_high
+MWA-20-10-4: 'Current flow temperature '
+MWA-20-10-5: 'Current return temperature '
+MWA-20-10-6: Current differential temperature
+MWA-20-10-7: Serial number_high
+MWA-20-11-0: Current energy_high
+MWA-20-11-1: Current power_high
+MWA-20-11-11: Current_high
+MWA-20-11-12: Voltage
+MWA-20-11-13: Cos phi
+MWA-20-11-2: Current flow rate_high
+MWA-20-11-203: Power total high2
+MWA-20-11-250: Energy Import 1_high2
+MWA-20-11-252: Energy Export 1_high2
+MWA-20-11-3: Current volume_high
+MWA-20-11-4: 'Current flow temperature '
+MWA-20-11-5: 'Current return temperature '
+MWA-20-11-6: Current differential temperature
+MWA-20-11-7: Serial number_high
+MWA-20-12-0: Current energy_high
+MWA-20-12-1: Current power_high
+MWA-20-12-11: Current_high
+MWA-20-12-12: Voltage
+MWA-20-12-13: Cos phi
+MWA-20-12-2: Current flow rate_high
+MWA-20-12-203: Power total high2
+MWA-20-12-250: Energy Import 1_high2
+MWA-20-12-252: Energy Export 1_high2
+MWA-20-12-3: Current volume_high
+MWA-20-12-4: 'Current flow temperature '
+MWA-20-12-5: 'Current return temperature '
+MWA-20-12-6: Current differential temperature
+MWA-20-12-7: Serial number_high
+MWA-20-13-0: Current energy_high
+MWA-20-13-1: Current power_high
+MWA-20-13-11: Current_high
+MWA-20-13-12: Voltage
+MWA-20-13-13: Cos phi
+MWA-20-13-2: Current flow rate_high
+MWA-20-13-203: Power total high2
+MWA-20-13-250: Energy Import 1_high2
+MWA-20-13-252: Energy Export 1_high2
+MWA-20-13-3: Current volume_high
+MWA-20-13-4: 'Current flow temperature '
+MWA-20-13-5: 'Current return temperature '
+MWA-20-13-6: Current differential temperature
+MWA-20-13-7: Serial number_high
+MWA-20-14-0: Current energy_high
+MWA-20-14-1: Current power_high
+MWA-20-14-11: Current_high
+MWA-20-14-12: Voltage
+MWA-20-14-13: Cos phi
+MWA-20-14-2: Current flow rate_high
+MWA-20-14-203: Power total high2
+MWA-20-14-250: Energy Import 1_high2
+MWA-20-14-252: Energy Export 1_high2
+MWA-20-14-3: Current volume_high
+MWA-20-14-4: 'Current flow temperature '
+MWA-20-14-5: 'Current return temperature '
+MWA-20-14-6: Current differential temperature
+MWA-20-14-7: Serial number_high
+MWA-20-15-0: Current energy_high
+MWA-20-15-1: Current power_high
+MWA-20-15-11: Current_high
+MWA-20-15-12: Voltage
+MWA-20-15-13: Cos phi
+MWA-20-15-2: Current flow rate_high
+MWA-20-15-203: Power total high2
+MWA-20-15-250: Energy Import 1_low2
+MWA-20-15-252: Energy Export 1_high2
+MWA-20-15-3: Current volume_high
+MWA-20-15-4: 'Current flow temperature '
+MWA-20-15-5: 'Current return temperature '
+MWA-20-15-6: Current differential temperature
+MWA-20-15-7: Serial number_high
+MWA-20-16-0: Current energy_high
+MWA-20-16-1: Current power_high
+MWA-20-16-11: Current_high
+MWA-20-16-12: Voltage
+MWA-20-16-13: Cos phi
+MWA-20-16-2: Current flow rate_high
+MWA-20-16-203: Power total high2
+MWA-20-16-250: Energy Import 1_high2
+MWA-20-16-252: Energy Export 1_high2
+MWA-20-16-3: Current volume_high
+MWA-20-16-4: 'Current flow temperature '
+MWA-20-16-5: 'Current return temperature '
+MWA-20-16-6: Current differential temperature
+MWA-20-16-7: Serial number_high
+MWA-20-2-0: Current energy_high
+MWA-20-2-1: Current power_high
+MWA-20-2-11: Current_high
+MWA-20-2-12: Voltage
+MWA-20-2-13: Cos phi
+MWA-20-2-2: Current flow rate_high
+MWA-20-2-203: Power total high2
+MWA-20-2-250: Energy Import 1_high2
+MWA-20-2-252: Energy Export 1_high2
+MWA-20-2-3: Current volume_high
+MWA-20-2-4: 'Current flow temperature '
+MWA-20-2-5: 'Current return temperature '
+MWA-20-2-6: Current differential temperature
+MWA-20-2-7: Serial number_high
+MWA-20-3-0: Current energy_high
+MWA-20-3-1: Current power_high
+MWA-20-3-11: Current_high
+MWA-20-3-12: Voltage
+MWA-20-3-13: Cos phi
+MWA-20-3-2: Current flow rate_high
+MWA-20-3-203: Power total high2
+MWA-20-3-250: Energy Import 1_high2
+MWA-20-3-252: Energy Export 1_high2
+MWA-20-3-3: Current volume_high
+MWA-20-3-4: 'Current flow temperature '
+MWA-20-3-5: 'Current return temperature '
+MWA-20-3-6: Current differential temperature
+MWA-20-3-7: Serial number_high
+MWA-20-4-0: Current energy_high
+MWA-20-4-1: Current power_high
+MWA-20-4-11: Current_high
+MWA-20-4-12: Voltage
+MWA-20-4-13: Cos phi
+MWA-20-4-2: Current flow rate_high
+MWA-20-4-203: Power total high2
+MWA-20-4-250: Energy Import 1_high2
+MWA-20-4-252: Energy Export 1_high2
+MWA-20-4-3: Current volume_high
+MWA-20-4-4: 'Current flow temperature '
+MWA-20-4-5: 'Current return temperature '
+MWA-20-4-6: Current differential temperature
+MWA-20-4-7: Serial number_high
+MWA-20-5-0: Current energy_high
+MWA-20-5-1: Current power_high
+MWA-20-5-11: Current_high
+MWA-20-5-12: Voltage
+MWA-20-5-13: Cos phi
+MWA-20-5-2: Current flow rate_high
+MWA-20-5-203: Power total high2
+MWA-20-5-250: Energy Import 1_high2
+MWA-20-5-252: Energy Export 1_high2
+MWA-20-5-3: Current volume_high
+MWA-20-5-4: 'Current flow temperature '
+MWA-20-5-5: 'Current return temperature '
+MWA-20-5-6: Current differential temperature
+MWA-20-5-7: Serial number_high
+MWA-20-6-0: Current energy_high
+MWA-20-6-1: Current power_high
+MWA-20-6-11: Current_high
+MWA-20-6-12: Voltage
+MWA-20-6-13: Cos phi
+MWA-20-6-2: Current flow rate_high
+MWA-20-6-203: Power total high2
+MWA-20-6-250: Energy Import 1_high2
+MWA-20-6-252: Energy Export 1_high2
+MWA-20-6-3: Current volume_high
+MWA-20-6-4: 'Current flow temperature '
+MWA-20-6-5: 'Current return temperature '
+MWA-20-6-6: Current differential temperature
+MWA-20-6-7: Serial number_high
+MWA-20-7-0: Current energy_high
+MWA-20-7-1: Current power_high
+MWA-20-7-11: Current_high
+MWA-20-7-12: Voltage
+MWA-20-7-13: Cos phi
+MWA-20-7-2: Current flow rate_high
+MWA-20-7-203: Power total high2
+MWA-20-7-250: Energy Import 1_high2
+MWA-20-7-252: Energy Export 1_high2
+MWA-20-7-3: Current volume_high
+MWA-20-7-4: 'Current flow temperature '
+MWA-20-7-5: 'Current return temperature '
+MWA-20-7-6: Current differential temperature
+MWA-20-7-7: Serial number_high
+MWA-20-8-0: Current energy_high
+MWA-20-8-1: Current power_high
+MWA-20-8-11: Current_high
+MWA-20-8-12: Voltage
+MWA-20-8-13: Cos phi
+MWA-20-8-2: Current flow rate_high
+MWA-20-8-203: Power total high2
+MWA-20-8-250: Energy Import 1_high2
+MWA-20-8-252: Energy Export 1_high2
+MWA-20-8-3: Current volume_high
+MWA-20-8-4: 'Current flow temperature '
+MWA-20-8-5: 'Current return temperature '
+MWA-20-8-6: Current differential temperature
+MWA-20-8-7: Serial number_high
+MWA-20-9-0: Current energy_high
+MWA-20-9-1: Current power_high
+MWA-20-9-11: Current_high
+MWA-20-9-12: Voltage
+MWA-20-9-13: Cos phi
+MWA-20-9-2: Current flow rate_high
+MWA-20-9-203: Power total high2
+MWA-20-9-250: Energy Import 1_high2
+MWA-20-9-252: Energy Export 1_high2
+MWA-20-9-3: Current volume_high
+MWA-20-9-4: 'Current flow temperature '
+MWA-20-9-5: 'Current return temperature '
+MWA-20-9-6: Current differential temperature
+MWA-20-9-7: Serial number_high
+PS-0-0-21036: VA1 HW output
+PS-0-0-21037: VA2 HW output
+PS-0-0-21038: VA3 HW output
+PS-0-0-21039: VA1-FE1 HW output
+PS-0-0-21040: VA2-FE1 HW output
+PS-0-0-21041: VA3-FE1 HW output
+PS-0-0-21043: VA1-FE2 HW output
+PS-0-0-21044: VA2-FE2 HW output
+PS-0-0-21045: VA3-FE2 HW output
+PS-0-0-21078: VA0-10V/PWM HW output
+PS-0-0-21079: VA0-10V/PWM-FE1 HW output
+PS-0-0-21080: VA0-10V/PWM-FE2 HW output
+PS-0-0-21120: Info 1
+PS-0-0-21121: Info 2
+PS-0-0-21122: Info 3
+PS-0-0-21123: Info 4
+PS-0-0-21124: Info 5
+PS-0-0-23084: Activate relay test
+PS-0-0-29042: Active error 1_appearance_time
+PS-0-0-29043: Active error 2_appearance_time
+PS-0-0-29044: Active error 3_appearance_time
+PS-0-0-29045: Active error 4_appearance_time
+PS-0-0-29046: Active error 5_appearance_time
+PS-21-0-1015: Buffer setpoint
+PS-21-0-15: Buffer PF/KPF2 actual
+PS-21-0-17: Buffer PF2/KPF actual
+PS-21-0-23082: Status buffer
+SOL-0-0-21036: VA1 output
+SOL-0-0-21037: VA2 output
+SOL-0-0-21038: VA3 output
+SOL-0-0-21039: VA1-FE1 output
+SOL-0-0-21040: VA2- FE1 output
+SOL-0-0-21041: VA3-FE1 output
+SOL-0-0-21043: VA1-FE2 output
+SOL-0-0-21044: VA2- FE2 output
+SOL-0-0-21045: VA3-FE2 output
+SOL-0-0-21078: VA10V/PWM output
+SOL-0-0-21079: ' VA10V/PWM-FE1 output'
+SOL-0-0-21080: ' VA10V/PWM-FE2 output'
+SOL-0-0-21120: Info 1
+SOL-0-0-21121: Info 2
+SOL-0-0-21122: Info 3
+SOL-0-0-21123: Info 4
+SOL-0-0-21124: Info 5
+SOL-0-0-23084: Activate relay test
+SOL-0-0-29042: Active error 1_appearance_time
+SOL-0-0-29043: Active error 2_appearance_time
+SOL-0-0-29044: Active error 3_appearance_time
+SOL-0-0-29045: Active error 4_appearance_time
+SOL-0-0-29046: Active error 5_appearance_time
+SOL-22-0-1050: Current speed pump Solar
+SOL-22-0-14: TKO1 collector temperature
+SOL-22-0-2030: Current collector output
+SOL-22-0-2032: Operating hours pump Solar
+SOL-22-0-2034: Total yield collector_high
+SOL-22-0-2056: Solar controller status
+SOL-22-0-60: TKV collector supply temp.
+SOL-22-0-61: TKR collector return temp.
+SOL-22-0-62: Vset volume flow solar circuit
+SOL-22-1-1050: Current speed pump Solar
+SOL-22-1-14: TKO2 collector temperature
+SOL-22-1-2030: Current collector output
+SOL-22-1-2032: Operating hours pump Solar
+SOL-22-1-2034: Total yield collector_high
+SOL-22-1-2056: Solar controller status
+SOL-22-1-60: TKV collector supply temp.
+SOL-22-1-61: TKR collector return temp.
+SOL-22-1-62: Vset volume flow solar circuit
+SOL-23-0-15: TO storage tank top temp.
+SOL-23-0-16: TU storage tank bottom temp.
+SOL-23-1-15: TO storage tank top temp.
+SOL-23-1-16: TU storage tank bottom temp.
+SOL-23-2-15: TO storage tank top temp.
+SOL-23-2-16: TU storage tank bottom temp.
+SOL-23-3-15: TO storage tank top temp.
+SOL-23-3-16: TU storage tank bottom temp.
+WEZ-0-0-0: AF1 - outdoor sensor 1
+WEZ-0-0-21031: MK1 HW output
+WEZ-0-0-21032: YK1+ HW output
+WEZ-0-0-21033: YK1- HW output
+WEZ-0-0-21034: DKP HW output
+WEZ-0-0-21035: SLP HW output
+WEZ-0-0-21036: VA1 HW output
+WEZ-0-0-21037: VA2 HW output
+WEZ-0-0-21039: VA1-FE1 HW output
+WEZ-0-0-21040: VA2-FE1 HW output
+WEZ-0-0-21041: VA3-FE1 HW output
+WEZ-0-0-21043: VA1-FE2 HW output
+WEZ-0-0-21044: VA2-FE2 HW output
+WEZ-0-0-21045: VA3-FE2 HW output
+WEZ-0-0-21059: Plant flow sensor actual temp.
+WEZ-0-0-21078: VA0-10V/PWM HW output
+WEZ-0-0-21079: VA0-10V/PWM-FE1 HW output
+WEZ-0-0-21100: AF2 - outdoor sensor 2
+WEZ-0-0-21120: Info sensor 1
+WEZ-0-0-21121: Info sensor 2
+WEZ-0-0-21122: Info sensor 3
+WEZ-0-0-21123: Info sensor 4
+WEZ-0-0-21124: Info sensor 5
+WEZ-0-0-21125: Info 1 0-10V
+WEZ-0-0-21126: Info 2 0-10V
+WEZ-0-0-21127: Info 3 0-10V
+WEZ-0-0-22021: FAV flow sensor set temp.
+WEZ-0-0-22055: AVP pump
+WEZ-0-0-22056: YAV mixer
+WEZ-0-0-23084: Activate relay test
+WEZ-0-0-29042: Active error 1_appearance_time
+WEZ-0-0-29043: Active error 2_appearance_time
+WEZ-0-0-29044: Active error 3_appearance_time
+WEZ-0-0-29045: Active error 4_appearance_time
+WEZ-0-0-29046: Active error 5_appearance_time
+WEZ-1-0-1: Room actual
+WEZ-1-0-1001: Room setpoint
+WEZ-1-0-1002: Supply setpoint
+WEZ-1-0-1020: Pump
+WEZ-1-0-1021: mixer
+WEZ-1-0-2: Supply actual
+WEZ-1-0-2051: Status heating circuit control
+WEZ-1-0-3: Return actual
+WEZ-1-0-3050: Heating operation choice
+WEZ-1-0-3051: Normal room temp. heating oper.
+WEZ-1-0-3053: Conservation room temp. heating oper.
+WEZ-1-0-7009: Manual mode set temperature
+WEZ-1-0-7036: Flow setpoint constant req. heating
+WEZ-1-0-7047: Flow setpoint constant req. cooling
+WEZ-1-1-1: Room actual
+WEZ-1-1-1001: Room setpoint
+WEZ-1-1-1002: Supply setpoint
+WEZ-1-1-1020: Pump
+WEZ-1-1-1021: mixer
+WEZ-1-1-2: Supply actual
+WEZ-1-1-2051: Status heating circuit control
+WEZ-1-1-3: Return actual
+WEZ-1-1-3050: Heating operation choice
+WEZ-1-1-3051: Normal room temp. heating oper.
+WEZ-1-1-3053: Conservation room temp. heating oper.
+WEZ-1-1-7009: Manual mode set temperature
+WEZ-1-1-7036: Flow setpoint constant req. heating
+WEZ-1-1-7047: Flow setpoint constant req. cooling
+WEZ-1-2-1: Room actual
+WEZ-1-2-1001: Room setpoint
+WEZ-1-2-1002: Supply setpoint
+WEZ-1-2-1020: Pump
+WEZ-1-2-1021: mixer
+WEZ-1-2-2: Supply actual
+WEZ-1-2-2051: Status heating circuit control
+WEZ-1-2-3: Return actual
+WEZ-1-2-3050: Heating operation choice
+WEZ-1-2-3051: Normal room temp. heating oper.
+WEZ-1-2-3053: Conservation room temp. heating oper.
+WEZ-1-2-7009: Manual mode set temperature
+WEZ-1-2-7036: Flow setpoint constant req. heating
+WEZ-1-2-7047: Flow setpoint constant req. cooling
+WEZ-10-0-1007: Heat generator setpoint
+WEZ-10-0-1009: Set value output heat generator
+WEZ-10-0-1022: Pump heat generator
+WEZ-10-0-1100: Burner stage
+WEZ-10-0-2053: Status heat generator control
+WEZ-10-0-2080: Switching cycles heat generator_high
+WEZ-10-0-2081: Operating hours heat generator_high
+WEZ-10-0-21105: Volume flow
+WEZ-10-0-22: Main pump rotation speed
+WEZ-10-0-29050: Heat quantity heating_high
+WEZ-10-0-29051: Current output heating_high
+WEZ-10-0-7: Heat generator actual
+WEZ-10-0-8: Return temperature heat generator
+WEZ-10-0-9020: Manual mode set temperature
+WEZ-10-0-9037: Temperature increase heat generator
+WEZ-10-0-9058: Manual mode output setpoint
+WEZ-10-0-9075: Heat generator operation choice
+WEZ-10-1-1007: Heat generator setpoint
+WEZ-10-1-10110: Emissions test output limitation
+WEZ-10-1-1022: Pump heat generator
+WEZ-10-1-20050: Water pressure
+WEZ-10-1-20051: FA status
+WEZ-10-1-20052: Modulation
+WEZ-10-1-20053: Operating message
+WEZ-10-1-2053: Status heat generator control
+WEZ-10-1-2080: Switching cycles heat generator_high
+WEZ-10-1-2081: Operating hours heat generator_high
+WEZ-10-1-2082: Operating hours heat generator >50%_high
+WEZ-10-1-2083: Switching cycles heat generator >50%_high
+WEZ-10-1-21105: Volume flow
+WEZ-10-1-22: Main pump rotation speed
+WEZ-10-1-23085: Activate emissions test
+WEZ-10-1-29050: Heat quantity heating_high
+WEZ-10-1-29051: Current output heating_high
+WEZ-10-1-29052: Cooling quantity_high
+WEZ-10-1-29053: Current output cooling_high
+WEZ-10-1-7: Heat generator actual
+WEZ-10-1-8: Return temperature heat generator
+WEZ-10-1-9020: Manual mode set temperature
+WEZ-10-1-9037: Temperature increase heat generator
+WEZ-10-1-9058: Manual mode output setpoint
+WEZ-10-1-9075: Heat generator operation choice
+WEZ-2-0-1004: Hot water setpoint
+WEZ-2-0-1065: Hot water circulation pump
+WEZ-2-0-1066: SLP hot water charging pump
+WEZ-2-0-118: Circulation circuit temperature
+WEZ-2-0-2052: Status domestic hot water control
+WEZ-2-0-4: Hot water actual SF
+WEZ-2-0-5050: Hot water operation choice
+WEZ-2-0-5051: Normal hot water temp.
+WEZ-2-0-5086: Conservation hot water temp.
+WEZ-3-0-1096: System temp. setpoint heating current
+WEZ-3-0-1097: System temp. setpoint DHW current
+WEZ-3-0-2040: System output setpoint heating current
+WEZ-3-0-2041: System output setpoint DHW current
+WEZ-3-0-2042: System output setpoint cooling current
+WEZ-3-0-21089: System flow temperature cooling
+WEZ-3-0-22024: status cooling valve activ UKA
+WEZ-3-0-22098: System set temp. cooling current
+WEZ-3-0-22121: status cooling valve gen. UHKA
+WEZ-3-0-96: System flow temperature
+WEZ-3-0-97: System flow temperature hot water
+WEZ-4-0-1009: Set value output heat generator
+WEZ-4-0-2043: 0 - 100% current req. on heat generator
+WEZ-4-0-2119: Guide H-Gen
+WEZ-4-0-6020: Sequence change (time)
+WEZ-4-1-1009: Set value output heat generator
+WEZ-4-1-2043: 0 - 100% current req. on heat generator
+WEZ-4-2-1009: Set value output heat generator
+WEZ-4-2-2043: 0 - 100% current req. on heat generator
+WEZ-4-3-1009: Set value output heat generator
+WEZ-4-3-2043: 0 - 100% current req. on heat generator
+WEZ-4-4-1009: Set value output heat generator
+WEZ-4-4-2043: 0 - 100% current req. on heat generator
+WEZ-4-5-1009: Set value output heat generator
+WEZ-4-5-2043: 0 - 100% current req. on heat generator
+WEZ-4-6-1009: Set value output heat generator
+WEZ-4-6-2043: 0 - 100% current req. on heat generator
+WEZ-4-7-1009: Set value output heat generator
+WEZ-4-7-2043: 0 - 100% current req. on heat generator
+WEZ-60-254-0: Setpoint for heating circuit operation
+WEZ-60-254-1: Setpoint for tank operation
+WEZ-60-254-12: Setpoint for cooling mode
+WEZ-60-254-17: WEZ temperature
+WEZ-60-254-18: Exhaust gas temperature RS485
+WEZ-60-254-19: Swiching temperature active/passive
+WEZ-60-254-21: Burner flame
+WEZ-60-254-22: Heating setpoint
+WEZ-60-254-23: Storage tank setpoint
+WEZ-60-254-24: WEZ set value
+WEZ-60-254-25: Heating ext. maximum limit
+WEZ-60-254-26: Tank ext. maximum limit
+WEZ-60-254-27: Error code from controller
+WEZ-60-254-29: Return temperature
+WEZ-60-254-30: WEZ output
+WEZ-60-254-31: Absolute output
+WEZ-60-254-32: Water pressure in bar
+WEZ-60-254-33: WEZ status
+WEZ-60-254-34: Operating status
+WEZ-60-254-35: Burner ID index
+WEZ-60-254-36: Extension of functionality
+WEZ-60-254-37: Status information
+WEZ-60-254-38: Cooling setpoint
+WEZ-60-254-8: Output limitation
+WEZ-60-254-9: Emission measurement

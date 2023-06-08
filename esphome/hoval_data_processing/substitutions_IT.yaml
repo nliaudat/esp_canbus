@@ -1,0 +1,1071 @@
+FW-0-0-0: AF1 - sensore esterno 1
+FW-0-0-106: Temperatura nominale cumulativa
+FW-0-0-110: Regolazione valvola stazione
+FW-0-0-128: VE 1
+FW-0-0-129: VE 2
+FW-0-0-132: Ore di funzionamento_high
+FW-0-0-200: Info AF
+FW-0-0-201: Info RLF
+FW-0-0-202: Info VF
+FW-0-0-203: Info VF1
+FW-0-0-204: Info SF1
+FW-0-0-205: Info SF2
+FW-0-0-206: Info VE4
+FW-0-0-207: Info VE5
+FW-0-0-208: Info VE6
+FW-0-0-209: Info VE7
+FW-0-0-210: Info VE8
+FW-0-0-21031: DKP hardware-uscita
+FW-0-0-21032: YFW+ hardware-uscita
+FW-0-0-21033: YFW- hardware-uscita
+FW-0-0-21034: MK1 hardware-uscita
+FW-0-0-21035: YK1+ hardware-uscita
+FW-0-0-21036: YK1- hardware-uscita
+FW-0-0-21037: SLP1 hardware-uscita
+FW-0-0-21038: SLP2 hardware-uscita
+FW-0-0-21039: VA2 hardware-uscita
+FW-0-0-21040: VA1 0-10V/0-20mA hardware-uscita
+FW-0-0-21041: VA3 0-10V/PWM hardware-uscita
+FW-0-0-21042: VA4 0-10V/PWM hardware-uscita
+FW-0-0-21043: VA5 0-10V/PWM hardware-uscita
+FW-0-0-21044: "Attivare test dei rel\xE8 TTE-FE"
+FW-0-0-21045: FE-VA1 hardware-uscita
+FW-0-0-21046: FE-VA2 hardware-uscita
+FW-0-0-21047: FE-VA3 hardware-uscita
+FW-0-0-21048: FE-VA10V/PWM hardware-uscita
+FW-0-0-21059: AVF temperatura effettiva mandata
+FW-0-0-21092: Livello riempimento accumulo di energia
+FW-0-0-21093: Pressione
+FW-0-0-211: Info VE9
+FW-0-0-21100: AF2 - sensore esterno 2
+FW-0-0-212: Info VE1-FE1
+FW-0-0-213: Info VE2-FE1
+FW-0-0-214: Info VE3-FE1
+FW-0-0-215: Info VE1-FE2
+FW-0-0-216: Info VE2-FE2
+FW-0-0-217: Info VE3-FE2
+FW-0-0-218: Info VE1-FE3
+FW-0-0-219: Info VE2-FE3
+FW-0-0-220: Info VE3-FE3
+FW-0-0-22021: AVF temperatura nominale mandata
+FW-0-0-22055: AVP pompa
+FW-0-0-22056: YAV pompa
+FW-0-0-221: Info VE1-FE4
+FW-0-0-222: Info VE2-FE4
+FW-0-0-223: Info VE3-FE4
+FW-0-0-224: Info VE1-FE5
+FW-0-0-225: Info VE2-FE5
+FW-0-0-226: Info VE3-FE5
+FW-0-0-227: Info VE10/IMP
+FW-0-0-228: Info VE3/IMP-FE1
+FW-0-0-229: Info VE3/IMP-FE2
+FW-0-0-230: Info VE3/IMP-FE3
+FW-0-0-23084: "Attivare test di rel\xE8 TTE-FW"
+FW-0-0-231: Info VE3/IMP-FE4
+FW-0-0-232: Info VE3/IMP-FE5
+FW-0-0-233: Info VE10V-FE1
+FW-0-0-234: Info VE10V-FE2
+FW-0-0-235: Info VE10V-FE3
+FW-0-0-236: Info VE10V-FE4
+FW-0-0-237: Info VE10V-FE5
+FW-0-0-238: Info VE3
+FW-0-0-29042: Errore attivo 1_appearance_time
+FW-0-0-29043: Errore attivo 2_appearance_time
+FW-0-0-29044: Errore attivo 3_appearance_time
+FW-0-0-29045: Errore attivo 4_appearance_time
+FW-0-0-29046: Errore attivo 5_appearance_time
+FW-0-0-98: RI-limitazione attiva
+FW-0-0-99: Limitazione potenza attiva
+FW-1-0-1: Ambiente-effettivo
+FW-1-0-1001: Ambiente-nominale
+FW-1-0-1002: Mandata-nominale
+FW-1-0-1020: Pompa
+FW-1-0-1021: Miscelatrice
+FW-1-0-2: Mandata-effettivo
+FW-1-0-2051: Stato regolazione circuito riscaldamento
+FW-1-0-3050: Selezione modo funzionam.to riscaldam.to
+FW-1-0-3051: Temp ambiente normale riscaldamento
+FW-1-0-3053: Temp ambiente risparmio riscaldamento
+FW-1-1-1: Ambiente-effettivo
+FW-1-1-1001: Ambiente-nominale
+FW-1-1-1002: Mandata-nominale
+FW-1-1-1020: Pompa
+FW-1-1-1021: Miscelatrice
+FW-1-1-2: Mandata-effettivo
+FW-1-1-2051: Stato regolazione circuito riscaldamento
+FW-1-1-3050: Selezione modo funzionam.to riscaldam.to
+FW-1-1-3051: Temp ambiente normale riscaldamento
+FW-1-1-3053: Temp ambiente risparmio riscaldamento
+FW-1-2-1: Ambiente-effettivo
+FW-1-2-1001: Ambiente-nominale
+FW-1-2-1002: Mandata-nominale
+FW-1-2-1020: Pompa
+FW-1-2-1021: Miscelatrice
+FW-1-2-2: Mandata-effettivo
+FW-1-2-2051: Stato regolazione circuito riscaldamento
+FW-1-2-3050: Selezione modo funzionam.to riscaldam.to
+FW-1-2-3051: Temp ambiente normale riscaldamento
+FW-1-2-3053: Temp ambiente risparmio riscaldamento
+FW-1-3-1: Ambiente-effettivo
+FW-1-3-1001: Ambiente-nominale
+FW-1-3-1002: Mandata-nominale
+FW-1-3-1020: Pompa
+FW-1-3-1021: Miscelatrice
+FW-1-3-2: Mandata-effettivo
+FW-1-3-2051: Stato regolazione circuito riscaldamento
+FW-1-3-3050: Selezione modo funzionam.to riscaldam.to
+FW-1-3-3051: Temp ambiente normale riscaldamento
+FW-1-3-3053: Temp ambiente risparmio riscaldamento
+FW-1-4-1: Ambiente-effettivo
+FW-1-4-1001: Ambiente-nominale
+FW-1-4-1002: Mandata-nominale
+FW-1-4-1020: Pompa
+FW-1-4-1021: Miscelatrice
+FW-1-4-2: Mandata-effettivo
+FW-1-4-2051: Stato regolazione circuito riscaldamento
+FW-1-4-3050: Selezione modo funzionam.to riscaldam.to
+FW-1-4-3051: Temp ambiente normale riscaldamento
+FW-1-4-3053: Temp ambiente risparmio riscaldamento
+FW-2-0-1004: Acqua calda-nominale
+FW-2-0-1065: Acqua calda pompa di ricircolo
+FW-2-0-1066: SLP1 pompa di caricamento acqua calda
+FW-2-0-1067: SLP2 pompa di caricamento acqua calda
+FW-2-0-118: Temperatura circuito di circolazione
+FW-2-0-2052: Stato regolazione acqua calda
+FW-2-0-4: Acqua calda-effettivo SF
+FW-2-0-5050: Selezione modo funzionamento acqua calda
+FW-2-0-5051: Temperatura acqua calda normale
+FW-2-0-5086: Temperatura di risparmio acqua calda
+FW-2-1-1004: Acqua calda-nominale
+FW-2-1-1065: Acqua calda pompa di ricircolo
+FW-2-1-1066: SLP1 pompa di caricamento acqua calda
+FW-2-1-1067: SLP2 pompa di caricamento acqua calda
+FW-2-1-118: Temperatura circuito di circolazione
+FW-2-1-2052: Stato regolazione acqua calda
+FW-2-1-4: Acqua calda-effettivo SF
+FW-2-1-5050: Selezione modo funzionamento acqua calda
+FW-2-1-5051: Temperatura acqua calda normale
+FW-2-1-5086: Temperatura di risparmio acqua calda
+FW-2-2-1004: Acqua calda-nominale
+FW-2-2-1065: Acqua calda pompa di ricircolo
+FW-2-2-1066: SLP1 pompa di caricamento acqua calda
+FW-2-2-1067: SLP2 pompa di caricamento acqua calda
+FW-2-2-118: Temperatura circuito di circolazione
+FW-2-2-2052: Stato regolazione acqua calda
+FW-2-2-4: Acqua calda-effettivo SF
+FW-2-2-5050: Selezione modo funzionamento acqua calda
+FW-2-2-5051: Temperatura acqua calda normale
+FW-2-2-5086: Temperatura di risparmio acqua calda
+FW-2-3-1004: Acqua calda-nominale
+FW-2-3-1065: Acqua calda pompa di ricircolo
+FW-2-3-1066: SLP1 pompa di caricamento acqua calda
+FW-2-3-1067: SLP2 pompa di caricamento acqua calda
+FW-2-3-118: Temperatura circuito di circolazione
+FW-2-3-2052: Stato regolazione acqua calda
+FW-2-3-4: Acqua calda-effettivo SF
+FW-2-3-5050: Selezione modo funzionamento acqua calda
+FW-2-3-5051: Temperatura acqua calda normale
+FW-2-3-5086: Temperatura di risparmio acqua calda
+FW-2-4-1004: Acqua calda-nominale
+FW-2-4-1065: Acqua calda pompa di ricircolo
+FW-2-4-1066: SLP1 pompa di caricamento acqua calda
+FW-2-4-1067: SLP2 pompa di caricamento acqua calda
+FW-2-4-118: Temperatura circuito di circolazione
+FW-2-4-2052: Stato regolazione acqua calda
+FW-2-4-4: Acqua calda-effettivo SF
+FW-2-4-5050: Selezione modo funzionamento acqua calda
+FW-2-4-5051: Temperatura acqua calda normale
+FW-2-4-5086: Temperatura di risparmio acqua calda
+FW-20-1-0: Energia attuale_high
+FW-20-1-1: Potenza attuale_high
+FW-20-1-11: Corrente elettrica_high
+FW-20-1-12: Tensione
+FW-20-1-13: Coseno phi
+FW-20-1-2: Portata attuale_high
+FW-20-1-203: Potenza attiva high2
+FW-20-1-250: Importazioni di energia 1_high2
+FW-20-1-252: Esportazione di energia 1_high2
+FW-20-1-3: Volume attuale_high
+FW-20-1-4: 'Temperatura di mandata attuale '
+FW-20-1-5: 'Temperatura di ritorno attuale '
+FW-20-1-50: Energia attuale freddo_high
+FW-20-1-51: Potenza attuale freddo_high
+FW-20-1-6: Temperatura differenziale attuale
+FW-20-1-7: N. di serie_high
+FW-20-1-8: Messaggio di errore/Mbus stato byte
+FW-20-10-0: Energia attuale_high
+FW-20-10-1: Potenza attuale_high
+FW-20-10-11: Corrente elettrica_high
+FW-20-10-12: Tensione
+FW-20-10-13: Coseno phi
+FW-20-10-2: Portata attuale_high
+FW-20-10-203: Potenza attiva high2
+FW-20-10-250: Importazioni di energia 1_high2
+FW-20-10-252: Esportazione di energia 1_high2
+FW-20-10-3: Volume attuale_high
+FW-20-10-4: 'Temperatura di mandata attuale '
+FW-20-10-5: 'Temperatura di ritorno attuale '
+FW-20-10-50: Energia attuale freddo_high
+FW-20-10-51: Potenza attuale freddo_high
+FW-20-10-6: Temperatura differenziale attuale
+FW-20-10-7: N. di serie_high
+FW-20-10-8: Messaggio di errore/Mbus stato byte
+FW-20-11-0: Energia attuale_high
+FW-20-11-1: Potenza attuale_high
+FW-20-11-11: Corrente elettrica_high
+FW-20-11-12: Tensione
+FW-20-11-13: Coseno phi
+FW-20-11-2: Portata attuale_high
+FW-20-11-203: Potenza attiva high2
+FW-20-11-250: Importazioni di energia 1_high2
+FW-20-11-252: Esportazione di energia 1_high2
+FW-20-11-3: Volume attuale_high
+FW-20-11-4: 'Temperatura di mandata attuale '
+FW-20-11-5: 'Temperatura di ritorno attuale '
+FW-20-11-50: Energia attuale freddo_high
+FW-20-11-51: Potenza attuale freddo_high
+FW-20-11-6: Temperatura differenziale attuale
+FW-20-11-7: N. di serie_high
+FW-20-11-8: Messaggio di errore/Mbus stato byte
+FW-20-12-0: Energia attuale_high
+FW-20-12-1: Potenza attuale_high
+FW-20-12-11: Corrente elettrica_high
+FW-20-12-12: Tensione
+FW-20-12-13: Coseno phi
+FW-20-12-2: Portata attuale_high
+FW-20-12-203: Potenza attiva high2
+FW-20-12-250: Importazioni di energia 1_high2
+FW-20-12-252: Esportazione di energia 1_high2
+FW-20-12-3: Volume attuale_high
+FW-20-12-4: 'Temperatura di mandata attuale '
+FW-20-12-5: 'Temperatura di ritorno attuale '
+FW-20-12-50: Energia attuale freddo_high
+FW-20-12-51: Potenza attuale freddo_high
+FW-20-12-6: Temperatura differenziale attuale
+FW-20-12-7: N. di serie_high
+FW-20-12-8: Messaggio di errore/Mbus stato byte
+FW-20-13-0: Energia attuale_high
+FW-20-13-1: Potenza attuale_high
+FW-20-13-11: Corrente elettrica_high
+FW-20-13-12: Tensione
+FW-20-13-13: Coseno phi
+FW-20-13-2: Portata attuale_high
+FW-20-13-203: Potenza attiva high2
+FW-20-13-250: Importazioni di energia 1_high2
+FW-20-13-252: Esportazione di energia 1_high2
+FW-20-13-3: Volume attuale_high
+FW-20-13-4: 'Temperatura di mandata attuale '
+FW-20-13-5: 'Temperatura di ritorno attuale '
+FW-20-13-50: Energia attuale freddo_high
+FW-20-13-51: Potenza attuale freddo_high
+FW-20-13-6: Temperatura differenziale attuale
+FW-20-13-7: N. di serie_high
+FW-20-13-8: Messaggio di errore/Mbus stato byte
+FW-20-14-0: Energia attuale_high
+FW-20-14-1: Potenza attuale_high
+FW-20-14-11: Corrente elettrica_high
+FW-20-14-12: Tensione
+FW-20-14-13: Coseno phi
+FW-20-14-2: Portata attuale_high
+FW-20-14-203: Potenza attiva high2
+FW-20-14-250: Importazioni di energia 1_high2
+FW-20-14-252: Esportazione di energia 1_high2
+FW-20-14-3: Volume attuale_high
+FW-20-14-4: 'Temperatura di mandata attuale '
+FW-20-14-5: 'Temperatura di ritorno attuale '
+FW-20-14-50: Energia attuale freddo_high
+FW-20-14-51: Potenza attuale freddo_high
+FW-20-14-6: Temperatura differenziale attuale
+FW-20-14-7: N. di serie_high
+FW-20-14-8: Messaggio di errore/Mbus stato byte
+FW-20-15-0: Energia attuale_high
+FW-20-15-1: Potenza attuale_high
+FW-20-15-11: Corrente elettrica_high
+FW-20-15-12: Tensione
+FW-20-15-13: Coseno phi
+FW-20-15-2: Portata attuale_high
+FW-20-15-203: Potenza attiva high2
+FW-20-15-250: Importazioni di energia 1_high2
+FW-20-15-252: Esportazione di energia 1_high2
+FW-20-15-3: Volume attuale_high
+FW-20-15-4: 'Temperatura di mandata attuale '
+FW-20-15-5: 'Temperatura di ritorno attuale '
+FW-20-15-50: Energia attuale freddo_high
+FW-20-15-51: Potenza attuale freddo_high
+FW-20-15-6: Temperatura differenziale attuale
+FW-20-15-7: N. di serie_high
+FW-20-15-8: Messaggio di errore/Mbus stato byte
+FW-20-16-0: Energia attuale_high
+FW-20-16-1: Potenza attuale_high
+FW-20-16-11: Corrente elettrica_high
+FW-20-16-12: Tensione
+FW-20-16-13: Coseno phi
+FW-20-16-2: Portata attuale_high
+FW-20-16-203: Potenza attiva high2
+FW-20-16-250: Importazioni di energia 1_high2
+FW-20-16-252: Esportazione di energia 1_high2
+FW-20-16-3: Volume attuale_high
+FW-20-16-4: 'Temperatura di mandata attuale '
+FW-20-16-5: 'Temperatura di ritorno attuale '
+FW-20-16-50: Energia attuale freddo_high
+FW-20-16-51: Potenza attuale freddo_high
+FW-20-16-6: Temperatura differenziale attuale
+FW-20-16-7: N. di serie_high
+FW-20-16-8: Messaggio di errore/Mbus stato byte
+FW-20-2-0: Energia attuale_high
+FW-20-2-1: Potenza attuale_high
+FW-20-2-11: Corrente elettrica_high
+FW-20-2-12: Tensione
+FW-20-2-13: Coseno phi
+FW-20-2-2: Portata attuale_high
+FW-20-2-203: Potenza attiva high2
+FW-20-2-250: Importazioni di energia 1_high2
+FW-20-2-252: Esportazione di energia 1_high2
+FW-20-2-3: Volume attuale_high
+FW-20-2-4: 'Temperatura di mandata attuale '
+FW-20-2-5: 'Temperatura di ritorno attuale '
+FW-20-2-50: Energia attuale freddo_high
+FW-20-2-51: Potenza attuale freddo_high
+FW-20-2-6: Temperatura differenziale attuale
+FW-20-2-7: N. di serie_high
+FW-20-2-8: Messaggio di errore/Mbus stato byte
+FW-20-3-0: Energia attuale_high
+FW-20-3-1: Potenza attuale_high
+FW-20-3-11: Corrente elettrica_high
+FW-20-3-12: Tensione
+FW-20-3-13: Coseno phi
+FW-20-3-2: Portata attuale_high
+FW-20-3-203: Potenza attiva high2
+FW-20-3-250: Importazioni di energia 1_high2
+FW-20-3-252: Esportazione di energia 1_high2
+FW-20-3-3: Volume attuale_high
+FW-20-3-4: 'Temperatura di mandata attuale '
+FW-20-3-5: 'Temperatura di ritorno attuale '
+FW-20-3-50: Energia attuale freddo_high
+FW-20-3-51: Potenza attuale freddo_high
+FW-20-3-6: Temperatura differenziale attuale
+FW-20-3-7: N. di serie_high
+FW-20-3-8: Messaggio di errore/Mbus stato byte
+FW-20-4-0: Energia attuale_high
+FW-20-4-1: Potenza attuale_high
+FW-20-4-11: Corrente elettrica_high
+FW-20-4-12: Tensione
+FW-20-4-13: Coseno phi
+FW-20-4-2: Portata attuale_high
+FW-20-4-203: Potenza attiva high2
+FW-20-4-250: Importazioni di energia 1_high2
+FW-20-4-252: Esportazione di energia 1_high2
+FW-20-4-3: Volume attuale_high
+FW-20-4-4: 'Temperatura di mandata attuale '
+FW-20-4-5: 'Temperatura di ritorno attuale '
+FW-20-4-50: Energia attuale freddo_high
+FW-20-4-51: Potenza attuale freddo_high
+FW-20-4-6: Temperatura differenziale attuale
+FW-20-4-7: N. di serie_high
+FW-20-4-8: Messaggio di errore/Mbus stato byte
+FW-20-5-0: Energia attuale_high
+FW-20-5-1: Potenza attuale_high
+FW-20-5-11: Corrente elettrica_high
+FW-20-5-12: Tensione
+FW-20-5-13: Coseno phi
+FW-20-5-2: Portata attuale_high
+FW-20-5-203: Potenza attiva high2
+FW-20-5-250: Importazioni di energia 1_high2
+FW-20-5-252: Esportazione di energia 1_high2
+FW-20-5-3: Volume attuale_high
+FW-20-5-4: 'Temperatura di mandata attuale '
+FW-20-5-5: 'Temperatura di ritorno attuale '
+FW-20-5-50: Energia attuale freddo_high
+FW-20-5-51: Potenza attuale freddo_high
+FW-20-5-6: Temperatura differenziale attuale
+FW-20-5-7: N. di serie_high
+FW-20-5-8: Messaggio di errore/Mbus stato byte
+FW-20-6-0: Energia attuale_high
+FW-20-6-1: Potenza attuale_high
+FW-20-6-11: Corrente elettrica_high
+FW-20-6-12: Tensione
+FW-20-6-13: Coseno phi
+FW-20-6-2: Portata attuale_high
+FW-20-6-203: Potenza attiva high2
+FW-20-6-250: Importazioni di energia 1_high2
+FW-20-6-252: Esportazione di energia 1_high2
+FW-20-6-3: Volume attuale_high
+FW-20-6-4: 'Temperatura di mandata attuale '
+FW-20-6-5: 'Temperatura di ritorno attuale '
+FW-20-6-50: Energia attuale freddo_high
+FW-20-6-51: Potenza attuale freddo_high
+FW-20-6-6: Temperatura differenziale attuale
+FW-20-6-7: N. di serie_high
+FW-20-6-8: Messaggio di errore/Mbus stato byte
+FW-20-7-0: Energia attuale_high
+FW-20-7-1: Potenza attuale_high
+FW-20-7-11: Corrente elettrica_high
+FW-20-7-12: Tensione
+FW-20-7-13: Coseno phi
+FW-20-7-2: Portata attuale_high
+FW-20-7-203: Potenza attiva high2
+FW-20-7-250: Importazioni di energia 1_high2
+FW-20-7-252: Esportazione di energia 1_high2
+FW-20-7-3: Volume attuale_high
+FW-20-7-4: 'Temperatura di mandata attuale '
+FW-20-7-5: 'Temperatura di ritorno attuale '
+FW-20-7-50: Energia attuale freddo_high
+FW-20-7-51: Potenza attuale freddo_high
+FW-20-7-6: Temperatura differenziale attuale
+FW-20-7-7: N. di serie_high
+FW-20-7-8: Messaggio di errore/Mbus stato byte
+FW-20-8-0: Energia attuale_high
+FW-20-8-1: Potenza attuale_high
+FW-20-8-11: Corrente elettrica_high
+FW-20-8-12: Tensione
+FW-20-8-13: Coseno phi
+FW-20-8-2: Portata attuale_high
+FW-20-8-203: Potenza attiva high2
+FW-20-8-250: Importazioni di energia 1_high2
+FW-20-8-252: Esportazione di energia 1_high2
+FW-20-8-3: Volume attuale_high
+FW-20-8-4: 'Temperatura di mandata attuale '
+FW-20-8-5: 'Temperatura di ritorno attuale '
+FW-20-8-50: Energia attuale freddo_high
+FW-20-8-51: Potenza attuale freddo_high
+FW-20-8-6: Temperatura differenziale attuale
+FW-20-8-7: N. di serie_high
+FW-20-8-8: Messaggio di errore/Mbus stato byte
+FW-20-9-0: Energia attuale_high
+FW-20-9-1: Potenza attuale_high
+FW-20-9-11: Corrente elettrica_high
+FW-20-9-12: Tensione
+FW-20-9-13: Coseno phi
+FW-20-9-2: Portata attuale_high
+FW-20-9-203: Potenza attiva high2
+FW-20-9-250: Importazioni di energia 1_high2
+FW-20-9-252: Esportazione di energia 1_high2
+FW-20-9-3: Volume attuale_high
+FW-20-9-4: 'Temperatura di mandata attuale '
+FW-20-9-5: 'Temperatura di ritorno attuale '
+FW-20-9-50: Energia attuale freddo_high
+FW-20-9-51: Potenza attuale freddo_high
+FW-20-9-6: Temperatura differenziale attuale
+FW-20-9-7: N. di serie_high
+FW-20-9-8: Messaggio di errore/Mbus stato byte
+GLT-0-0-21036: VA1 hardware-uscita
+GLT-0-0-21037: VA2 hardware-uscita
+GLT-0-0-21038: VA3 hardware-uscita
+GLT-0-0-21039: VA1-FE1 hardware-uscita
+GLT-0-0-21040: VA2-FE1 hardware-uscita
+GLT-0-0-21041: VA3-FE1 hardware-uscita
+GLT-0-0-21043: VA1-FE2 hardware-uscita
+GLT-0-0-21044: VA2-FE2 hardware-uscita
+GLT-0-0-21045: VA3-FE2 hardware-uscita
+GLT-0-0-21106: Richiesta temperatura riscaldamento
+GLT-0-0-21107: Richiesta temperatura raffrescamento
+GLT-0-0-21108: Richiesta temperatura acqua calda
+GLT-0-0-21109: Valore nominale potenza riscaldamento
+GLT-0-0-21110: 'Valore nominale potenza raffrescamento '
+GLT-0-0-21111: Valore nominale potenza acqua calda
+GLT-0-0-21120: Info 1
+GLT-0-0-21121: Info 2
+GLT-0-0-21122: Info 3
+GLT-0-0-21123: Info 4
+GLT-0-0-21124: Info 5
+GLT-0-0-21125: Informazione 1 0-10V
+GLT-0-0-21126: Informazione 2 0-10V
+GLT-0-0-21127: Informazione 3 0-10V
+GLT-0-0-23084: "Attivare test dei rel\xE8"
+GLT-0-0-29042: Errore attivo 1_appearance_time
+GLT-0-0-29043: Errore attivo 2_appearance_time
+GLT-0-0-29044: Errore attivo 3_appearance_time
+GLT-0-0-29045: Errore attivo 4_appearance_time
+GLT-0-0-29046: Errore attivo 5_appearance_time
+GW-0-0-21101: AFG1 sistema-sensore esterno 1
+GW-0-0-21102: AFG2 sistema-sensore esterno 2
+GW-0-1-20: unixtime_high
+GW-0-1-45: Irraggiamento globale previsto (W/m2)
+HKW-0-0-0: AF1 - sensore esterno 1
+HKW-0-0-21036: VA1 hardware-uscita
+HKW-0-0-21037: VA2 hardware-uscita
+HKW-0-0-21038: VA3 hardware-uscita
+HKW-0-0-21039: VA1-FE1 hardware-uscita
+HKW-0-0-21040: VA2-FE1 hardware-uscita
+HKW-0-0-21041: VA3-FE1 hardware-uscita
+HKW-0-0-21043: VA1-FE2 hardware-uscita
+HKW-0-0-21044: VA2-FE2 hardware-uscita
+HKW-0-0-21045: VA3-FE2 hardware-uscita
+HKW-0-0-21059: AVF temperatura effettiva mandata
+HKW-0-0-21078: VA0-10V/PWM hardware-uscita
+HKW-0-0-21079: VA0-10V/PWM-FE1 hardware-uscita
+HKW-0-0-21080: VA0-10V/PWM-FE2 hardware-uscita
+HKW-0-0-21100: AF2 - sensore esterno 2
+HKW-0-0-21120: Info 1
+HKW-0-0-21121: Info 2
+HKW-0-0-21122: Info 3
+HKW-0-0-21123: Info 4
+HKW-0-0-21124: Info 5
+HKW-0-0-21125: Info 1 0-10V
+HKW-0-0-21126: Info 2 0-10V
+HKW-0-0-21127: Info 3 0-10V
+HKW-0-0-22021: FAV temperatura nominale mandata
+HKW-0-0-22055: AVP pompa
+HKW-0-0-22056: YAV miscelatrice
+HKW-0-0-23084: "Attivare test dei rel\xE8"
+HKW-0-0-29042: Errore attivo 1_appearance_time
+HKW-0-0-29043: Errore attivo 2_appearance_time
+HKW-0-0-29044: Errore attivo 3_appearance_time
+HKW-0-0-29045: Errore attivo 4_appearance_time
+HKW-0-0-29046: Errore attivo 5_appearance_time
+HKW-1-0-1: Ambiente-effettivo
+HKW-1-0-1001: Ambiente-nominale
+HKW-1-0-1002: Mandata-nominale
+HKW-1-0-1020: Pompa
+HKW-1-0-1021: Miscelatrice
+HKW-1-0-2: Mandata-effettivo
+HKW-1-0-2051: Stato regolazione circuito riscaldamento
+HKW-1-0-3: Ritorno-effettivo
+HKW-1-0-3050: Selezione modo funzionam.to riscaldam.to
+HKW-1-0-3051: Temp ambiente normale riscaldamento
+HKW-1-0-3053: Temp ambiente risparmio riscaldamento
+HKW-1-0-7009: Temperatura nominale modo manuale
+HKW-1-0-7036: Mandata nominale richiesta costante risc
+HKW-1-0-7047: Mandata nominale richiesta costante raff
+HKW-1-1-1: Ambiente-effettivo
+HKW-1-1-1001: Ambiente-nominale
+HKW-1-1-1002: Mandata-nominale
+HKW-1-1-1020: Pompa
+HKW-1-1-1021: Miscelatrice
+HKW-1-1-2: Mandata-effettivo
+HKW-1-1-2051: Stato regolazione circuito riscaldamento
+HKW-1-1-3: Ritorno-effettivo
+HKW-1-1-3050: Selezione modo funzionam.to riscaldam.to
+HKW-1-1-3051: Temp ambiente normale riscaldamento
+HKW-1-1-3053: Temp ambiente risparmio riscaldamento
+HKW-1-1-7009: Temperatura nominale modo manuale
+HKW-1-1-7036: Mandata nominale richiesta costante risc
+HKW-1-1-7047: Mandata nominale richiesta costante raff
+HKW-1-2-1: Ambiente-effettivo
+HKW-1-2-1001: Ambiente-nominale
+HKW-1-2-1002: Mandata-nominale
+HKW-1-2-1020: Pompa
+HKW-1-2-1021: Miscelatrice
+HKW-1-2-2: Mandata-effettivo
+HKW-1-2-2051: Stato regolazione circuito riscaldamento
+HKW-1-2-3: Ritorno-effettivo
+HKW-1-2-3050: Selezione modo funzionam.to riscaldam.to
+HKW-1-2-3051: Temp ambiente normale riscaldamento
+HKW-1-2-3053: Temp ambiente risparmio riscaldamento
+HKW-1-2-7009: Temperatura nominale modo manuale
+HKW-1-2-7036: Mandata nominale richiesta costante risc
+HKW-1-2-7047: Mandata nominale richiesta costante raff
+HKW-2-0-1004: Acqua calda-nominale
+HKW-2-0-1065: Acqua calda pompa di circolazione
+HKW-2-0-1066: SLP pompa di carica acqua calda
+HKW-2-0-118: Temperatura circuito di circolazione
+HKW-2-0-2052: Stato regolazione acqua calda
+HKW-2-0-4: Acqua calda-effettivo SF
+HKW-2-0-5050: Selezione modo funzionamento acqua calda
+HKW-2-0-5051: Temperatura acqua calda normale
+HKW-2-0-5086: Temperatura di risparmio acqua calda
+HV-0-0-29042: Errore attivo 1_appearance_time
+HV-0-0-29043: Errore attivo 2_appearance_time
+HV-0-0-29044: Errore attivo 3_appearance_time
+HV-0-0-29045: Errore attivo 4_appearance_time
+HV-0-0-29046: Errore attivo 5_appearance_time
+HV-50-0-0: Temperatura aria esterna
+HV-50-0-37600: "Umidit\xE0 aria ripresa"
+HV-50-0-37602: Temperatura aria ripresa
+HV-50-0-37608: VOC aria ripresa
+HV-50-0-37611: VOC aria esterna
+HV-50-0-38600: Ventilatore aria espulsa nominale
+HV-50-0-38606: Modulazione ventilazione
+HV-50-0-39600: "Regolazione qualit\xE0 dell'aria"
+HV-50-0-39652: Stato regolazione ventilazione
+HV-50-0-40650: Selezione modo funzion.to ventilazione
+HV-50-0-40651: Modulazione ventilazione normale
+HV-50-0-40686: Modulazione ventilazione risparmio
+HV-50-0-40687: "Valore nominale umidit\xE0"
+MWA-0-0-29042: Errore attivo 1_appearance_time
+MWA-0-0-29043: Errore attivo 2_appearance_time
+MWA-0-0-29044: Errore attivo 3_appearance_time
+MWA-0-0-29045: Errore attivo 4_appearance_time
+MWA-0-0-29046: Errore attivo 5_appearance_time
+MWA-20-1-0: Energia attuale_high
+MWA-20-1-1: Potenza attuale_high
+MWA-20-1-11: Corrente elettrica_high
+MWA-20-1-12: Tensione
+MWA-20-1-13: Coseno phi
+MWA-20-1-2: Portata attuale_high
+MWA-20-1-203: Potenza attiva high2
+MWA-20-1-250: Importazioni di energia 1_high2
+MWA-20-1-252: Esportazione di energia 1_high2
+MWA-20-1-3: Volume attuale_high
+MWA-20-1-4: 'Temperatura di mandata attuale '
+MWA-20-1-5: 'Temperatura di ritorno attuale '
+MWA-20-1-6: Temperatura differenziale attuale
+MWA-20-1-7: N. di serie_high
+MWA-20-10-0: Energia attuale_high
+MWA-20-10-1: Potenza attuale_high
+MWA-20-10-11: Corrente elettrica_high
+MWA-20-10-12: Tensione
+MWA-20-10-13: Coseno phi
+MWA-20-10-2: Portata attuale_high
+MWA-20-10-203: Potenza attiva high2
+MWA-20-10-250: Importazioni di energia 1_high2
+MWA-20-10-252: Esportazione di energia 1_high2
+MWA-20-10-3: Volume attuale_high
+MWA-20-10-4: 'Temperatura di mandata attuale '
+MWA-20-10-5: 'Temperatura di ritorno attuale '
+MWA-20-10-6: Temperatura differenziale attuale
+MWA-20-10-7: N. di serie_high
+MWA-20-11-0: Energia attuale_high
+MWA-20-11-1: Potenza attuale_high
+MWA-20-11-11: Corrente elettrica_high
+MWA-20-11-12: Tensione
+MWA-20-11-13: Coseno phi
+MWA-20-11-2: Portata attuale_high
+MWA-20-11-203: Potenza attiva high2
+MWA-20-11-250: Importazioni di energia 1_high2
+MWA-20-11-252: Esportazione di energia 1_high2
+MWA-20-11-3: Volume attuale_high
+MWA-20-11-4: 'Temperatura di mandata attuale '
+MWA-20-11-5: 'Temperatura di ritorno attuale '
+MWA-20-11-6: Temperatura differenziale attuale
+MWA-20-11-7: N. di serie_high
+MWA-20-12-0: Energia attuale_high
+MWA-20-12-1: Potenza attuale_high
+MWA-20-12-11: Corrente elettrica_high
+MWA-20-12-12: Tensione
+MWA-20-12-13: Coseno phi
+MWA-20-12-2: Portata attuale_high
+MWA-20-12-203: Potenza attiva high2
+MWA-20-12-250: Importazioni di energia 1_high2
+MWA-20-12-252: Esportazione di energia 1_high2
+MWA-20-12-3: Volume attuale_high
+MWA-20-12-4: 'Temperatura di mandata attuale '
+MWA-20-12-5: 'Temperatura di ritorno attuale '
+MWA-20-12-6: Temperatura differenziale attuale
+MWA-20-12-7: N. di serie_high
+MWA-20-13-0: Energia attuale_high
+MWA-20-13-1: Potenza attuale_high
+MWA-20-13-11: Corrente elettrica_high
+MWA-20-13-12: Tensione
+MWA-20-13-13: Coseno phi
+MWA-20-13-2: Portata attuale_high
+MWA-20-13-203: Potenza attiva high2
+MWA-20-13-250: Importazioni di energia 1_high2
+MWA-20-13-252: Esportazione di energia 1_high2
+MWA-20-13-3: Volume attuale_high
+MWA-20-13-4: 'Temperatura di mandata attuale '
+MWA-20-13-5: 'Temperatura di ritorno attuale '
+MWA-20-13-6: Temperatura differenziale attuale
+MWA-20-13-7: N. di serie_high
+MWA-20-14-0: Energia attuale_high
+MWA-20-14-1: Potenza attuale_high
+MWA-20-14-11: Corrente elettrica_high
+MWA-20-14-12: Tensione
+MWA-20-14-13: Coseno phi
+MWA-20-14-2: Portata attuale_high
+MWA-20-14-203: Potenza attiva high2
+MWA-20-14-250: Importazioni di energia 1_high2
+MWA-20-14-252: Esportazione di energia 1_high2
+MWA-20-14-3: Volume attuale_high
+MWA-20-14-4: 'Temperatura di mandata attuale '
+MWA-20-14-5: 'Temperatura di ritorno attuale '
+MWA-20-14-6: Temperatura differenziale attuale
+MWA-20-14-7: N. di serie_high
+MWA-20-15-0: Energia attuale_high
+MWA-20-15-1: Potenza attuale_high
+MWA-20-15-11: Corrente elettrica_high
+MWA-20-15-12: Tensione
+MWA-20-15-13: Coseno phi
+MWA-20-15-2: Portata attuale_high
+MWA-20-15-203: Potenza attiva high2
+MWA-20-15-250: Importazioni di energia 1_low2
+MWA-20-15-252: Esportazione di energia 1_high2
+MWA-20-15-3: Volume attuale_high
+MWA-20-15-4: 'Temperatura di mandata attuale '
+MWA-20-15-5: 'Temperatura di ritorno attuale '
+MWA-20-15-6: Temperatura differenziale attuale
+MWA-20-15-7: N. di serie_high
+MWA-20-16-0: Energia attuale_high
+MWA-20-16-1: Potenza attuale_high
+MWA-20-16-11: Corrente elettrica_high
+MWA-20-16-12: Tensione
+MWA-20-16-13: Coseno phi
+MWA-20-16-2: Portata attuale_high
+MWA-20-16-203: Potenza attiva high2
+MWA-20-16-250: Importazioni di energia 1_high2
+MWA-20-16-252: Esportazione di energia 1_high2
+MWA-20-16-3: Volume attuale_high
+MWA-20-16-4: 'Temperatura di mandata attuale '
+MWA-20-16-5: 'Temperatura di ritorno attuale '
+MWA-20-16-6: Temperatura differenziale attuale
+MWA-20-16-7: N. di serie_high
+MWA-20-2-0: Energia attuale_high
+MWA-20-2-1: Potenza attuale_high
+MWA-20-2-11: Corrente elettrica_high
+MWA-20-2-12: Tensione
+MWA-20-2-13: Coseno phi
+MWA-20-2-2: Portata attuale_high
+MWA-20-2-203: Potenza attiva high2
+MWA-20-2-250: Importazioni di energia 1_high2
+MWA-20-2-252: Esportazione di energia 1_high2
+MWA-20-2-3: Volume attuale_high
+MWA-20-2-4: 'Temperatura di mandata attuale '
+MWA-20-2-5: 'Temperatura di ritorno attuale '
+MWA-20-2-6: Temperatura differenziale attuale
+MWA-20-2-7: N. di serie_high
+MWA-20-3-0: Energia attuale_high
+MWA-20-3-1: Potenza attuale_high
+MWA-20-3-11: Corrente elettrica_high
+MWA-20-3-12: Tensione
+MWA-20-3-13: Coseno phi
+MWA-20-3-2: Portata attuale_high
+MWA-20-3-203: Potenza attiva high2
+MWA-20-3-250: Importazioni di energia 1_high2
+MWA-20-3-252: Esportazione di energia 1_high2
+MWA-20-3-3: Volume attuale_high
+MWA-20-3-4: 'Temperatura di mandata attuale '
+MWA-20-3-5: 'Temperatura di ritorno attuale '
+MWA-20-3-6: Temperatura differenziale attuale
+MWA-20-3-7: N. di serie_high
+MWA-20-4-0: Energia attuale_high
+MWA-20-4-1: Potenza attuale_high
+MWA-20-4-11: Corrente elettrica_high
+MWA-20-4-12: Tensione
+MWA-20-4-13: Coseno phi
+MWA-20-4-2: Portata attuale_high
+MWA-20-4-203: Potenza attiva high2
+MWA-20-4-250: Importazioni di energia 1_high2
+MWA-20-4-252: Esportazione di energia 1_high2
+MWA-20-4-3: Volume attuale_high
+MWA-20-4-4: 'Temperatura di mandata attuale '
+MWA-20-4-5: 'Temperatura di ritorno attuale '
+MWA-20-4-6: Temperatura differenziale attuale
+MWA-20-4-7: N. di serie_high
+MWA-20-5-0: Energia attuale_high
+MWA-20-5-1: Potenza attuale_high
+MWA-20-5-11: Corrente elettrica_high
+MWA-20-5-12: Tensione
+MWA-20-5-13: Coseno phi
+MWA-20-5-2: Portata attuale_high
+MWA-20-5-203: Potenza attiva high2
+MWA-20-5-250: Importazioni di energia 1_high2
+MWA-20-5-252: Esportazione di energia 1_high2
+MWA-20-5-3: Volume attuale_high
+MWA-20-5-4: 'Temperatura di mandata attuale '
+MWA-20-5-5: 'Temperatura di ritorno attuale '
+MWA-20-5-6: Temperatura differenziale attuale
+MWA-20-5-7: N. di serie_high
+MWA-20-6-0: Energia attuale_high
+MWA-20-6-1: Potenza attuale_high
+MWA-20-6-11: Corrente elettrica_high
+MWA-20-6-12: Tensione
+MWA-20-6-13: Coseno phi
+MWA-20-6-2: Portata attuale_high
+MWA-20-6-203: Potenza attiva high2
+MWA-20-6-250: Importazioni di energia 1_high2
+MWA-20-6-252: Esportazione di energia 1_high2
+MWA-20-6-3: Volume attuale_high
+MWA-20-6-4: 'Temperatura di mandata attuale '
+MWA-20-6-5: 'Temperatura di ritorno attuale '
+MWA-20-6-6: Temperatura differenziale attuale
+MWA-20-6-7: N. di serie_high
+MWA-20-7-0: Energia attuale_high
+MWA-20-7-1: Potenza attuale_high
+MWA-20-7-11: Corrente elettrica_high
+MWA-20-7-12: Tensione
+MWA-20-7-13: Coseno phi
+MWA-20-7-2: Portata attuale_high
+MWA-20-7-203: Potenza attiva high2
+MWA-20-7-250: Importazioni di energia 1_high2
+MWA-20-7-252: Esportazione di energia 1_high2
+MWA-20-7-3: Volume attuale_high
+MWA-20-7-4: 'Temperatura di mandata attuale '
+MWA-20-7-5: 'Temperatura di ritorno attuale '
+MWA-20-7-6: Temperatura differenziale attuale
+MWA-20-7-7: N. di serie_high
+MWA-20-8-0: Energia attuale_high
+MWA-20-8-1: Potenza attuale_high
+MWA-20-8-11: Corrente elettrica_high
+MWA-20-8-12: Tensione
+MWA-20-8-13: Coseno phi
+MWA-20-8-2: Portata attuale_high
+MWA-20-8-203: Potenza attiva high2
+MWA-20-8-250: Importazioni di energia 1_high2
+MWA-20-8-252: Esportazione di energia 1_high2
+MWA-20-8-3: Volume attuale_high
+MWA-20-8-4: 'Temperatura di mandata attuale '
+MWA-20-8-5: 'Temperatura di ritorno attuale '
+MWA-20-8-6: Temperatura differenziale attuale
+MWA-20-8-7: N. di serie_high
+MWA-20-9-0: Energia attuale_high
+MWA-20-9-1: Potenza attuale_high
+MWA-20-9-11: Corrente elettrica_high
+MWA-20-9-12: Tensione
+MWA-20-9-13: Coseno phi
+MWA-20-9-2: Portata attuale_high
+MWA-20-9-203: Potenza attiva high2
+MWA-20-9-250: Importazioni di energia 1_high2
+MWA-20-9-252: Esportazione di energia 1_high2
+MWA-20-9-3: Volume attuale_high
+MWA-20-9-4: 'Temperatura di mandata attuale '
+MWA-20-9-5: 'Temperatura di ritorno attuale '
+MWA-20-9-6: Temperatura differenziale attuale
+MWA-20-9-7: N. di serie_high
+PS-0-0-21036: VA1 hardware-uscita
+PS-0-0-21037: VA2 hardware-uscita
+PS-0-0-21038: VA3 hardware-uscita
+PS-0-0-21039: VA1-FE1 hardware-uscita
+PS-0-0-21040: VA2-FE1 hardware-uscita
+PS-0-0-21041: VA3-FE1 hardware-uscita
+PS-0-0-21043: VA1-FE2 hardware-uscita
+PS-0-0-21044: VA2-FE2 hardware-uscita
+PS-0-0-21045: VA3-FE2 hardware-uscita
+PS-0-0-21078: VA0-10V/PWM hardware-uscita
+PS-0-0-21079: VA0-10V/PWM-FE1 hardware-uscita
+PS-0-0-21080: VA0-10V/PWM-FE2 hardware-uscita
+PS-0-0-21120: Info 1
+PS-0-0-21121: Info 2
+PS-0-0-21122: Info 3
+PS-0-0-21123: Info 4
+PS-0-0-21124: Info 5
+PS-0-0-23084: "Attivare test dei rel\xE8"
+PS-0-0-29042: Errore attivo 1_appearance_time
+PS-0-0-29043: Errore attivo 2_appearance_time
+PS-0-0-29044: Errore attivo 3_appearance_time
+PS-0-0-29045: Errore attivo 4_appearance_time
+PS-0-0-29046: Errore attivo 5_appearance_time
+PS-21-0-1015: Accumulo-nominale
+PS-21-0-15: Accumulo PF/KPF2 effettivo
+PS-21-0-17: Accumulo PF2/KPF effettivo
+PS-21-0-23082: Stato accumulo
+SOL-0-0-21036: Uscita VA1
+SOL-0-0-21037: Uscita VA2
+SOL-0-0-21038: Uscita VA3
+SOL-0-0-21039: VA1-FE1 uscita
+SOL-0-0-21040: VA2- FE1 uscita
+SOL-0-0-21041: VA3-FE1 uscita
+SOL-0-0-21043: VA1-FE2 uscita
+SOL-0-0-21044: VA2- FE2 uscita
+SOL-0-0-21045: VA3-FE2 uscita
+SOL-0-0-21078: Uscita VA10V/PWM
+SOL-0-0-21079: ' Uscita VA10V/PWM-FE1'
+SOL-0-0-21080: ' Uscita VA10V/PWM-FE2'
+SOL-0-0-21120: Info 1
+SOL-0-0-21121: Info 2
+SOL-0-0-21122: Info 3
+SOL-0-0-21123: Info 4
+SOL-0-0-21124: Info 5
+SOL-0-0-23084: "Attivare test dei rel\xE8"
+SOL-0-0-29042: Errore attivo 1_appearance_time
+SOL-0-0-29043: Errore attivo 2_appearance_time
+SOL-0-0-29044: Errore attivo 3_appearance_time
+SOL-0-0-29045: Errore attivo 4_appearance_time
+SOL-0-0-29046: Errore attivo 5_appearance_time
+SOL-22-0-1050: "N\xB0 giri attuale pompa solare"
+SOL-22-0-14: TKO1 temperatura collettore
+SOL-22-0-2030: Potenza attuale collettore
+SOL-22-0-2032: Ore funzionamento pompa solare
+SOL-22-0-2034: Resa totale collettore_high
+SOL-22-0-2056: Stato regolazione solare
+SOL-22-0-60: TKV temp. mandata collettore
+SOL-22-0-61: TKR temp. ritorno collettore
+SOL-22-0-62: VSol portata in volume circuito solare
+SOL-22-1-1050: "N\xB0 giri attuale pompa solare"
+SOL-22-1-14: TKO2 temperatura collettore
+SOL-22-1-2030: Potenza attuale collettore
+SOL-22-1-2032: Ore funzionamento pompa solare
+SOL-22-1-2034: Resa totale collettore_high
+SOL-22-1-2056: Stato regolazione solare
+SOL-22-1-60: TKV temp. mandata collettore
+SOL-22-1-61: TKR temp. ritorno collettore
+SOL-22-1-62: VSol portata in volume circuito solare
+SOL-23-0-15: TO temp. accumulo sopra
+SOL-23-0-16: TU temp. accumulo sotto
+SOL-23-1-15: TO temp. accumulo sopra
+SOL-23-1-16: TU temp. accumulo sotto
+SOL-23-2-15: TO temp. accumulo sopra
+SOL-23-2-16: TU temp. accumulo sotto
+SOL-23-3-15: TO temp. accumulo sopra
+SOL-23-3-16: TU temp. accumulo sotto
+WEZ-0-0-0: AF1 - sensore esterno 1
+WEZ-0-0-21031: MK1 hardware-uscita
+WEZ-0-0-21032: YK1+ hardware-uscita
+WEZ-0-0-21033: YK1- hardware-uscita
+WEZ-0-0-21034: DKP hardware-uscita
+WEZ-0-0-21035: SLP hardware-uscita
+WEZ-0-0-21036: VA1 hardware-uscita
+WEZ-0-0-21037: VA2 hardware-uscita
+WEZ-0-0-21039: VA1-FE1 hardware-uscita
+WEZ-0-0-21040: VA2-FE1 hardware-uscita
+WEZ-0-0-21041: VA3-FE1 hardware-uscita
+WEZ-0-0-21043: VA1-FE2 hardware-uscita
+WEZ-0-0-21044: VA2-FE2 hardware-uscita
+WEZ-0-0-21045: VA3-FE2 hardware-uscita
+WEZ-0-0-21059: AVF temperatura effettiva mandata
+WEZ-0-0-21078: VA0-10V/PWM hardware-uscita
+WEZ-0-0-21079: VA0-10V/PWM-FE1 hardware-uscita
+WEZ-0-0-21100: AF2 - sensore esterno 2
+WEZ-0-0-21120: Info sensore 1
+WEZ-0-0-21121: Info sensore 2
+WEZ-0-0-21122: Info sensore 3
+WEZ-0-0-21123: Info sensore 4
+WEZ-0-0-21124: Info sensore 5
+WEZ-0-0-21125: Info 1 0-10V
+WEZ-0-0-21126: Info 2 0-10V
+WEZ-0-0-21127: Info 3 0-10V
+WEZ-0-0-22021: FAV temperatura nominale mandata
+WEZ-0-0-22055: AVP pompa
+WEZ-0-0-22056: YAV miscelatrice
+WEZ-0-0-23084: "Attivare test dei rel\xE8"
+WEZ-0-0-29042: Errore attivo 1_appearance_time
+WEZ-0-0-29043: Errore attivo 2_appearance_time
+WEZ-0-0-29044: Errore attivo 3_appearance_time
+WEZ-0-0-29045: Errore attivo 4_appearance_time
+WEZ-0-0-29046: Errore attivo 5_appearance_time
+WEZ-1-0-1: Ambiente-effettivo
+WEZ-1-0-1001: Ambiente-nominale
+WEZ-1-0-1002: Mandata-nominale
+WEZ-1-0-1020: Pompa
+WEZ-1-0-1021: Miscelatrice
+WEZ-1-0-2: Mandata-effettivo
+WEZ-1-0-2051: Stato regolazione circuito riscaldamento
+WEZ-1-0-3: Ritorno-effettivo
+WEZ-1-0-3050: Selezione modo funzionam.to riscaldam.to
+WEZ-1-0-3051: Temp ambiente normale riscaldamento
+WEZ-1-0-3053: Temp ambiente risparmio riscaldamento
+WEZ-1-0-7009: Temperatura nominale modo manuale
+WEZ-1-0-7036: Mandata nominale richiesta costante risc
+WEZ-1-0-7047: Mandata nominale richiesta costante raff
+WEZ-1-1-1: Ambiente-effettivo
+WEZ-1-1-1001: Ambiente-nominale
+WEZ-1-1-1002: Mandata-nominale
+WEZ-1-1-1020: Pompa
+WEZ-1-1-1021: Miscelatrice
+WEZ-1-1-2: Mandata-effettivo
+WEZ-1-1-2051: Stato regolazione circuito riscaldamento
+WEZ-1-1-3: Ritorno-effettivo
+WEZ-1-1-3050: Selezione modo funzionam.to riscaldam.to
+WEZ-1-1-3051: Temp ambiente normale riscaldamento
+WEZ-1-1-3053: Temp ambiente risparmio riscaldamento
+WEZ-1-1-7009: Temperatura nominale modo manuale
+WEZ-1-1-7036: Mandata nominale richiesta costante risc
+WEZ-1-1-7047: Mandata nominale richiesta costante raff
+WEZ-1-2-1: Ambiente-effettivo
+WEZ-1-2-1001: Ambiente-nominale
+WEZ-1-2-1002: Mandata-nominale
+WEZ-1-2-1020: Pompa
+WEZ-1-2-1021: Miscelatrice
+WEZ-1-2-2: Mandata-effettivo
+WEZ-1-2-2051: Stato regolazione circuito riscaldamento
+WEZ-1-2-3: Ritorno-effettivo
+WEZ-1-2-3050: Selezione modo funzionam.to riscaldam.to
+WEZ-1-2-3051: Temp ambiente normale riscaldamento
+WEZ-1-2-3053: Temp ambiente risparmio riscaldamento
+WEZ-1-2-7009: Temperatura nominale modo manuale
+WEZ-1-2-7036: Mandata nominale richiesta costante risc
+WEZ-1-2-7047: Mandata nominale richiesta costante raff
+WEZ-10-0-1007: Generatore di calore-nominale
+WEZ-10-0-1009: Valore nominale potenza gen. di calore
+WEZ-10-0-1022: Pompa generatore di calore
+WEZ-10-0-1100: Stadio bruciatore
+WEZ-10-0-2053: Stato regolazione gen. di calore
+WEZ-10-0-2080: Cicli di attivazione gen. di calore_high
+WEZ-10-0-2081: Ore funzionamento gen. di calore_high
+WEZ-10-0-21105: Portata in volume
+WEZ-10-0-22: Numero di giri pompa principale
+WEZ-10-0-29050: "Quantit\xE0 di calore riscaldamento_high"
+WEZ-10-0-29051: Potenza attuale riscaldamento_high
+WEZ-10-0-7: Generatore di calore-effettivo
+WEZ-10-0-8: Temperatura di ritorno gen. di calore
+WEZ-10-0-9020: Temperatura nominale modo manuale
+WEZ-10-0-9037: Temperatura-sovraumento gen di calore
+WEZ-10-0-9058: Modo manuale potenza valore nominale
+WEZ-10-0-9075: Selezione modo funz.to generatore calore
+WEZ-10-1-1007: Generatore di calore-nominale
+WEZ-10-1-10110: Test emissioni limitazione della potenza
+WEZ-10-1-1022: Pompa generatore di calore
+WEZ-10-1-20050: Pressione acqua
+WEZ-10-1-20051: FA-stato
+WEZ-10-1-20052: Modulazione
+WEZ-10-1-20053: Segnalazione di funzionamento
+WEZ-10-1-2053: Stato regolazione gen. di calore
+WEZ-10-1-2080: Cicli di attivazione gen. di calore_high
+WEZ-10-1-2081: Ore funzionamento gen. di calore_high
+WEZ-10-1-2082: Ore funzionamento gen. di calore >50%_high
+WEZ-10-1-2083: Cicli di attivazione gen. di calore >50%_high
+WEZ-10-1-21105: Portata in volume
+WEZ-10-1-22: Numero di giri pompa principale
+WEZ-10-1-23085: Attivare test emissioni
+WEZ-10-1-29050: "Quantit\xE0 di calore riscaldamento_high"
+WEZ-10-1-29051: Potenza attuale riscaldamento_high
+WEZ-10-1-29052: "Quantit\xE0 di freddo raffrescamento_high"
+WEZ-10-1-29053: Potenza attuale raffrescamento_high
+WEZ-10-1-7: Generatore di calore-effettivo
+WEZ-10-1-8: Temperatura di ritorno gen. di calore
+WEZ-10-1-9020: Temperatura nominale modo manuale
+WEZ-10-1-9037: Temperatura-sovraumento gen di calore
+WEZ-10-1-9058: Modo manuale potenza valore nominale
+WEZ-10-1-9075: Selezione modo funz.to generatore calore
+WEZ-2-0-1004: Acqua calda-nominale
+WEZ-2-0-1065: Acqua calda pompa di circolazione
+WEZ-2-0-1066: SLP pompa di carica acqua calda
+WEZ-2-0-118: Temperatura circuito di circolazione
+WEZ-2-0-2052: Stato regolazione acqua calda
+WEZ-2-0-4: Acqua calda-effettivo SF
+WEZ-2-0-5050: Selezione modo funzionamento acqua calda
+WEZ-2-0-5051: Temperatura acqua calda normale
+WEZ-2-0-5086: Temperatura di risparmio acqua calda
+WEZ-3-0-1096: Temp impianto nominale risc attuale
+WEZ-3-0-1097: Temp impianto nominale AC attuale
+WEZ-3-0-2040: Potenza impianto nominale risc attuale
+WEZ-3-0-2041: Potenza impianto nominale AC attuale
+WEZ-3-0-2042: Potenza impianto nominale raff attuale
+WEZ-3-0-21089: Temperatura di mandata impianto raff
+WEZ-3-0-22024: Stato valvola raffrescamento attivo UKA
+WEZ-3-0-22098: Temp impianto nominale raff attuale
+WEZ-3-0-22121: Stato valvola raffrescamento gen. UHKA
+WEZ-3-0-96: Temperatura di mandata impianto
+WEZ-3-0-97: emperatura di mandata impianto AC
+WEZ-4-0-1009: Valore nominale potenza gen. di calore
+WEZ-4-0-2043: 0 - 100% richiesta attuale a gen calore
+WEZ-4-0-2119: WEZ guida
+WEZ-4-0-6020: Cambio di sequenza (tempo)
+WEZ-4-1-1009: Valore nominale potenza gen. di calore
+WEZ-4-1-2043: 0 - 100% richiesta attuale a gen calore
+WEZ-4-2-1009: Valore nominale potenza gen. di calore
+WEZ-4-2-2043: 0 - 100% richiesta attuale a gen calore
+WEZ-4-3-1009: Valore nominale potenza gen. di calore
+WEZ-4-3-2043: 0 - 100% richiesta attuale a gen calore
+WEZ-4-4-1009: Valore nominale potenza gen. di calore
+WEZ-4-4-2043: 0 - 100% richiesta attuale a gen calore
+WEZ-4-5-1009: Valore nominale potenza gen. di calore
+WEZ-4-5-2043: 0 - 100% richiesta attuale a gen calore
+WEZ-4-6-1009: Valore nominale potenza gen. di calore
+WEZ-4-6-2043: 0 - 100% richiesta attuale a gen calore
+WEZ-4-7-1009: Valore nominale potenza gen. di calore
+WEZ-4-7-2043: 0 - 100% richiesta attuale a gen calore
+WEZ-60-254-0: Valore nominale per modo circuito risc
+WEZ-60-254-1: Valore nominale per funzion.to accumulo
+WEZ-60-254-12: Valore nominale per modo raffrescamento
+WEZ-60-254-17: WEZ-temperatura
+WEZ-60-254-18: Temperatura fumi RS485
+WEZ-60-254-19: Temperatura dello cambio attivo / passivo
+WEZ-60-254-21: Fiamma bruciatore
+WEZ-60-254-22: Valore nominale riscaldamento
+WEZ-60-254-23: Valore nominale accumulo
+WEZ-60-254-24: Valore nominale WEZ
+WEZ-60-254-25: Limitazione max esterna riscaldamento
+WEZ-60-254-26: Accumulo limitazione massima esterna
+WEZ-60-254-27: "Codice errore da unit\xE0 automatica"
+WEZ-60-254-29: Temperatura di ritorno
+WEZ-60-254-30: Potenza WEZ
+WEZ-60-254-31: Potenza assoluta
+WEZ-60-254-32: Pressione dell'acqua in bar
+WEZ-60-254-33: WEZ-stato
+WEZ-60-254-34: Stato di funzionamento
+WEZ-60-254-35: Bruciatore ID-indice
+WEZ-60-254-36: Ampliamenti delle funzioni
+WEZ-60-254-37: Informazioni di stato
+WEZ-60-254-38: Valore nominale raffrescamento
+WEZ-60-254-8: Limitazione della potenza
+WEZ-60-254-9: Misura delle emissioni

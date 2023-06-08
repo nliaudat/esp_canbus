@@ -1,0 +1,1071 @@
+FW-0-0-0: "AF1 - Aussenf\xFChler 1"
+FW-0-0-106: Summen Solltemperatur
+FW-0-0-110: Ventilstellung Station
+FW-0-0-128: VE 1
+FW-0-0-129: VE 2
+FW-0-0-132: Betriebsstunden_high
+FW-0-0-200: Info AF
+FW-0-0-201: Info RLF
+FW-0-0-202: Info VF
+FW-0-0-203: Info VF1
+FW-0-0-204: Info SF1
+FW-0-0-205: Info SF2
+FW-0-0-206: Info VE4
+FW-0-0-207: Info VE5
+FW-0-0-208: Info VE6
+FW-0-0-209: Info VE7
+FW-0-0-210: Info VE8
+FW-0-0-21031: DKP HW-Ausgang
+FW-0-0-21032: YFW+ HW-Ausgang
+FW-0-0-21033: YFW- HW-Ausgang
+FW-0-0-21034: MK1 HW-Ausgang
+FW-0-0-21035: YK1+ HW-Ausgang
+FW-0-0-21036: YK1- HW-Ausgang
+FW-0-0-21037: SLP1 HW-Ausgang
+FW-0-0-21038: SLP2 HW-Ausgang
+FW-0-0-21039: VA2 HW-Ausgang
+FW-0-0-21040: VA1 0-10V/0-20mA HW-Ausgang
+FW-0-0-21041: VA3 0-10V/PWM HW-Ausgang
+FW-0-0-21042: VA4 0-10V/PWM HW-Ausgang
+FW-0-0-21043: VA5 0-10V/PWM HW-Ausgang
+FW-0-0-21044: Relaistest TTE-FE aktivieren
+FW-0-0-21045: FE-VA1 HW-Ausgang
+FW-0-0-21046: FE-VA2 HW-Ausgang
+FW-0-0-21047: FE-VA3 HW-Ausgang
+FW-0-0-21048: FE-VA10V/PWM HW-Ausgang
+FW-0-0-21059: FAV Vorlauf-Ist Temp.
+FW-0-0-21092: "Pufferf\xFCllstand"
+FW-0-0-21093: Druck
+FW-0-0-211: Info VE9
+FW-0-0-21100: "AF2 - Aussenf\xFChler 2"
+FW-0-0-212: Info VE1-FE1
+FW-0-0-213: Info VE2-FE1
+FW-0-0-214: Info VE3-FE1
+FW-0-0-215: Info VE1-FE2
+FW-0-0-216: Info VE2-FE2
+FW-0-0-217: Info VE3-FE2
+FW-0-0-218: Info VE1-FE3
+FW-0-0-219: Info VE2-FE3
+FW-0-0-220: Info VE3-FE3
+FW-0-0-22021: FAV Vorlauf-Soll Temp.
+FW-0-0-22055: AVP Pumpe
+FW-0-0-22056: YAV Pumpe
+FW-0-0-221: Info VE1-FE4
+FW-0-0-222: Info VE2-FE4
+FW-0-0-223: Info VE3-FE4
+FW-0-0-224: Info VE1-FE5
+FW-0-0-225: Info VE2-FE5
+FW-0-0-226: Info VE3-FE5
+FW-0-0-227: Info VE10/IMP
+FW-0-0-228: Info VE3/IMP-FE1
+FW-0-0-229: Info VE3/IMP-FE2
+FW-0-0-230: Info VE3/IMP-FE3
+FW-0-0-23084: Relaistest TTE-FW aktivieren
+FW-0-0-231: Info VE3/IMP-FE4
+FW-0-0-232: Info VE3/IMP-FE5
+FW-0-0-233: Info VE10V-FE1
+FW-0-0-234: Info VE10V-FE2
+FW-0-0-235: Info VE10V-FE3
+FW-0-0-236: Info VE10V-FE4
+FW-0-0-237: Info VE10V-FE5
+FW-0-0-238: Info VE3
+FW-0-0-29042: Aktiver Fehler 1_appearance_time
+FW-0-0-29043: Aktiver Fehler 2_appearance_time
+FW-0-0-29044: Aktiver Fehler 3_appearance_time
+FW-0-0-29045: Aktiver Fehler 4_appearance_time
+FW-0-0-29046: Aktiver Fehler 5_appearance_time
+FW-0-0-98: RL-Begrenzung aktiv
+FW-0-0-99: Leistungsbegrenzung aktiv
+FW-1-0-1: Raum-Ist
+FW-1-0-1001: Raum-Soll
+FW-1-0-1002: Vorlauf-Soll
+FW-1-0-1020: Pumpe
+FW-1-0-1021: Mischer
+FW-1-0-2: Vorlauf-Ist
+FW-1-0-2051: Status Heizkreisregelung
+FW-1-0-3050: Betriebswahl Heizung
+FW-1-0-3051: Normal-Raumtemperatur Heizbetrieb
+FW-1-0-3053: Spar-Raumtemperatur Heizbetrieb
+FW-1-1-1: Raum-Ist
+FW-1-1-1001: Raum-Soll
+FW-1-1-1002: Vorlauf-Soll
+FW-1-1-1020: Pumpe
+FW-1-1-1021: Mischer
+FW-1-1-2: Vorlauf-Ist
+FW-1-1-2051: Status Heizkreisregelung
+FW-1-1-3050: Betriebswahl Heizung
+FW-1-1-3051: Normal-Raumtemperatur Heizbetrieb
+FW-1-1-3053: Spar-Raumtemperatur Heizbetrieb
+FW-1-2-1: Raum-Ist
+FW-1-2-1001: Raum-Soll
+FW-1-2-1002: Vorlauf-Soll
+FW-1-2-1020: Pumpe
+FW-1-2-1021: Mischer
+FW-1-2-2: Vorlauf-Ist
+FW-1-2-2051: Status Heizkreisregelung
+FW-1-2-3050: Betriebswahl Heizung
+FW-1-2-3051: Normal-Raumtemperatur Heizbetrieb
+FW-1-2-3053: Spar-Raumtemperatur Heizbetrieb
+FW-1-3-1: Raum-Ist
+FW-1-3-1001: Raum-Soll
+FW-1-3-1002: Vorlauf-Soll
+FW-1-3-1020: Pumpe
+FW-1-3-1021: Mischer
+FW-1-3-2: Vorlauf-Ist
+FW-1-3-2051: Status Heizkreisregelung
+FW-1-3-3050: Betriebswahl Heizung
+FW-1-3-3051: Normal-Raumtemperatur Heizbetrieb
+FW-1-3-3053: Spar-Raumtemperatur Heizbetrieb
+FW-1-4-1: Raum-Ist
+FW-1-4-1001: Raum-Soll
+FW-1-4-1002: Vorlauf-Soll
+FW-1-4-1020: Pumpe
+FW-1-4-1021: Mischer
+FW-1-4-2: Vorlauf-Ist
+FW-1-4-2051: Status Heizkreisregelung
+FW-1-4-3050: Betriebswahl Heizung
+FW-1-4-3051: Normal-Raumtemperatur Heizbetrieb
+FW-1-4-3053: Spar-Raumtemperatur Heizbetrieb
+FW-2-0-1004: Warmwasser-Soll
+FW-2-0-1065: Warmwasser Zirkulationspumpe
+FW-2-0-1066: SLP1 Warmwasser Ladepumpe
+FW-2-0-1067: SLP2 Warmwasser Ladepumpe
+FW-2-0-118: Zirkulationskreistemperatur
+FW-2-0-2052: Status Warmwasserregelung
+FW-2-0-4: Warmwasser-Ist SF
+FW-2-0-5050: Betriebswahl Warmwasser
+FW-2-0-5051: Normal-Warmwassertemperatur
+FW-2-0-5086: Spar-Warmwassertemperatur
+FW-2-1-1004: Warmwasser-Soll
+FW-2-1-1065: Warmwasser Zirkulationspumpe
+FW-2-1-1066: SLP1 Warmwasser Ladepumpe
+FW-2-1-1067: SLP2 Warmwasser Ladepumpe
+FW-2-1-118: Zirkulationskreistemperatur
+FW-2-1-2052: Status Warmwasserregelung
+FW-2-1-4: Warmwasser-Ist SF
+FW-2-1-5050: Betriebswahl Warmwasser
+FW-2-1-5051: Normal-Warmwassertemperatur
+FW-2-1-5086: Spar-Warmwassertemperatur
+FW-2-2-1004: Warmwasser-Soll
+FW-2-2-1065: Warmwasser Zirkulationspumpe
+FW-2-2-1066: SLP1 Warmwasser Ladepumpe
+FW-2-2-1067: SLP2 Warmwasser Ladepumpe
+FW-2-2-118: Zirkulationskreistemperatur
+FW-2-2-2052: Status Warmwasserregelung
+FW-2-2-4: Warmwasser-Ist SF
+FW-2-2-5050: Betriebswahl Warmwasser
+FW-2-2-5051: Normal-Warmwassertemperatur
+FW-2-2-5086: Spar-Warmwassertemperatur
+FW-2-3-1004: Warmwasser-Soll
+FW-2-3-1065: Warmwasser Zirkulationspumpe
+FW-2-3-1066: SLP1 Warmwasser Ladepumpe
+FW-2-3-1067: SLP2 Warmwasser Ladepumpe
+FW-2-3-118: Zirkulationskreistemperatur
+FW-2-3-2052: Status Warmwasserregelung
+FW-2-3-4: Warmwasser-Ist SF
+FW-2-3-5050: Betriebswahl Warmwasser
+FW-2-3-5051: Normal-Warmwassertemperatur
+FW-2-3-5086: Spar-Warmwassertemperatur
+FW-2-4-1004: Warmwasser-Soll
+FW-2-4-1065: Warmwasser Zirkulationspumpe
+FW-2-4-1066: SLP1 Warmwasser Ladepumpe
+FW-2-4-1067: SLP2 Warmwasser Ladepumpe
+FW-2-4-118: Zirkulationskreistemperatur
+FW-2-4-2052: Status Warmwasserregelung
+FW-2-4-4: Warmwasser-Ist SF
+FW-2-4-5050: Betriebswahl Warmwasser
+FW-2-4-5051: Normal-Warmwassertemperatur
+FW-2-4-5086: Spar-Warmwassertemperatur
+FW-20-1-0: aktuelle Energie_high
+FW-20-1-1: aktuelle Leistung_high
+FW-20-1-11: Strom_high
+FW-20-1-12: Spannung
+FW-20-1-13: Cosphi
+FW-20-1-2: aktueller Durchfluss_high
+FW-20-1-203: aktuelle Wirkleistung total high2
+FW-20-1-250: Wirk Energie Import 1_high2
+FW-20-1-252: Wirk Energie Export 1_high2
+FW-20-1-3: aktuelles Volumen_high
+FW-20-1-4: 'aktuelle Vorlauftemperatur '
+FW-20-1-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-1-50: "aktuelle Energie K\xE4lte_high"
+FW-20-1-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-1-6: aktuelle Differenztemperatur
+FW-20-1-7: Seriennummer_high
+FW-20-1-8: Fehlermeldung/Mbus Status Byte
+FW-20-10-0: aktuelle Energie_high
+FW-20-10-1: aktuelle Leistung_high
+FW-20-10-11: Strom_high
+FW-20-10-12: Spannung
+FW-20-10-13: Cosphi
+FW-20-10-2: aktueller Durchfluss_high
+FW-20-10-203: aktuelle Wirkleistung total high2
+FW-20-10-250: Wirk Energie Import 1_high2
+FW-20-10-252: Wirk Energie Export 1_high2
+FW-20-10-3: aktuelles Volumen_high
+FW-20-10-4: 'aktuelle Vorlauftemperatur '
+FW-20-10-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-10-50: "aktuelle Energie K\xE4lte_high"
+FW-20-10-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-10-6: aktuelle Differenztemperatur
+FW-20-10-7: Seriennummer_high
+FW-20-10-8: Fehlermeldung/Mbus Status Byte
+FW-20-11-0: aktuelle Energie_high
+FW-20-11-1: aktuelle Leistung_high
+FW-20-11-11: Strom_high
+FW-20-11-12: Spannung
+FW-20-11-13: Cosphi
+FW-20-11-2: aktueller Durchfluss_high
+FW-20-11-203: aktuelle Wirkleistung total high2
+FW-20-11-250: Wirk Energie Import 1_high2
+FW-20-11-252: Wirk Energie Export 1_high2
+FW-20-11-3: aktuelles Volumen_high
+FW-20-11-4: 'aktuelle Vorlauftemperatur '
+FW-20-11-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-11-50: "aktuelle Energie K\xE4lte_high"
+FW-20-11-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-11-6: aktuelle Differenztemperatur
+FW-20-11-7: Seriennummer_high
+FW-20-11-8: Fehlermeldung/Mbus Status Byte
+FW-20-12-0: aktuelle Energie_high
+FW-20-12-1: aktuelle Leistung_high
+FW-20-12-11: Strom_high
+FW-20-12-12: Spannung
+FW-20-12-13: Cosphi
+FW-20-12-2: aktueller Durchfluss_high
+FW-20-12-203: aktuelle Wirkleistung total high2
+FW-20-12-250: Wirk Energie Import 1_high2
+FW-20-12-252: Wirk Energie Export 1_high2
+FW-20-12-3: aktuelles Volumen_high
+FW-20-12-4: 'aktuelle Vorlauftemperatur '
+FW-20-12-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-12-50: "aktuelle Energie K\xE4lte_high"
+FW-20-12-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-12-6: aktuelle Differenztemperatur
+FW-20-12-7: Seriennummer_high
+FW-20-12-8: Fehlermeldung/Mbus Status Byte
+FW-20-13-0: aktuelle Energie_high
+FW-20-13-1: aktuelle Leistung_high
+FW-20-13-11: Strom_high
+FW-20-13-12: Spannung
+FW-20-13-13: Cosphi
+FW-20-13-2: aktueller Durchfluss_high
+FW-20-13-203: aktuelle Wirkleistung total high2
+FW-20-13-250: Wirk Energie Import 1_high2
+FW-20-13-252: Wirk Energie Export 1_high2
+FW-20-13-3: aktuelles Volumen_high
+FW-20-13-4: 'aktuelle Vorlauftemperatur '
+FW-20-13-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-13-50: "aktuelle Energie K\xE4lte_high"
+FW-20-13-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-13-6: aktuelle Differenztemperatur
+FW-20-13-7: Seriennummer_high
+FW-20-13-8: Fehlermeldung/Mbus Status Byte
+FW-20-14-0: aktuelle Energie_high
+FW-20-14-1: aktuelle Leistung_high
+FW-20-14-11: Strom_high
+FW-20-14-12: Spannung
+FW-20-14-13: Cosphi
+FW-20-14-2: aktueller Durchfluss_high
+FW-20-14-203: aktuelle Wirkleistung total high2
+FW-20-14-250: Wirk Energie Import 1_high2
+FW-20-14-252: Wirk Energie Export 1_high2
+FW-20-14-3: aktuelles Volumen_high
+FW-20-14-4: 'aktuelle Vorlauftemperatur '
+FW-20-14-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-14-50: "aktuelle Energie K\xE4lte_high"
+FW-20-14-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-14-6: aktuelle Differenztemperatur
+FW-20-14-7: Seriennummer_high
+FW-20-14-8: Fehlermeldung/Mbus Status Byte
+FW-20-15-0: aktuelle Energie_high
+FW-20-15-1: aktuelle Leistung_high
+FW-20-15-11: Strom_high
+FW-20-15-12: Spannung
+FW-20-15-13: Cosphi
+FW-20-15-2: aktueller Durchfluss_high
+FW-20-15-203: aktuelle Wirkleistung total high2
+FW-20-15-250: Wirk Energie Import 1_high2
+FW-20-15-252: Wirk Energie Export 1_high2
+FW-20-15-3: aktuelles Volumen_high
+FW-20-15-4: 'aktuelle Vorlauftemperatur '
+FW-20-15-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-15-50: "aktuelle Energie K\xE4lte_high"
+FW-20-15-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-15-6: aktuelle Differenztemperatur
+FW-20-15-7: Seriennummer_high
+FW-20-15-8: Fehlermeldung/Mbus Status Byte
+FW-20-16-0: aktuelle Energie_high
+FW-20-16-1: aktuelle Leistung_high
+FW-20-16-11: Strom_high
+FW-20-16-12: Spannung
+FW-20-16-13: Cosphi
+FW-20-16-2: aktueller Durchfluss_high
+FW-20-16-203: aktuelle Wirkleistung total high2
+FW-20-16-250: Wirk Energie Import 1_high2
+FW-20-16-252: Wirk Energie Export 1_high2
+FW-20-16-3: aktuelles Volumen_high
+FW-20-16-4: 'aktuelle Vorlauftemperatur '
+FW-20-16-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-16-50: "aktuelle Energie K\xE4lte_high"
+FW-20-16-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-16-6: aktuelle Differenztemperatur
+FW-20-16-7: Seriennummer_high
+FW-20-16-8: Fehlermeldung/Mbus Status Byte
+FW-20-2-0: aktuelle Energie_high
+FW-20-2-1: aktuelle Leistung_high
+FW-20-2-11: Strom_high
+FW-20-2-12: Spannung
+FW-20-2-13: Cosphi
+FW-20-2-2: aktueller Durchfluss_high
+FW-20-2-203: aktuelle Wirkleistung total high2
+FW-20-2-250: Wirk Energie Import 1_high2
+FW-20-2-252: Wirk Energie Export 1_high2
+FW-20-2-3: aktuelles Volumen_high
+FW-20-2-4: 'aktuelle Vorlauftemperatur '
+FW-20-2-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-2-50: "aktuelle Energie K\xE4lte_high"
+FW-20-2-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-2-6: aktuelle Differenztemperatur
+FW-20-2-7: Seriennummer_high
+FW-20-2-8: Fehlermeldung/Mbus Status Byte
+FW-20-3-0: aktuelle Energie_high
+FW-20-3-1: aktuelle Leistung_high
+FW-20-3-11: Strom_high
+FW-20-3-12: Spannung
+FW-20-3-13: Cosphi
+FW-20-3-2: aktueller Durchfluss_high
+FW-20-3-203: aktuelle Wirkleistung total high2
+FW-20-3-250: Wirk Energie Import 1_high2
+FW-20-3-252: Wirk Energie Export 1_high2
+FW-20-3-3: aktuelles Volumen_high
+FW-20-3-4: 'aktuelle Vorlauftemperatur '
+FW-20-3-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-3-50: "aktuelle Energie K\xE4lte_high"
+FW-20-3-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-3-6: aktuelle Differenztemperatur
+FW-20-3-7: Seriennummer_high
+FW-20-3-8: Fehlermeldung/Mbus Status Byte
+FW-20-4-0: aktuelle Energie_high
+FW-20-4-1: aktuelle Leistung_high
+FW-20-4-11: Strom_high
+FW-20-4-12: Spannung
+FW-20-4-13: Cosphi
+FW-20-4-2: aktueller Durchfluss_high
+FW-20-4-203: aktuelle Wirkleistung total high2
+FW-20-4-250: Wirk Energie Import 1_high2
+FW-20-4-252: Wirk Energie Export 1_high2
+FW-20-4-3: aktuelles Volumen_high
+FW-20-4-4: 'aktuelle Vorlauftemperatur '
+FW-20-4-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-4-50: "aktuelle Energie K\xE4lte_high"
+FW-20-4-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-4-6: aktuelle Differenztemperatur
+FW-20-4-7: Seriennummer_high
+FW-20-4-8: Fehlermeldung/Mbus Status Byte
+FW-20-5-0: aktuelle Energie_high
+FW-20-5-1: aktuelle Leistung_high
+FW-20-5-11: Strom_high
+FW-20-5-12: Spannung
+FW-20-5-13: Cosphi
+FW-20-5-2: aktueller Durchfluss_high
+FW-20-5-203: aktuelle Wirkleistung total high2
+FW-20-5-250: Wirk Energie Import 1_high2
+FW-20-5-252: Wirk Energie Export 1_high2
+FW-20-5-3: aktuelles Volumen_high
+FW-20-5-4: 'aktuelle Vorlauftemperatur '
+FW-20-5-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-5-50: "aktuelle Energie K\xE4lte_high"
+FW-20-5-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-5-6: aktuelle Differenztemperatur
+FW-20-5-7: Seriennummer_high
+FW-20-5-8: Fehlermeldung/Mbus Status Byte
+FW-20-6-0: aktuelle Energie_high
+FW-20-6-1: aktuelle Leistung_high
+FW-20-6-11: Strom_high
+FW-20-6-12: Spannung
+FW-20-6-13: Cosphi
+FW-20-6-2: aktueller Durchfluss_high
+FW-20-6-203: aktuelle Wirkleistung total high2
+FW-20-6-250: Wirk Energie Import 1_high2
+FW-20-6-252: Wirk Energie Export 1_high2
+FW-20-6-3: aktuelles Volumen_high
+FW-20-6-4: 'aktuelle Vorlauftemperatur '
+FW-20-6-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-6-50: "aktuelle Energie K\xE4lte_high"
+FW-20-6-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-6-6: aktuelle Differenztemperatur
+FW-20-6-7: Seriennummer_high
+FW-20-6-8: Fehlermeldung/Mbus Status Byte
+FW-20-7-0: aktuelle Energie_high
+FW-20-7-1: aktuelle Leistung_high
+FW-20-7-11: Strom_high
+FW-20-7-12: Spannung
+FW-20-7-13: Cosphi
+FW-20-7-2: aktueller Durchfluss_high
+FW-20-7-203: aktuelle Wirkleistung total high2
+FW-20-7-250: Wirk Energie Import 1_high2
+FW-20-7-252: Wirk Energie Export 1_high2
+FW-20-7-3: aktuelles Volumen_high
+FW-20-7-4: 'aktuelle Vorlauftemperatur '
+FW-20-7-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-7-50: "aktuelle Energie K\xE4lte_high"
+FW-20-7-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-7-6: aktuelle Differenztemperatur
+FW-20-7-7: Seriennummer_high
+FW-20-7-8: Fehlermeldung/Mbus Status Byte
+FW-20-8-0: aktuelle Energie_high
+FW-20-8-1: aktuelle Leistung_high
+FW-20-8-11: Strom_high
+FW-20-8-12: Spannung
+FW-20-8-13: Cosphi
+FW-20-8-2: aktueller Durchfluss_high
+FW-20-8-203: aktuelle Wirkleistung total high2
+FW-20-8-250: Wirk Energie Import 1_high2
+FW-20-8-252: Wirk Energie Export 1_high2
+FW-20-8-3: aktuelles Volumen_high
+FW-20-8-4: 'aktuelle Vorlauftemperatur '
+FW-20-8-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-8-50: "aktuelle Energie K\xE4lte_high"
+FW-20-8-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-8-6: aktuelle Differenztemperatur
+FW-20-8-7: Seriennummer_high
+FW-20-8-8: Fehlermeldung/Mbus Status Byte
+FW-20-9-0: aktuelle Energie_high
+FW-20-9-1: aktuelle Leistung_high
+FW-20-9-11: Strom_high
+FW-20-9-12: Spannung
+FW-20-9-13: Cosphi
+FW-20-9-2: aktueller Durchfluss_high
+FW-20-9-203: aktuelle Wirkleistung total high2
+FW-20-9-250: Wirk Energie Import 1_high2
+FW-20-9-252: Wirk Energie Export 1_high2
+FW-20-9-3: aktuelles Volumen_high
+FW-20-9-4: 'aktuelle Vorlauftemperatur '
+FW-20-9-5: "aktuelle R\xFCcklauftemperatur "
+FW-20-9-50: "aktuelle Energie K\xE4lte_high"
+FW-20-9-51: "aktuelle Leistung K\xE4lte_high"
+FW-20-9-6: aktuelle Differenztemperatur
+FW-20-9-7: Seriennummer_high
+FW-20-9-8: Fehlermeldung/Mbus Status Byte
+GLT-0-0-21036: VA1 HW-Ausgang
+GLT-0-0-21037: VA2 HW-Ausgang
+GLT-0-0-21038: VA3 HW-Ausgang
+GLT-0-0-21039: VA1-FE1 HW-Ausgang
+GLT-0-0-21040: VA2-FE1 HW-Ausgang
+GLT-0-0-21041: VA3-FE1 HW-Ausgang
+GLT-0-0-21043: VA1-FE2 HW-Ausgang
+GLT-0-0-21044: VA2-FE2 HW-Ausgang
+GLT-0-0-21045: VA3-FE2 HW-Ausgang
+GLT-0-0-21106: Anforderung Temperatur Heizen
+GLT-0-0-21107: "Anforderung Temperatur K\xFChlen"
+GLT-0-0-21108: Anforderung Temperatur Warmwasser
+GLT-0-0-21109: Leistungs Sollwert Heizen
+GLT-0-0-21110: "Leistungs Sollwert K\xFChlen "
+GLT-0-0-21111: Leistungs Sollwert Warmwasser
+GLT-0-0-21120: Info 1
+GLT-0-0-21121: Info 2
+GLT-0-0-21122: Info 3
+GLT-0-0-21123: Info 4
+GLT-0-0-21124: Info 5
+GLT-0-0-21125: Info 1 0-10V
+GLT-0-0-21126: Info 2 0-10V
+GLT-0-0-21127: Info 3 0-10V
+GLT-0-0-23084: Relaistest aktivieren
+GLT-0-0-29042: Aktiver Fehler 1_appearance_time
+GLT-0-0-29043: Aktiver Fehler 2_appearance_time
+GLT-0-0-29044: Aktiver Fehler 3_appearance_time
+GLT-0-0-29045: Aktiver Fehler 4_appearance_time
+GLT-0-0-29046: Aktiver Fehler 5_appearance_time
+GW-0-0-21101: "AFG1 System-Aussenf\xFChler 1"
+GW-0-0-21102: "AFG2 System-Aussenf\xFChler 2"
+GW-0-1-20: Unixzeit_high
+GW-0-1-45: Erwartete Globalstrahlung (W/m2)
+HKW-0-0-0: "AF1 - Aussenf\xFChler 1"
+HKW-0-0-21036: VA1 HW-Ausgang
+HKW-0-0-21037: VA2 HW-Ausgang
+HKW-0-0-21038: VA3 HW-Ausgang
+HKW-0-0-21039: VA1-FE1 HW-Ausgang
+HKW-0-0-21040: VA2-FE1 HW-Ausgang
+HKW-0-0-21041: VA3-FE1 HW-Ausgang
+HKW-0-0-21043: VA1-FE2 HW-Ausgang
+HKW-0-0-21044: VA2-FE2 HW-Ausgang
+HKW-0-0-21045: VA3-FE2 HW-Ausgang
+HKW-0-0-21059: FAV Vorlauf-Ist Temp.
+HKW-0-0-21078: VA0-10V/PWM HW-Ausgang
+HKW-0-0-21079: VA0-10V/PWM-FE1 HW-Ausgang
+HKW-0-0-21080: VA0-10V/PWM-FE2 HW-Ausgang
+HKW-0-0-21100: "AF2 - Aussenf\xFChler 2"
+HKW-0-0-21120: Info 1
+HKW-0-0-21121: Info 2
+HKW-0-0-21122: Info 3
+HKW-0-0-21123: Info 4
+HKW-0-0-21124: Info 5
+HKW-0-0-21125: Info 1 0-10V
+HKW-0-0-21126: Info 2 0-10V
+HKW-0-0-21127: Info 3 0-10V
+HKW-0-0-22021: FAV Vorlauf-Solltemp.
+HKW-0-0-22055: AVP Pumpe
+HKW-0-0-22056: YAV Mischer
+HKW-0-0-23084: Relaistest aktivieren
+HKW-0-0-29042: Aktiver Fehler 1_appearance_time
+HKW-0-0-29043: Aktiver Fehler 2_appearance_time
+HKW-0-0-29044: Aktiver Fehler 3_appearance_time
+HKW-0-0-29045: Aktiver Fehler 4_appearance_time
+HKW-0-0-29046: Aktiver Fehler 5_appearance_time
+HKW-1-0-1: Raum-Ist
+HKW-1-0-1001: Raum-Soll
+HKW-1-0-1002: Vorlauf-Soll
+HKW-1-0-1020: Pumpe
+HKW-1-0-1021: Mischer
+HKW-1-0-2: Vorlauf-Ist
+HKW-1-0-2051: Status Heizkreisregelung
+HKW-1-0-3: "R\xFCcklauf-Ist"
+HKW-1-0-3050: Betriebswahl Heizung
+HKW-1-0-3051: Normal-Raumtemperatur Heizbetrieb
+HKW-1-0-3053: Spar-Raumtemperatur Heizbetrieb
+HKW-1-0-7009: Solltemperatur Handbetrieb
+HKW-1-0-7036: Vorlauf Soll Konstantanf. Heizen
+HKW-1-0-7047: "Vorlauf Soll Konstantanf. K\xFChlen"
+HKW-1-1-1: Raum-Ist
+HKW-1-1-1001: Raum-Soll
+HKW-1-1-1002: Vorlauf-Soll
+HKW-1-1-1020: Pumpe
+HKW-1-1-1021: Mischer
+HKW-1-1-2: Vorlauf-Ist
+HKW-1-1-2051: Status Heizkreisregelung
+HKW-1-1-3: "R\xFCcklauf-Ist"
+HKW-1-1-3050: Betriebswahl Heizung
+HKW-1-1-3051: Normal-Raumtemperatur Heizbetrieb
+HKW-1-1-3053: Spar-Raumtemperatur Heizbetrieb
+HKW-1-1-7009: Solltemperatur Handbetrieb
+HKW-1-1-7036: Vorlauf Soll Konstantanf. Heizen
+HKW-1-1-7047: "Vorlauf Soll Konstantanf. K\xFChlen"
+HKW-1-2-1: Raum-Ist
+HKW-1-2-1001: Raum-Soll
+HKW-1-2-1002: Vorlauf-Soll
+HKW-1-2-1020: Pumpe
+HKW-1-2-1021: Mischer
+HKW-1-2-2: Vorlauf-Ist
+HKW-1-2-2051: Status Heizkreisregelung
+HKW-1-2-3: "R\xFCcklauf-Ist"
+HKW-1-2-3050: Betriebswahl Heizung
+HKW-1-2-3051: Normal-Raumtemperatur Heizbetrieb
+HKW-1-2-3053: Spar-Raumtemperatur Heizbetrieb
+HKW-1-2-7009: Solltemperatur Handbetrieb
+HKW-1-2-7036: Vorlauf Soll Konstantanf. Heizen
+HKW-1-2-7047: "Vorlauf Soll Konstantanf. K\xFChlen"
+HKW-2-0-1004: Warmwasser-Soll
+HKW-2-0-1065: Warmwasser-Zirkulationspumpe
+HKW-2-0-1066: SLP Warmwasser-Ladepumpe
+HKW-2-0-118: Zirkulationskreistemperatur
+HKW-2-0-2052: Status Warmwasserregelung
+HKW-2-0-4: Warmwasser-Ist SF
+HKW-2-0-5050: Betriebswahl Warmwasser
+HKW-2-0-5051: Normal-Warmwassertemperatur
+HKW-2-0-5086: Spar-Warmwassertemperatur
+HV-0-0-29042: Aktiver Fehler 1_appearance_time
+HV-0-0-29043: Aktiver Fehler 2_appearance_time
+HV-0-0-29044: Aktiver Fehler 3_appearance_time
+HV-0-0-29045: Aktiver Fehler 4_appearance_time
+HV-0-0-29046: Aktiver Fehler 5_appearance_time
+HV-50-0-0: Temperatur Aussenluft
+HV-50-0-37600: Feuchtigkeit Abluft
+HV-50-0-37602: Temperatur Abluft
+HV-50-0-37608: VOC Abluft
+HV-50-0-37611: VOC Aussenluft
+HV-50-0-38600: Ventilator Fortluft soll
+HV-50-0-38606: "L\xFCftungsmodulation"
+HV-50-0-39600: "Luftqualit\xE4t Regulierung"
+HV-50-0-39652: "Status L\xFCftungsregelung"
+HV-50-0-40650: "Betriebswahl L\xFCftung"
+HV-50-0-40651: "Normal-L\xFCftungsmodulation "
+HV-50-0-40686: "Spar-L\xFCftungsmodulation "
+HV-50-0-40687: Feuchte Sollwert
+MWA-0-0-29042: Aktiver Fehler 1_appearance_time
+MWA-0-0-29043: Aktiver Fehler 2_appearance_time
+MWA-0-0-29044: Aktiver Fehler 3_appearance_time
+MWA-0-0-29045: Aktiver Fehler 4_appearance_time
+MWA-0-0-29046: Aktiver Fehler 5_appearance_time
+MWA-20-1-0: aktuelle Energie_high
+MWA-20-1-1: aktuelle Leistung_high
+MWA-20-1-11: Strom_high
+MWA-20-1-12: Spannung
+MWA-20-1-13: Cosphi
+MWA-20-1-2: aktueller Durchfluss_high
+MWA-20-1-203: aktuelle Wirkleistung total high2
+MWA-20-1-250: Wirk Energie Import 1_high2
+MWA-20-1-252: Wirk Energie Export 1_high2
+MWA-20-1-3: aktuelles Volumen_high
+MWA-20-1-4: aktuelle Vorlauftemperatur
+MWA-20-1-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-1-6: aktuelle Differenztemperatur
+MWA-20-1-7: Seriennummer_high
+MWA-20-10-0: aktuelle Energie_high
+MWA-20-10-1: aktuelle Leistung_high
+MWA-20-10-11: Strom_high
+MWA-20-10-12: Spannung
+MWA-20-10-13: Cosphi
+MWA-20-10-2: aktueller Durchfluss_high
+MWA-20-10-203: aktuelle Wirkleistung total high2
+MWA-20-10-250: Wirk Energie Import 1_high2
+MWA-20-10-252: Wirk Energie Export 1_high2
+MWA-20-10-3: aktuelles Volumen_high
+MWA-20-10-4: aktuelle Vorlauftemperatur
+MWA-20-10-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-10-6: aktuelle Differenztemperatur
+MWA-20-10-7: Seriennummer_high
+MWA-20-11-0: aktuelle Energie_high
+MWA-20-11-1: aktuelle Leistung_high
+MWA-20-11-11: Strom_high
+MWA-20-11-12: Spannung
+MWA-20-11-13: Cosphi
+MWA-20-11-2: aktueller Durchfluss_high
+MWA-20-11-203: aktuelle Wirkleistung total high2
+MWA-20-11-250: Wirk Energie Import 1_high2
+MWA-20-11-252: Wirk Energie Export 1_high2
+MWA-20-11-3: aktuelles Volumen_high
+MWA-20-11-4: aktuelle Vorlauftemperatur
+MWA-20-11-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-11-6: aktuelle Differenztemperatur
+MWA-20-11-7: Seriennummer_high
+MWA-20-12-0: aktuelle Energie_high
+MWA-20-12-1: aktuelle Leistung_high
+MWA-20-12-11: Strom_high
+MWA-20-12-12: Spannung
+MWA-20-12-13: Cosphi
+MWA-20-12-2: aktueller Durchfluss_high
+MWA-20-12-203: aktuelle Wirkleistung total high2
+MWA-20-12-250: Wirk Energie Import 1_high2
+MWA-20-12-252: Wirk Energie Export 1_high2
+MWA-20-12-3: aktuelles Volumen_high
+MWA-20-12-4: aktuelle Vorlauftemperatur
+MWA-20-12-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-12-6: aktuelle Differenztemperatur
+MWA-20-12-7: Seriennummer_high
+MWA-20-13-0: aktuelle Energie_high
+MWA-20-13-1: aktuelle Leistung_high
+MWA-20-13-11: Strom_high
+MWA-20-13-12: Spannung
+MWA-20-13-13: Cosphi
+MWA-20-13-2: aktueller Durchfluss_high
+MWA-20-13-203: aktuelle Wirkleistung total high2
+MWA-20-13-250: Wirk Energie Import 1_high2
+MWA-20-13-252: Wirk Energie Export 1_high2
+MWA-20-13-3: aktuelles Volumen_high
+MWA-20-13-4: aktuelle Vorlauftemperatur
+MWA-20-13-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-13-6: aktuelle Differenztemperatur
+MWA-20-13-7: Seriennummer_high
+MWA-20-14-0: aktuelle Energie_high
+MWA-20-14-1: aktuelle Leistung_high
+MWA-20-14-11: Strom_high
+MWA-20-14-12: Spannung
+MWA-20-14-13: Cosphi
+MWA-20-14-2: aktueller Durchfluss_high
+MWA-20-14-203: aktuelle Wirkleistung total high2
+MWA-20-14-250: Wirk Energie Import 1_high2
+MWA-20-14-252: Wirk Energie Export 1_high2
+MWA-20-14-3: aktuelles Volumen_high
+MWA-20-14-4: aktuelle Vorlauftemperatur
+MWA-20-14-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-14-6: aktuelle Differenztemperatur
+MWA-20-14-7: Seriennummer_high
+MWA-20-15-0: aktuelle Energie_high
+MWA-20-15-1: aktuelle Leistung_high
+MWA-20-15-11: Strom_high
+MWA-20-15-12: Spannung
+MWA-20-15-13: Cosphi
+MWA-20-15-2: aktueller Durchfluss_high
+MWA-20-15-203: aktuelle Wirkleistung total high2
+MWA-20-15-250: Wirk Energie Import 1_low2
+MWA-20-15-252: Wirk Energie Export 1_high2
+MWA-20-15-3: aktuelles Volumen_high
+MWA-20-15-4: aktuelle Vorlauftemperatur
+MWA-20-15-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-15-6: aktuelle Differenztemperatur
+MWA-20-15-7: Seriennummer_high
+MWA-20-16-0: aktuelle Energie_high
+MWA-20-16-1: aktuelle Leistung_high
+MWA-20-16-11: Strom_high
+MWA-20-16-12: Spannung
+MWA-20-16-13: Cosphi
+MWA-20-16-2: aktueller Durchfluss_high
+MWA-20-16-203: aktuelle Wirkleistung total high2
+MWA-20-16-250: Wirk Energie Import 1_high2
+MWA-20-16-252: Wirk Energie Export 1_high2
+MWA-20-16-3: aktuelles Volumen_high
+MWA-20-16-4: aktuelle Vorlauftemperatur
+MWA-20-16-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-16-6: aktuelle Differenztemperatur
+MWA-20-16-7: Seriennummer_high
+MWA-20-2-0: aktuelle Energie_high
+MWA-20-2-1: aktuelle Leistung_high
+MWA-20-2-11: Strom_high
+MWA-20-2-12: Spannung
+MWA-20-2-13: Cosphi
+MWA-20-2-2: aktueller Durchfluss_high
+MWA-20-2-203: aktuelle Wirkleistung total high2
+MWA-20-2-250: Wirk Energie Import 1_high2
+MWA-20-2-252: Wirk Energie Export 1_high2
+MWA-20-2-3: aktuelles Volumen_high
+MWA-20-2-4: aktuelle Vorlauftemperatur
+MWA-20-2-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-2-6: aktuelle Differenztemperatur
+MWA-20-2-7: Seriennummer_high
+MWA-20-3-0: aktuelle Energie_high
+MWA-20-3-1: aktuelle Leistung_high
+MWA-20-3-11: Strom_high
+MWA-20-3-12: Spannung
+MWA-20-3-13: Cosphi
+MWA-20-3-2: aktueller Durchfluss_high
+MWA-20-3-203: aktuelle Wirkleistung total high2
+MWA-20-3-250: Wirk Energie Import 1_high2
+MWA-20-3-252: Wirk Energie Export 1_high2
+MWA-20-3-3: aktuelles Volumen_high
+MWA-20-3-4: aktuelle Vorlauftemperatur
+MWA-20-3-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-3-6: aktuelle Differenztemperatur
+MWA-20-3-7: Seriennummer_high
+MWA-20-4-0: aktuelle Energie_high
+MWA-20-4-1: aktuelle Leistung_high
+MWA-20-4-11: Strom_high
+MWA-20-4-12: Spannung
+MWA-20-4-13: Cosphi
+MWA-20-4-2: aktueller Durchfluss_high
+MWA-20-4-203: aktuelle Wirkleistung total high2
+MWA-20-4-250: Wirk Energie Import 1_high2
+MWA-20-4-252: Wirk Energie Export 1_high2
+MWA-20-4-3: aktuelles Volumen_high
+MWA-20-4-4: aktuelle Vorlauftemperatur
+MWA-20-4-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-4-6: aktuelle Differenztemperatur
+MWA-20-4-7: Seriennummer_high
+MWA-20-5-0: aktuelle Energie_high
+MWA-20-5-1: aktuelle Leistung_high
+MWA-20-5-11: Strom_high
+MWA-20-5-12: Spannung
+MWA-20-5-13: Cosphi
+MWA-20-5-2: aktueller Durchfluss_high
+MWA-20-5-203: aktuelle Wirkleistung total high2
+MWA-20-5-250: Wirk Energie Import 1_high2
+MWA-20-5-252: Wirk Energie Export 1_high2
+MWA-20-5-3: aktuelles Volumen_high
+MWA-20-5-4: aktuelle Vorlauftemperatur
+MWA-20-5-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-5-6: aktuelle Differenztemperatur
+MWA-20-5-7: Seriennummer_high
+MWA-20-6-0: aktuelle Energie_high
+MWA-20-6-1: aktuelle Leistung_high
+MWA-20-6-11: Strom_high
+MWA-20-6-12: Spannung
+MWA-20-6-13: Cosphi
+MWA-20-6-2: aktueller Durchfluss_high
+MWA-20-6-203: aktuelle Wirkleistung total high2
+MWA-20-6-250: Wirk Energie Import 1_high2
+MWA-20-6-252: Wirk Energie Export 1_high2
+MWA-20-6-3: aktuelles Volumen_high
+MWA-20-6-4: aktuelle Vorlauftemperatur
+MWA-20-6-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-6-6: aktuelle Differenztemperatur
+MWA-20-6-7: Seriennummer_high
+MWA-20-7-0: aktuelle Energie_high
+MWA-20-7-1: aktuelle Leistung_high
+MWA-20-7-11: Strom_high
+MWA-20-7-12: Spannung
+MWA-20-7-13: Cosphi
+MWA-20-7-2: aktueller Durchfluss_high
+MWA-20-7-203: aktuelle Wirkleistung total high2
+MWA-20-7-250: Wirk Energie Import 1_high2
+MWA-20-7-252: Wirk Energie Export 1_high2
+MWA-20-7-3: aktuelles Volumen_high
+MWA-20-7-4: aktuelle Vorlauftemperatur
+MWA-20-7-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-7-6: aktuelle Differenztemperatur
+MWA-20-7-7: Seriennummer_high
+MWA-20-8-0: aktuelle Energie_high
+MWA-20-8-1: aktuelle Leistung_high
+MWA-20-8-11: Strom_high
+MWA-20-8-12: Spannung
+MWA-20-8-13: Cosphi
+MWA-20-8-2: aktueller Durchfluss_high
+MWA-20-8-203: aktuelle Wirkleistung total high2
+MWA-20-8-250: Wirk Energie Import 1_high2
+MWA-20-8-252: Wirk Energie Export 1_high2
+MWA-20-8-3: aktuelles Volumen_high
+MWA-20-8-4: aktuelle Vorlauftemperatur
+MWA-20-8-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-8-6: aktuelle Differenztemperatur
+MWA-20-8-7: Seriennummer_high
+MWA-20-9-0: aktuelle Energie_high
+MWA-20-9-1: aktuelle Leistung_high
+MWA-20-9-11: Strom_high
+MWA-20-9-12: Spannung
+MWA-20-9-13: Cosphi
+MWA-20-9-2: aktueller Durchfluss_high
+MWA-20-9-203: aktuelle Wirkleistung total high2
+MWA-20-9-250: Wirk Energie Import 1_high2
+MWA-20-9-252: Wirk Energie Export 1_high2
+MWA-20-9-3: aktuelles Volumen_high
+MWA-20-9-4: aktuelle Vorlauftemperatur
+MWA-20-9-5: "aktuelle R\xFCcklauftemperatur "
+MWA-20-9-6: aktuelle Differenztemperatur
+MWA-20-9-7: Seriennummer_high
+PS-0-0-21036: VA1 HW-Ausgang
+PS-0-0-21037: VA2 HW-Ausgang
+PS-0-0-21038: VA3 HW-Ausgang
+PS-0-0-21039: VA1-FE1 HW-Ausgang
+PS-0-0-21040: VA2-FE1 HW-Ausgang
+PS-0-0-21041: VA3-FE1 HW-Ausgang
+PS-0-0-21043: VA1-FE2 HW-Ausgang
+PS-0-0-21044: VA2-FE2 HW-Ausgang
+PS-0-0-21045: VA3-FE2 HW-Ausgang
+PS-0-0-21078: VA0-10V/PWM HW-Ausgang
+PS-0-0-21079: VA0-10V/PWM-FE1 HW-Ausgang
+PS-0-0-21080: VA0-10V/PWM-FE2 HW-Ausgang
+PS-0-0-21120: Info 1
+PS-0-0-21121: Info 2
+PS-0-0-21122: Info 3
+PS-0-0-21123: Info 4
+PS-0-0-21124: Info 5
+PS-0-0-23084: Relaistest aktivieren
+PS-0-0-29042: Aktiver Fehler 1_appearance_time
+PS-0-0-29043: Aktiver Fehler 2_appearance_time
+PS-0-0-29044: Aktiver Fehler 3_appearance_time
+PS-0-0-29045: Aktiver Fehler 4_appearance_time
+PS-0-0-29046: Aktiver Fehler 5_appearance_time
+PS-21-0-1015: Puffer-Soll
+PS-21-0-15: Puffer PF/KPF2 Ist
+PS-21-0-17: Puffer PF2/KPF Ist
+PS-21-0-23082: Status Puffer
+SOL-0-0-21036: status Solarregelung
+SOL-0-0-21037: VA2 HW-Ausgang
+SOL-0-0-21038: VA3 HW-Ausgang
+SOL-0-0-21039: VA1-FE1 HW-Ausgang
+SOL-0-0-21040: VA2-FE1 HW-Ausgang
+SOL-0-0-21041: VA3-FE1 HW-Ausgang
+SOL-0-0-21043: VA1-FE2 HW-Ausgang
+SOL-0-0-21044: VA2-FE2 HW-Ausgang
+SOL-0-0-21045: VA3-FE2 HW-Ausgang
+SOL-0-0-21078: VA0-10V/PWM HW-Ausgang
+SOL-0-0-21079: VA0-10V/PWM-FE1 HW-Ausgang
+SOL-0-0-21080: VA0-10V/PWM-FE2 HW-Ausgang
+SOL-0-0-21120: Info 1
+SOL-0-0-21121: Info 2
+SOL-0-0-21122: Info 3
+SOL-0-0-21123: Info 4
+SOL-0-0-21124: Info 5
+SOL-0-0-23084: Relaistest aktivieren
+SOL-0-0-29042: Aktiver Fehler 1_appearance_time
+SOL-0-0-29043: Aktiver Fehler 2_appearance_time
+SOL-0-0-29044: Aktiver Fehler 3_appearance_time
+SOL-0-0-29045: Aktiver Fehler 4_appearance_time
+SOL-0-0-29046: Aktiver Fehler 5_appearance_time
+SOL-22-0-1050: PS akt. Drehzahl Pumpe Solar
+SOL-22-0-14: TKO1 Kollektor Temperatur
+SOL-22-0-2030: Kollektorleistung aktuell
+SOL-22-0-2032: Betriebsstunden PS Pumpe Solar
+SOL-22-0-2034: Gesamtertrag Kollektor_high
+SOL-22-0-2056: Status Solarregelung
+SOL-22-0-60: TKV Kollektorvorlauf Temp.
+SOL-22-0-61: TKR Kollektorruecklauf Temp.
+SOL-22-0-62: VSol Volumenstrom Solarkreis
+SOL-22-1-1050: PS akt. Drehzahl Pumpe Solar
+SOL-22-1-14: TKO2 Kollektor Temperatur
+SOL-22-1-2030: Kollektorleistung aktuell
+SOL-22-1-2032: Betriebsstunden PS Pumpe Solar
+SOL-22-1-2034: Gesamtertrag Kollektor_high
+SOL-22-1-2056: Status Solarregelung
+SOL-22-1-60: TKV Kollektorvorlauf Temp.
+SOL-22-1-61: TKR Kollektorruecklauf Temp.
+SOL-22-1-62: VSol Volumenstrom Solarkreis
+SOL-23-0-15: TO Speicher oben Temp.
+SOL-23-0-16: TU Speicher unten Temp.
+SOL-23-1-15: TO Speicher oben Temp.
+SOL-23-1-16: TU Speicher unten Temp.
+SOL-23-2-15: TO Speicher oben Temp.
+SOL-23-2-16: TU Speicher unten Temp.
+SOL-23-3-15: TO Speicher oben Temp.
+SOL-23-3-16: TU Speicher unten Temp.
+WEZ-0-0-0: "AF1 - Aussenf\xFChler 1"
+WEZ-0-0-21031: MK1 HW-Ausgang
+WEZ-0-0-21032: YK1+ HW-Ausgang
+WEZ-0-0-21033: YK1- HW-Ausgang
+WEZ-0-0-21034: DKP HW-Ausgang
+WEZ-0-0-21035: SLP HW-Ausgang
+WEZ-0-0-21036: VA1 HW-Ausgang
+WEZ-0-0-21037: VA2 HW-Ausgang
+WEZ-0-0-21039: VA1-FE1 HW-Ausgang
+WEZ-0-0-21040: VA2-FE1 HW-Ausgang
+WEZ-0-0-21041: VA3-FE1 HW-Ausgang
+WEZ-0-0-21043: VA1-FE2 HW-Ausgang
+WEZ-0-0-21044: VA2-FE2 HW-Ausgang
+WEZ-0-0-21045: VA3-FE2 HW-Ausgang
+WEZ-0-0-21059: FAV Vorlauf-Ist Temp.
+WEZ-0-0-21078: VA0-10V/PWM HW-Ausgang
+WEZ-0-0-21079: VA0-10V/PWM-FE1 HW-Ausgang
+WEZ-0-0-21100: "AF2 - Aussenf\xFChler 2"
+WEZ-0-0-21120: Info 1
+WEZ-0-0-21121: Info 2
+WEZ-0-0-21122: Info 3
+WEZ-0-0-21123: Info 4
+WEZ-0-0-21124: Info 5
+WEZ-0-0-21125: Info 1 0-10V
+WEZ-0-0-21126: Info 2 0-10V
+WEZ-0-0-21127: Info 3 0-10V
+WEZ-0-0-22021: FAV Vorlauf-Solltemp.
+WEZ-0-0-22055: AVP Pumpe
+WEZ-0-0-22056: YAV Mischer
+WEZ-0-0-23084: Relaistest aktivieren
+WEZ-0-0-29042: Aktiver Fehler 1_appearance_time
+WEZ-0-0-29043: Aktiver Fehler 2_appearance_time
+WEZ-0-0-29044: Aktiver Fehler 3_appearance_time
+WEZ-0-0-29045: Aktiver Fehler 4_appearance_time
+WEZ-0-0-29046: Aktiver Fehler 5_appearance_time
+WEZ-1-0-1: Raum-Ist
+WEZ-1-0-1001: Raum-Soll
+WEZ-1-0-1002: Vorlauf-Soll
+WEZ-1-0-1020: Pumpe
+WEZ-1-0-1021: Mischer
+WEZ-1-0-2: Vorlauf-Ist
+WEZ-1-0-2051: Status Heizkreisregelung
+WEZ-1-0-3: "R\xFCcklauf-Ist"
+WEZ-1-0-3050: Betriebswahl Heizung
+WEZ-1-0-3051: Normal-Raumtemperatur Heizbetrieb
+WEZ-1-0-3053: Spar-Raumtemperatur Heizbetrieb
+WEZ-1-0-7009: Solltemperatur Handbetrieb
+WEZ-1-0-7036: Vorlauf Soll Konstantanf. Heizen
+WEZ-1-0-7047: "Vorlauf Soll Konstantanf. K\xFChlen"
+WEZ-1-1-1: Raum-Ist
+WEZ-1-1-1001: Raum-Soll
+WEZ-1-1-1002: Vorlauf-Soll
+WEZ-1-1-1020: Pumpe
+WEZ-1-1-1021: Mischer
+WEZ-1-1-2: Vorlauf-Ist
+WEZ-1-1-2051: Status Heizkreisregelung
+WEZ-1-1-3: "R\xFCcklauf-Ist"
+WEZ-1-1-3050: Betriebswahl Heizung
+WEZ-1-1-3051: Normal-Raumtemperatur Heizbetrieb
+WEZ-1-1-3053: Spar-Raumtemperatur Heizbetrieb
+WEZ-1-1-7009: Solltemperatur Handbetrieb
+WEZ-1-1-7036: Vorlauf Soll Konstantanf. Heizen
+WEZ-1-1-7047: "Vorlauf Soll Konstantanf. K\xFChlen"
+WEZ-1-2-1: Raum-Ist
+WEZ-1-2-1001: Raum-Soll
+WEZ-1-2-1002: Vorlauf-Soll
+WEZ-1-2-1020: Pumpe
+WEZ-1-2-1021: Mischer
+WEZ-1-2-2: Vorlauf-Ist
+WEZ-1-2-2051: Status Heizkreisregelung
+WEZ-1-2-3: "R\xFCcklauf-Ist"
+WEZ-1-2-3050: Betriebswahl Heizung
+WEZ-1-2-3051: Normal-Raumtemperatur Heizbetrieb
+WEZ-1-2-3053: Spar-Raumtemperatur Heizbetrieb
+WEZ-1-2-7009: Solltemperatur Handbetrieb
+WEZ-1-2-7036: Vorlauf Soll Konstantanf. Heizen
+WEZ-1-2-7047: "Vorlauf Soll Konstantanf. K\xFChlen"
+WEZ-10-0-1007: "W\xE4rmeerzeuger-Soll"
+WEZ-10-0-1009: "Sollwert Leistung W\xE4rmeerzeuger"
+WEZ-10-0-1022: "Pumpe W\xE4rmeerzeuger"
+WEZ-10-0-1100: Brennerstufe
+WEZ-10-0-2053: "Status W\xE4rmeerzeugerregelung"
+WEZ-10-0-2080: "Schaltzyklen W\xE4rmeerzeuger_high"
+WEZ-10-0-2081: "Betriebsstunden W\xE4rmeerzeuger_high"
+WEZ-10-0-21105: Volumenstrom
+WEZ-10-0-22: Drehzahl Hauptpumpe
+WEZ-10-0-29050: "W\xE4rmemenge Heizen_high"
+WEZ-10-0-29051: Aktuelle Leistung Heizen_high
+WEZ-10-0-7: "W\xE4rmeerzeuger-Ist"
+WEZ-10-0-8: "R\xFCcklauftemperatur W\xE4rmeerzeuger"
+WEZ-10-0-9020: Solltemperatur Handbetrieb
+WEZ-10-0-9037: "Temperatur \xDCberh\xF6hung/Abschlag WEZ"
+WEZ-10-0-9058: Handbetrieb Leistung Sollwert
+WEZ-10-0-9075: "Betriebswahl W\xE4rmeerzeuger"
+WEZ-10-1-1007: "W\xE4rmeerzeuger-Soll"
+WEZ-10-1-10110: Emissionstest Leistungsbegrenzung
+WEZ-10-1-1022: "Pumpe W\xE4rmeerzeuger"
+WEZ-10-1-20050: Wasserdruck
+WEZ-10-1-20051: FA-Status
+WEZ-10-1-20052: Modulation
+WEZ-10-1-20053: Betriebsmeldung
+WEZ-10-1-2053: "Status W\xE4rmeerzeugerregelung"
+WEZ-10-1-2080: "Schaltzyklen W\xE4rmeerzeuger_high"
+WEZ-10-1-2081: "Betriebsstunden W\xE4rmeerzeuger_high"
+WEZ-10-1-2082: "Betriebsstunden W\xE4rmeerzeuger >50%_high"
+WEZ-10-1-2083: "Schaltzyklen W\xE4rmeerzeuger >50%_high"
+WEZ-10-1-21105: Volumenstrom
+WEZ-10-1-22: Drehzahl Hauptpumpe
+WEZ-10-1-23085: Emissionstest aktivieren
+WEZ-10-1-29050: "W\xE4rmemenge Heizen_high"
+WEZ-10-1-29051: Aktuelle Leistung Heizen_high
+WEZ-10-1-29052: "K\xE4ltemenge K\xFChlen_high"
+WEZ-10-1-29053: "Aktuelle Leistung K\xFChlen_high"
+WEZ-10-1-7: "W\xE4rmeerzeuger-Ist"
+WEZ-10-1-8: "R\xFCcklauftemperatur W\xE4rmeerzeuger"
+WEZ-10-1-9020: Solltemperatur Handbetrieb
+WEZ-10-1-9037: "Temperatur \xDCberh\xF6hung/Abschlag WEZ"
+WEZ-10-1-9058: Handbetrieb Leistung Sollwert
+WEZ-10-1-9075: "Betriebswahl W\xE4rmeerzeuger"
+WEZ-2-0-1004: Warmwasser-Soll
+WEZ-2-0-1065: Warmwasser-Zirkulationspumpe
+WEZ-2-0-1066: SLP Warmwasser-Ladepumpe
+WEZ-2-0-118: Zirkulationskreistemperatur
+WEZ-2-0-2052: Status Warmwasserregelung
+WEZ-2-0-4: Warmwasser-Ist SF
+WEZ-2-0-5050: Betriebswahl Warmwasser
+WEZ-2-0-5051: Normal-Warmwassertemperatur
+WEZ-2-0-5086: Spar-Warmwassertemperatur
+WEZ-3-0-1096: Anlagetemp.Soll Heizen aktuell
+WEZ-3-0-1097: Anlagetemp.Soll WW aktuell
+WEZ-3-0-2040: Anlageleistu.Soll Heizen aktuell
+WEZ-3-0-2041: Anlageleistu.Soll WW aktuell
+WEZ-3-0-2042: "Anlageleistu.Soll K\xFChlen aktuell"
+WEZ-3-0-21089: "Anlage Vorlauftemp. K\xFChlen"
+WEZ-3-0-22024: "Status K\xFChlventil aktiv UKA"
+WEZ-3-0-22098: "Anlagetemp.Soll K\xFChlen aktuell"
+WEZ-3-0-22121: "Status K\xFChlventil Allg. UHKA"
+WEZ-3-0-96: Anlage Vorlauftemperatur Heizen
+WEZ-3-0-97: Anlage Vorlauftemperatur WW
+WEZ-4-0-1009: "Sollwert Leistung W\xE4rmeerzeuger"
+WEZ-4-0-2043: 0 - 100% aktuelle Anf. an WE
+WEZ-4-0-2119: "F\xFChrungs-WEZ"
+WEZ-4-0-6020: Sequenzwechsel (Zeit)
+WEZ-4-1-1009: "Sollwert Leistung W\xE4rmeerzeuger"
+WEZ-4-1-2043: 0 - 100% aktuelle Anf. an WE
+WEZ-4-2-1009: "Sollwert Leistung W\xE4rmeerzeuger"
+WEZ-4-2-2043: 0 - 100% aktuelle Anf. an WE
+WEZ-4-3-1009: "Sollwert Leistung W\xE4rmeerzeuger"
+WEZ-4-3-2043: 0 - 100% aktuelle Anf. an WE
+WEZ-4-4-1009: "Sollwert Leistung W\xE4rmeerzeuger"
+WEZ-4-4-2043: 0 - 100% aktuelle Anf. an WE
+WEZ-4-5-1009: "Sollwert Leistung W\xE4rmeerzeuger"
+WEZ-4-5-2043: 0 - 100% aktuelle Anf. an WE
+WEZ-4-6-1009: "Sollwert Leistung W\xE4rmeerzeuger"
+WEZ-4-6-2043: 0 - 100% aktuelle Anf. an WE
+WEZ-4-7-1009: "Sollwert Leistung W\xE4rmeerzeuger"
+WEZ-4-7-2043: 0 - 100% aktuelle Anf. an WE
+WEZ-60-254-0: "Sollwert f\xFCr Heizkreisbetrieb"
+WEZ-60-254-1: "Sollwert f\xFCr Speicherbetrieb"
+WEZ-60-254-12: "Sollwert f\xFCr K\xFChlbetrieb"
+WEZ-60-254-17: WEZ-Temperatur
+WEZ-60-254-18: Abgastemperatur RS485
+WEZ-60-254-19: Umschalttemp. aktiv/passiv
+WEZ-60-254-21: Brennerflamme
+WEZ-60-254-22: Heizung Sollwert
+WEZ-60-254-23: Speicher Sollwert
+WEZ-60-254-24: WEZ Sollwert
+WEZ-60-254-25: Heizung ext. Maximalbegrenzung
+WEZ-60-254-26: Speicher ext. Maximalbegrenzung
+WEZ-60-254-27: Fehlercode vom Automaten
+WEZ-60-254-29: "R\xFCcklauftemperatur"
+WEZ-60-254-30: WEZ-Leistung
+WEZ-60-254-31: Absolute Leistung
+WEZ-60-254-32: Wasserdruck in Bar
+WEZ-60-254-33: WEZ-Status
+WEZ-60-254-34: Betriebsstatus
+WEZ-60-254-35: Brenner ID Index
+WEZ-60-254-36: Funktionserweiterungen
+WEZ-60-254-37: StatusInformation
+WEZ-60-254-38: "K\xFChlung Sollwert"
+WEZ-60-254-8: Leistungsbegrenzung
+WEZ-60-254-9: Emissionsmessung

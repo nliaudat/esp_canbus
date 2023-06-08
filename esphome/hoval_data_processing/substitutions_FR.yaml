@@ -1,0 +1,1071 @@
+FW-0-0-0: "AF 1 - sonde ext\xE9rieure 1"
+FW-0-0-106: "Temp\xE9rature de consigne totale"
+FW-0-0-110: Position de la vanne station
+FW-0-0-128: VE 1
+FW-0-0-129: VE 2
+FW-0-0-132: Heures de fonctionnement_high
+FW-0-0-200: Info AF
+FW-0-0-201: Info RLF
+FW-0-0-202: Info VF
+FW-0-0-203: Info VF1
+FW-0-0-204: Info SF1
+FW-0-0-205: Info SF2
+FW-0-0-206: Info VE4
+FW-0-0-207: Info VE5
+FW-0-0-208: Info VE6
+FW-0-0-209: Info VE7
+FW-0-0-210: Info VE8
+FW-0-0-21031: DKP sortie HW
+FW-0-0-21032: YFW+ sortie HW
+FW-0-0-21033: YFW- sortie HW
+FW-0-0-21034: MK1 sortie HW
+FW-0-0-21035: YK1+ sortie HW
+FW-0-0-21036: YK1- sortie HW
+FW-0-0-21037: SLP1 sortie HW
+FW-0-0-21038: SLP2 sortie HW
+FW-0-0-21039: VA2 sortie HW
+FW-0-0-21040: VA1 0-10V/0-20mA sortie HW
+FW-0-0-21041: VA3 0-10V/PWM sortie HW
+FW-0-0-21042: VA4 0-10V/PWM sortie HW
+FW-0-0-21043: VA5 0-10V/PWM sortie HW
+FW-0-0-21044: Activer le test de relais TTE-FE
+FW-0-0-21045: "FE-VA1 sortie mat\xE9riel"
+FW-0-0-21046: "FE-VA2 sortie mat\xE9riel"
+FW-0-0-21047: "FE-VA3 sortie mat\xE9riel"
+FW-0-0-21048: "FE-VA10V/PWM sortie mat\xE9riel"
+FW-0-0-21059: "Temp. d\xE9part r\xE9elle AVF"
+FW-0-0-21092: Niveau remplissage accumulateur tampon
+FW-0-0-21093: Pression
+FW-0-0-211: Info VE9
+FW-0-0-21100: "AF 2 - sonde ext\xE9rieure 2"
+FW-0-0-212: Info VE1-FE1
+FW-0-0-213: Info VE2-FE1
+FW-0-0-214: Info VE3-FE1
+FW-0-0-215: Info VE1-FE2
+FW-0-0-216: Info VE2-FE2
+FW-0-0-217: Info VE3-FE2
+FW-0-0-218: Info VE1-FE3
+FW-0-0-219: Info VE2-FE3
+FW-0-0-220: Info VE3-FE3
+FW-0-0-22021: "Temp. d\xE9part cons. AVF"
+FW-0-0-22055: Pompe AVP
+FW-0-0-22056: Pompe YAV
+FW-0-0-221: Info VE1-FE4
+FW-0-0-222: Info VE2-FE4
+FW-0-0-223: Info VE3-FE4
+FW-0-0-224: Info VE1-FE5
+FW-0-0-225: Info VE2-FE5
+FW-0-0-226: Info VE3-FE5
+FW-0-0-227: Info VE10/IMP
+FW-0-0-228: Info VE3/IMP-FE1
+FW-0-0-229: Info VE3/IMP-FE2
+FW-0-0-230: Info VE3/IMP-FE3
+FW-0-0-23084: Activer le test de relais TTE-FW
+FW-0-0-231: Info VE3/IMP-FE4
+FW-0-0-232: Info VE3/IMP-FE5
+FW-0-0-233: Info VE10V-FE1
+FW-0-0-234: Info VE10V-FE2
+FW-0-0-235: Info VE10V-FE3
+FW-0-0-236: Info VE10V-FE4
+FW-0-0-237: Info VE10V-FE5
+FW-0-0-238: Info VE3
+FW-0-0-29042: Erreur active 1_appearance_time
+FW-0-0-29043: Erreur active 2_appearance_time
+FW-0-0-29044: Erreur active 3_appearance_time
+FW-0-0-29045: Erreur active 4_appearance_time
+FW-0-0-29046: Erreur active 5_appearance_time
+FW-0-0-98: Limitation ret. active
+FW-0-0-99: Limitation de puissance active
+FW-1-0-1: "Valeur r\xE9elle pi\xE8ce"
+FW-1-0-1001: "Valeur de consigne pi\xE8ce"
+FW-1-0-1002: Aller consigne
+FW-1-0-1020: Pompe
+FW-1-0-1021: "M\xE9langeur"
+FW-1-0-2: "Aller r\xE9el"
+FW-1-0-2051: "Statut r\xE9gulation circuit de chauffage"
+FW-1-0-3050: "S\xE9lection fonctionnement chauffage"
+FW-1-0-3051: "temp\xE9rature local normale mode chauffage"
+FW-1-0-3053: "temp\xE9rature local \xE9co mode chauffage"
+FW-1-1-1: "Valeur r\xE9elle pi\xE8ce"
+FW-1-1-1001: "Valeur de consigne pi\xE8ce"
+FW-1-1-1002: Aller consigne
+FW-1-1-1020: Pompe
+FW-1-1-1021: "M\xE9langeur"
+FW-1-1-2: "Aller r\xE9el"
+FW-1-1-2051: "Statut r\xE9gulation circuit de chauffage"
+FW-1-1-3050: "S\xE9lection fonctionnement chauffage"
+FW-1-1-3051: "temp\xE9rature local normale mode chauffage"
+FW-1-1-3053: "temp\xE9rature local \xE9co mode chauffage"
+FW-1-2-1: "Valeur r\xE9elle pi\xE8ce"
+FW-1-2-1001: "Valeur de consigne pi\xE8ce"
+FW-1-2-1002: Aller consigne
+FW-1-2-1020: Pompe
+FW-1-2-1021: "M\xE9langeur"
+FW-1-2-2: "Aller r\xE9el"
+FW-1-2-2051: "Statut r\xE9gulation circuit de chauffage"
+FW-1-2-3050: "S\xE9lection fonctionnement chauffage"
+FW-1-2-3051: "temp\xE9rature local normale mode chauffage"
+FW-1-2-3053: "temp\xE9rature local \xE9co mode chauffage"
+FW-1-3-1: "Valeur r\xE9elle pi\xE8ce"
+FW-1-3-1001: "Valeur de consigne pi\xE8ce"
+FW-1-3-1002: Aller consigne
+FW-1-3-1020: Pompe
+FW-1-3-1021: "M\xE9langeur"
+FW-1-3-2: "Aller r\xE9el"
+FW-1-3-2051: "Statut r\xE9gulation circuit de chauffage"
+FW-1-3-3050: "S\xE9lection fonctionnement chauffage"
+FW-1-3-3051: "temp\xE9rature local normale mode chauffage"
+FW-1-3-3053: "temp\xE9rature local \xE9co mode chauffage"
+FW-1-4-1: "Valeur r\xE9elle pi\xE8ce"
+FW-1-4-1001: "Valeur de consigne pi\xE8ce"
+FW-1-4-1002: Aller consigne
+FW-1-4-1020: Pompe
+FW-1-4-1021: "M\xE9langeur"
+FW-1-4-2: "Aller r\xE9el"
+FW-1-4-2051: "Statut r\xE9gulation circuit de chauffage"
+FW-1-4-3050: "S\xE9lection fonctionnement chauffage"
+FW-1-4-3051: "temp\xE9rature local normale mode chauffage"
+FW-1-4-3053: "temp\xE9rature local \xE9co mode chauffage"
+FW-2-0-1004: Eau chaude consigne
+FW-2-0-1065: Pompe de circulation eau chaude
+FW-2-0-1066: SLP1 pompe de charge eau chaude
+FW-2-0-1067: SLP2 pompe de charge eau chaude
+FW-2-0-118: "temp\xE9rature circuit de circulation"
+FW-2-0-2052: "Statut r\xE9gulation eau chaude"
+FW-2-0-4: "Eau chaude r\xE9elle SF"
+FW-2-0-5050: "S\xE9lection fonct. eau chaude"
+FW-2-0-5051: "temp\xE9rature d'eau chaude normale"
+FW-2-0-5086: "temp\xE9rature eau chaude \xE9co"
+FW-2-1-1004: Eau chaude consigne
+FW-2-1-1065: Pompe de circulation eau chaude
+FW-2-1-1066: SLP1 pompe de charge eau chaude
+FW-2-1-1067: SLP2 pompe de charge eau chaude
+FW-2-1-118: "temp\xE9rature circuit de circulation"
+FW-2-1-2052: "Statut r\xE9gulation eau chaude"
+FW-2-1-4: "Eau chaude r\xE9elle SF"
+FW-2-1-5050: "S\xE9lection fonct. eau chaude"
+FW-2-1-5051: "temp\xE9rature d'eau chaude normale"
+FW-2-1-5086: "temp\xE9rature eau chaude \xE9co"
+FW-2-2-1004: Eau chaude consigne
+FW-2-2-1065: Pompe de circulation eau chaude
+FW-2-2-1066: SLP1 pompe de charge eau chaude
+FW-2-2-1067: SLP2 pompe de charge eau chaude
+FW-2-2-118: "temp\xE9rature circuit de circulation"
+FW-2-2-2052: "Statut r\xE9gulation eau chaude"
+FW-2-2-4: "Eau chaude r\xE9elle SF"
+FW-2-2-5050: "S\xE9lection fonct. eau chaude"
+FW-2-2-5051: "temp\xE9rature d'eau chaude normale"
+FW-2-2-5086: "temp\xE9rature eau chaude \xE9co"
+FW-2-3-1004: Eau chaude consigne
+FW-2-3-1065: Pompe de circulation eau chaude
+FW-2-3-1066: SLP1 pompe de charge eau chaude
+FW-2-3-1067: SLP2 pompe de charge eau chaude
+FW-2-3-118: "temp\xE9rature circuit de circulation"
+FW-2-3-2052: "Statut r\xE9gulation eau chaude"
+FW-2-3-4: "Eau chaude r\xE9elle SF"
+FW-2-3-5050: "S\xE9lection fonct. eau chaude"
+FW-2-3-5051: "temp\xE9rature d'eau chaude normale"
+FW-2-3-5086: "temp\xE9rature eau chaude \xE9co"
+FW-2-4-1004: Eau chaude consigne
+FW-2-4-1065: Pompe de circulation eau chaude
+FW-2-4-1066: SLP1 pompe de charge eau chaude
+FW-2-4-1067: SLP2 pompe de charge eau chaude
+FW-2-4-118: "temp\xE9rature circuit de circulation"
+FW-2-4-2052: "Statut r\xE9gulation eau chaude"
+FW-2-4-4: "Eau chaude r\xE9elle SF"
+FW-2-4-5050: "S\xE9lection fonct. eau chaude"
+FW-2-4-5051: "temp\xE9rature d'eau chaude normale"
+FW-2-4-5086: "temp\xE9rature eau chaude \xE9co"
+FW-20-1-0: "\xC9nergie actuelle_high"
+FW-20-1-1: Puissance actuelle_high
+FW-20-1-11: "\xC9lectricit\xE9_high"
+FW-20-1-12: Tension
+FW-20-1-13: Cosphi
+FW-20-1-2: "D\xE9bit actuel_high"
+FW-20-1-203: Puissance total high2
+FW-20-1-250: "Importation d'\xE9nergie 1_high2"
+FW-20-1-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-1-3: "Volume r\xE9el_high"
+FW-20-1-4: "Temp. actuelle d\xE9part"
+FW-20-1-5: "Temp\xE9rature actuelle de retour"
+FW-20-1-50: "\xC9nergie actuelle froid_high"
+FW-20-1-51: Puissance actuelle froid_high
+FW-20-1-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-1-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-1-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-10-0: "\xC9nergie actuelle_high"
+FW-20-10-1: Puissance actuelle_high
+FW-20-10-11: "\xC9lectricit\xE9_high"
+FW-20-10-12: Tension
+FW-20-10-13: Cosphi
+FW-20-10-2: "D\xE9bit actuel_high"
+FW-20-10-203: Puissance total high2
+FW-20-10-250: "Importation d'\xE9nergie 1_high2"
+FW-20-10-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-10-3: "Volume r\xE9el_high"
+FW-20-10-4: "Temp. actuelle d\xE9part"
+FW-20-10-5: "Temp\xE9rature actuelle de retour"
+FW-20-10-50: "\xC9nergie actuelle froid_high"
+FW-20-10-51: Puissance actuelle froid_high
+FW-20-10-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-10-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-10-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-11-0: "\xC9nergie actuelle_high"
+FW-20-11-1: Puissance actuelle_high
+FW-20-11-11: "\xC9lectricit\xE9_high"
+FW-20-11-12: Tension
+FW-20-11-13: Cosphi
+FW-20-11-2: "D\xE9bit actuel_high"
+FW-20-11-203: Puissance total high2
+FW-20-11-250: "Importation d'\xE9nergie 1_high2"
+FW-20-11-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-11-3: "Volume r\xE9el_high"
+FW-20-11-4: "Temp. actuelle d\xE9part"
+FW-20-11-5: "Temp\xE9rature actuelle de retour"
+FW-20-11-50: "\xC9nergie actuelle froid_high"
+FW-20-11-51: Puissance actuelle froid_high
+FW-20-11-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-11-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-11-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-12-0: "\xC9nergie actuelle_high"
+FW-20-12-1: Puissance actuelle_high
+FW-20-12-11: "\xC9lectricit\xE9_high"
+FW-20-12-12: Tension
+FW-20-12-13: Cosphi
+FW-20-12-2: "D\xE9bit actuel_high"
+FW-20-12-203: Puissance total high2
+FW-20-12-250: "Importation d'\xE9nergie 1_high2"
+FW-20-12-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-12-3: "Volume r\xE9el_high"
+FW-20-12-4: "Temp. actuelle d\xE9part"
+FW-20-12-5: "Temp\xE9rature actuelle de retour"
+FW-20-12-50: "\xC9nergie actuelle froid_high"
+FW-20-12-51: Puissance actuelle froid_high
+FW-20-12-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-12-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-12-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-13-0: "\xC9nergie actuelle_high"
+FW-20-13-1: Puissance actuelle_high
+FW-20-13-11: "\xC9lectricit\xE9_high"
+FW-20-13-12: Tension
+FW-20-13-13: Cosphi
+FW-20-13-2: "D\xE9bit actuel_high"
+FW-20-13-203: Puissance total high2
+FW-20-13-250: "Importation d'\xE9nergie 1_high2"
+FW-20-13-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-13-3: "Volume r\xE9el_high"
+FW-20-13-4: "Temp. actuelle d\xE9part"
+FW-20-13-5: "Temp\xE9rature actuelle de retour"
+FW-20-13-50: "\xC9nergie actuelle froid_high"
+FW-20-13-51: Puissance actuelle froid_high
+FW-20-13-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-13-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-13-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-14-0: "\xC9nergie actuelle_high"
+FW-20-14-1: Puissance actuelle_high
+FW-20-14-11: "\xC9lectricit\xE9_high"
+FW-20-14-12: Tension
+FW-20-14-13: Cosphi
+FW-20-14-2: "D\xE9bit actuel_high"
+FW-20-14-203: Puissance total high2
+FW-20-14-250: "Importation d'\xE9nergie 1_high2"
+FW-20-14-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-14-3: "Volume r\xE9el_high"
+FW-20-14-4: "Temp. actuelle d\xE9part"
+FW-20-14-5: "Temp\xE9rature actuelle de retour"
+FW-20-14-50: "\xC9nergie actuelle froid_high"
+FW-20-14-51: Puissance actuelle froid_high
+FW-20-14-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-14-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-14-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-15-0: "\xC9nergie actuelle_high"
+FW-20-15-1: Puissance actuelle_high
+FW-20-15-11: "\xC9lectricit\xE9_high"
+FW-20-15-12: Tension
+FW-20-15-13: Cosphi
+FW-20-15-2: "D\xE9bit actuel_high"
+FW-20-15-203: Puissance total high2
+FW-20-15-250: "Importation d'\xE9nergie 1_high2"
+FW-20-15-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-15-3: "Volume r\xE9el_high"
+FW-20-15-4: "Temp. actuelle d\xE9part"
+FW-20-15-5: "Temp\xE9rature actuelle de retour"
+FW-20-15-50: "\xC9nergie actuelle froid_high"
+FW-20-15-51: Puissance actuelle froid_high
+FW-20-15-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-15-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-15-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-16-0: "\xC9nergie actuelle_high"
+FW-20-16-1: Puissance actuelle_high
+FW-20-16-11: "\xC9lectricit\xE9_high"
+FW-20-16-12: Tension
+FW-20-16-13: Cosphi
+FW-20-16-2: "D\xE9bit actuel_high"
+FW-20-16-203: Puissance total high2
+FW-20-16-250: "Importation d'\xE9nergie 1_high2"
+FW-20-16-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-16-3: "Volume r\xE9el_high"
+FW-20-16-4: "Temp. actuelle d\xE9part"
+FW-20-16-5: "Temp\xE9rature actuelle de retour"
+FW-20-16-50: "\xC9nergie actuelle froid_high"
+FW-20-16-51: Puissance actuelle froid_high
+FW-20-16-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-16-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-16-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-2-0: "\xC9nergie actuelle_high"
+FW-20-2-1: Puissance actuelle_high
+FW-20-2-11: "\xC9lectricit\xE9_high"
+FW-20-2-12: Tension
+FW-20-2-13: Cosphi
+FW-20-2-2: "D\xE9bit actuel_high"
+FW-20-2-203: Puissance total high2
+FW-20-2-250: "Importation d'\xE9nergie 1_high2"
+FW-20-2-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-2-3: "Volume r\xE9el_high"
+FW-20-2-4: "Temp. actuelle d\xE9part"
+FW-20-2-5: "Temp\xE9rature actuelle de retour"
+FW-20-2-50: "\xC9nergie actuelle froid_high"
+FW-20-2-51: Puissance actuelle froid_high
+FW-20-2-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-2-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-2-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-3-0: "\xC9nergie actuelle_high"
+FW-20-3-1: Puissance actuelle_high
+FW-20-3-11: "\xC9lectricit\xE9_high"
+FW-20-3-12: Tension
+FW-20-3-13: Cosphi
+FW-20-3-2: "D\xE9bit actuel_high"
+FW-20-3-203: Puissance total high2
+FW-20-3-250: "Importation d'\xE9nergie 1_high2"
+FW-20-3-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-3-3: "Volume r\xE9el_high"
+FW-20-3-4: "Temp. actuelle d\xE9part"
+FW-20-3-5: "Temp\xE9rature actuelle de retour"
+FW-20-3-50: "\xC9nergie actuelle froid_high"
+FW-20-3-51: Puissance actuelle froid_high
+FW-20-3-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-3-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-3-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-4-0: "\xC9nergie actuelle_high"
+FW-20-4-1: Puissance actuelle_high
+FW-20-4-11: "\xC9lectricit\xE9_high"
+FW-20-4-12: Tension
+FW-20-4-13: Cosphi
+FW-20-4-2: "D\xE9bit actuel_high"
+FW-20-4-203: Puissance total high2
+FW-20-4-250: "Importation d'\xE9nergie 1_high2"
+FW-20-4-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-4-3: "Volume r\xE9el_high"
+FW-20-4-4: "Temp. actuelle d\xE9part"
+FW-20-4-5: "Temp\xE9rature actuelle de retour"
+FW-20-4-50: "\xC9nergie actuelle froid_high"
+FW-20-4-51: Puissance actuelle froid_high
+FW-20-4-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-4-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-4-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-5-0: "\xC9nergie actuelle_high"
+FW-20-5-1: Puissance actuelle_high
+FW-20-5-11: "\xC9lectricit\xE9_high"
+FW-20-5-12: Tension
+FW-20-5-13: Cosphi
+FW-20-5-2: "D\xE9bit actuel_high"
+FW-20-5-203: Puissance total high2
+FW-20-5-250: "Importation d'\xE9nergie 1_high2"
+FW-20-5-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-5-3: "Volume r\xE9el_high"
+FW-20-5-4: "Temp. actuelle d\xE9part"
+FW-20-5-5: "Temp\xE9rature actuelle de retour"
+FW-20-5-50: "\xC9nergie actuelle froid_high"
+FW-20-5-51: Puissance actuelle froid_high
+FW-20-5-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-5-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-5-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-6-0: "\xC9nergie actuelle_high"
+FW-20-6-1: Puissance actuelle_high
+FW-20-6-11: "\xC9lectricit\xE9_high"
+FW-20-6-12: Tension
+FW-20-6-13: Cosphi
+FW-20-6-2: "D\xE9bit actuel_high"
+FW-20-6-203: Puissance total high2
+FW-20-6-250: "Importation d'\xE9nergie 1_high2"
+FW-20-6-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-6-3: "Volume r\xE9el_high"
+FW-20-6-4: "Temp. actuelle d\xE9part"
+FW-20-6-5: "Temp\xE9rature actuelle de retour"
+FW-20-6-50: "\xC9nergie actuelle froid_high"
+FW-20-6-51: Puissance actuelle froid_high
+FW-20-6-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-6-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-6-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-7-0: "\xC9nergie actuelle_high"
+FW-20-7-1: Puissance actuelle_high
+FW-20-7-11: "\xC9lectricit\xE9_high"
+FW-20-7-12: Tension
+FW-20-7-13: Cosphi
+FW-20-7-2: "D\xE9bit actuel_high"
+FW-20-7-203: Puissance total high2
+FW-20-7-250: "Importation d'\xE9nergie 1_high2"
+FW-20-7-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-7-3: "Volume r\xE9el_high"
+FW-20-7-4: "Temp. actuelle d\xE9part"
+FW-20-7-5: "Temp\xE9rature actuelle de retour"
+FW-20-7-50: "\xC9nergie actuelle froid_high"
+FW-20-7-51: Puissance actuelle froid_high
+FW-20-7-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-7-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-7-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-8-0: "\xC9nergie actuelle_high"
+FW-20-8-1: Puissance actuelle_high
+FW-20-8-11: "\xC9lectricit\xE9_high"
+FW-20-8-12: Tension
+FW-20-8-13: Cosphi
+FW-20-8-2: "D\xE9bit actuel_high"
+FW-20-8-203: Puissance total high2
+FW-20-8-250: "Importation d'\xE9nergie 1_high2"
+FW-20-8-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-8-3: "Volume r\xE9el_high"
+FW-20-8-4: "Temp. actuelle d\xE9part"
+FW-20-8-5: "Temp\xE9rature actuelle de retour"
+FW-20-8-50: "\xC9nergie actuelle froid_high"
+FW-20-8-51: Puissance actuelle froid_high
+FW-20-8-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-8-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-8-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+FW-20-9-0: "\xC9nergie actuelle_high"
+FW-20-9-1: Puissance actuelle_high
+FW-20-9-11: "\xC9lectricit\xE9_high"
+FW-20-9-12: Tension
+FW-20-9-13: Cosphi
+FW-20-9-2: "D\xE9bit actuel_high"
+FW-20-9-203: Puissance total high2
+FW-20-9-250: "Importation d'\xE9nergie 1_high2"
+FW-20-9-252: "Exportation d'\xE9nergie 1_high2"
+FW-20-9-3: "Volume r\xE9el_high"
+FW-20-9-4: "Temp. actuelle d\xE9part"
+FW-20-9-5: "Temp\xE9rature actuelle de retour"
+FW-20-9-50: "\xC9nergie actuelle froid_high"
+FW-20-9-51: Puissance actuelle froid_high
+FW-20-9-6: "Diff\xE9rence temp\xE9rature actuelle"
+FW-20-9-7: "Num\xE9ro de s\xE9rie_high"
+FW-20-9-8: "Message d\u2019erreur/octet d\u2019\xE9tat bus M"
+GLT-0-0-21036: VA1 sortie HW
+GLT-0-0-21037: VA2 sortie HW
+GLT-0-0-21038: VA3 sortie HW
+GLT-0-0-21039: VA1-FE1 Sortie HW
+GLT-0-0-21040: VA2-FE1 Sortie HW
+GLT-0-0-21041: VA3-FE1 Sortie HW
+GLT-0-0-21043: VA1-FE2 Sortie HW
+GLT-0-0-21044: VA2-FE2 Sortie HW
+GLT-0-0-21045: VA3-FE2 Sortie HW
+GLT-0-0-21106: "Demande temp\xE9rature chauffage"
+GLT-0-0-21107: "Demande temp\xE9rature refroid."
+GLT-0-0-21108: "Demande temp\xE9rature eau chaude"
+GLT-0-0-21109: Valeur cons. puiss. chauffage
+GLT-0-0-21110: Valeur cons. puiss. refroid.
+GLT-0-0-21111: Valeur cons. puiss. eau chaude
+GLT-0-0-21120: Info 1
+GLT-0-0-21121: Info 2
+GLT-0-0-21122: Info 3
+GLT-0-0-21123: Info 4
+GLT-0-0-21124: Info 5
+GLT-0-0-21125: Info 1 0-10V
+GLT-0-0-21126: Info 2 0-10V
+GLT-0-0-21127: Info 3 0-10V
+GLT-0-0-23084: Activer le test de relais
+GLT-0-0-29042: Erreur active 1_appearance_time
+GLT-0-0-29043: Erreur active 2_appearance_time
+GLT-0-0-29044: Erreur active 3_appearance_time
+GLT-0-0-29045: Erreur active 4_appearance_time
+GLT-0-0-29046: Erreur active 5_appearance_time
+GW-0-0-21101: "AFG1 - sonde ext\xE9rieure syst\xE8me 1"
+GW-0-0-21102: "AFG2 - sonde ext\xE9rieure syst\xE8me 2"
+GW-0-1-20: unixtime_high
+GW-0-1-45: Rayonnement global attendu (W/m2)
+HKW-0-0-0: "AF 1 - sonde ext\xE9rieure 1"
+HKW-0-0-21036: VA1 sortie HW
+HKW-0-0-21037: VA2 sortie HW
+HKW-0-0-21038: VA3 sortie HW
+HKW-0-0-21039: VA1-FE1 Sortie HW
+HKW-0-0-21040: VA2-FE1 sortie HW
+HKW-0-0-21041: VA3-FE1 sortie HW
+HKW-0-0-21043: VA1-FE2 sortie HW
+HKW-0-0-21044: VA2-FE2 sortie HW
+HKW-0-0-21045: VA3-FE2 sortie HW
+HKW-0-0-21059: "Temp. d\xE9part r\xE9elle AVF"
+HKW-0-0-21078: VA0-10V/PWM sortie HW
+HKW-0-0-21079: VA0-10V/PWM-FE1 sortie HW
+HKW-0-0-21080: VA0-10V/PWM-FE2 sortie HW
+HKW-0-0-21100: "AF 2 - sonde ext\xE9rieure 2"
+HKW-0-0-21120: Info 1
+HKW-0-0-21121: Info 2
+HKW-0-0-21122: Info 3
+HKW-0-0-21123: Info 4
+HKW-0-0-21124: Info 5
+HKW-0-0-21125: Info 1 0-10V
+HKW-0-0-21126: Info 2 0-10V
+HKW-0-0-21127: Info 3 0-10V
+HKW-0-0-22021: "Temp\xE9rature de consigne de d\xE9part FAV"
+HKW-0-0-22055: Pompe AVP
+HKW-0-0-22056: "M\xE9langeur YAV"
+HKW-0-0-23084: Activer le test de relais
+HKW-0-0-29042: Erreur active 1_appearance_time
+HKW-0-0-29043: Erreur active 2_appearance_time
+HKW-0-0-29044: Erreur active 3_appearance_time
+HKW-0-0-29045: Erreur active 4_appearance_time
+HKW-0-0-29046: Erreur active 5_appearance_time
+HKW-1-0-1: "Valeur r\xE9elle pi\xE8ce"
+HKW-1-0-1001: "Valeur de consigne pi\xE8ce"
+HKW-1-0-1002: Aller consigne
+HKW-1-0-1020: Pompe
+HKW-1-0-1021: "M\xE9langeur"
+HKW-1-0-2: "Aller r\xE9el"
+HKW-1-0-2051: "Statut r\xE9gulation circuit de chauffage"
+HKW-1-0-3: "Retour r\xE9el"
+HKW-1-0-3050: "S\xE9lection fonctionnement chauffage"
+HKW-1-0-3051: "temp\xE9rature local normale mode chauffage"
+HKW-1-0-3053: "temp\xE9rature local \xE9co mode chauffage"
+HKW-1-0-7009: temp. consigne comm. man.
+HKW-1-0-7036: "D\xE9p. consigne demande const. chauffer"
+HKW-1-0-7047: "D\xE9p. consigne demande const. refroid."
+HKW-1-1-1: "Valeur r\xE9elle pi\xE8ce"
+HKW-1-1-1001: "Valeur de consigne pi\xE8ce"
+HKW-1-1-1002: Aller consigne
+HKW-1-1-1020: Pompe
+HKW-1-1-1021: "M\xE9langeur"
+HKW-1-1-2: "Aller r\xE9el"
+HKW-1-1-2051: "Statut r\xE9gulation circuit de chauffage"
+HKW-1-1-3: "Retour r\xE9el"
+HKW-1-1-3050: "S\xE9lection fonctionnement chauffage"
+HKW-1-1-3051: "temp\xE9rature local normale mode chauffage"
+HKW-1-1-3053: "temp\xE9rature local \xE9co mode chauffage"
+HKW-1-1-7009: temp. consigne comm. man.
+HKW-1-1-7036: "D\xE9p. consigne demande const. chauffer"
+HKW-1-1-7047: "D\xE9p. consigne demande const. refroid."
+HKW-1-2-1: "Valeur r\xE9elle pi\xE8ce"
+HKW-1-2-1001: "Valeur de consigne pi\xE8ce"
+HKW-1-2-1002: Aller consigne
+HKW-1-2-1020: Pompe
+HKW-1-2-1021: "M\xE9langeur"
+HKW-1-2-2: "Aller r\xE9el"
+HKW-1-2-2051: "Statut r\xE9gulation circuit de chauffage"
+HKW-1-2-3: "Retour r\xE9el"
+HKW-1-2-3050: "S\xE9lection fonctionnement chauffage"
+HKW-1-2-3051: "temp\xE9rature local normale mode chauffage"
+HKW-1-2-3053: "temp\xE9rature local \xE9co mode chauffage"
+HKW-1-2-7009: temp. consigne comm. man.
+HKW-1-2-7036: "D\xE9p. consigne demande const. chauffer"
+HKW-1-2-7047: "D\xE9p. consigne demande const. refroid."
+HKW-2-0-1004: Eau chaude consigne
+HKW-2-0-1065: Pompe de circulation eau chaude
+HKW-2-0-1066: SLP pompe de charge eau chaude
+HKW-2-0-118: "temp\xE9rature circuit de circulation"
+HKW-2-0-2052: "Statut r\xE9gulation eau chaude"
+HKW-2-0-4: "Eau chaude r\xE9elle SF"
+HKW-2-0-5050: "S\xE9lection fonct. eau chaude"
+HKW-2-0-5051: "temp\xE9rature d'eau chaude normale"
+HKW-2-0-5086: "temp\xE9rature eau chaude \xE9co"
+HV-0-0-29042: Erreur active 1_appearance_time
+HV-0-0-29043: Erreur active 2_appearance_time
+HV-0-0-29044: Erreur active 3_appearance_time
+HV-0-0-29045: Erreur active 4_appearance_time
+HV-0-0-29046: Erreur active 5_appearance_time
+HV-50-0-0: "Temp\xE9rature de l'air ext\xE9rieur"
+HV-50-0-37600: "Humidit\xE9 de l'air extrait"
+HV-50-0-37602: "Temp\xE9rature de l'air extrait"
+HV-50-0-37608: VOC air extrait
+HV-50-0-37611: "VOC air ext\xE9rieur"
+HV-50-0-38600: "Ventilateur air \xE9vacu\xE9 val. de consigne"
+HV-50-0-38606: Modulation de la ventilation
+HV-50-0-39600: "Qualit\xE9 de l'air, r\xE9gulation"
+HV-50-0-39652: "\xC9tat r\xE9gulation de la ventilation"
+HV-50-0-40650: "S\xE9lection de fonctionnement ventilation"
+HV-50-0-40651: Modulation de la ventilation normale
+HV-50-0-40686: "Modulation de la ventilation \xE9conomique"
+HV-50-0-40687: "Valeur de consigne humidit\xE9"
+MWA-0-0-29042: Erreur active 1_appearance_time
+MWA-0-0-29043: Erreur active 2_appearance_time
+MWA-0-0-29044: Erreur active 3_appearance_time
+MWA-0-0-29045: Erreur active 4_appearance_time
+MWA-0-0-29046: Erreur active 5_appearance_time
+MWA-20-1-0: "\xC9nergie actuelle_high"
+MWA-20-1-1: Puissance actuelle_high
+MWA-20-1-11: "\xC9lectricit\xE9_high"
+MWA-20-1-12: Tension
+MWA-20-1-13: Cosphi
+MWA-20-1-2: "D\xE9bit actuel_high"
+MWA-20-1-203: Puissance total high2
+MWA-20-1-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-1-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-1-3: "Volume r\xE9el_high"
+MWA-20-1-4: "Temp. actuelle d\xE9part"
+MWA-20-1-5: "Temp\xE9rature actuelle de retour"
+MWA-20-1-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-1-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-10-0: "\xC9nergie actuelle_high"
+MWA-20-10-1: Puissance actuelle_high
+MWA-20-10-11: "\xC9lectricit\xE9_high"
+MWA-20-10-12: Tension
+MWA-20-10-13: Cosphi
+MWA-20-10-2: "D\xE9bit actuel_high"
+MWA-20-10-203: Puissance total high2
+MWA-20-10-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-10-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-10-3: "Volume r\xE9el_high"
+MWA-20-10-4: "Temp. actuelle d\xE9part"
+MWA-20-10-5: "Temp\xE9rature actuelle de retour"
+MWA-20-10-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-10-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-11-0: "\xC9nergie actuelle_high"
+MWA-20-11-1: Puissance actuelle_high
+MWA-20-11-11: "\xC9lectricit\xE9_high"
+MWA-20-11-12: Tension
+MWA-20-11-13: Cosphi
+MWA-20-11-2: "D\xE9bit actuel_high"
+MWA-20-11-203: Puissance total high2
+MWA-20-11-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-11-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-11-3: "Volume r\xE9el_high"
+MWA-20-11-4: "Temp. actuelle d\xE9part"
+MWA-20-11-5: "Temp\xE9rature actuelle de retour"
+MWA-20-11-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-11-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-12-0: "\xC9nergie actuelle_high"
+MWA-20-12-1: Puissance actuelle_high
+MWA-20-12-11: "\xC9lectricit\xE9_high"
+MWA-20-12-12: Tension
+MWA-20-12-13: Cosphi
+MWA-20-12-2: "D\xE9bit actuel_high"
+MWA-20-12-203: Puissance total high2
+MWA-20-12-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-12-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-12-3: "Volume r\xE9el_high"
+MWA-20-12-4: "Temp. actuelle d\xE9part"
+MWA-20-12-5: "Temp\xE9rature actuelle de retour"
+MWA-20-12-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-12-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-13-0: "\xC9nergie actuelle_high"
+MWA-20-13-1: Puissance actuelle_high
+MWA-20-13-11: "\xC9lectricit\xE9_high"
+MWA-20-13-12: Tension
+MWA-20-13-13: Cosphi
+MWA-20-13-2: "D\xE9bit actuel_high"
+MWA-20-13-203: Puissance total high2
+MWA-20-13-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-13-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-13-3: "Volume r\xE9el_high"
+MWA-20-13-4: "Temp. actuelle d\xE9part"
+MWA-20-13-5: "Temp\xE9rature actuelle de retour"
+MWA-20-13-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-13-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-14-0: "\xC9nergie actuelle_high"
+MWA-20-14-1: Puissance actuelle_high
+MWA-20-14-11: "\xC9lectricit\xE9_high"
+MWA-20-14-12: Tension
+MWA-20-14-13: Cosphi
+MWA-20-14-2: "D\xE9bit actuel_high"
+MWA-20-14-203: Puissance total high2
+MWA-20-14-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-14-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-14-3: "Volume r\xE9el_high"
+MWA-20-14-4: "Temp. actuelle d\xE9part"
+MWA-20-14-5: "Temp\xE9rature actuelle de retour"
+MWA-20-14-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-14-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-15-0: "\xC9nergie actuelle_high"
+MWA-20-15-1: Puissance actuelle_high
+MWA-20-15-11: "\xC9lectricit\xE9_high"
+MWA-20-15-12: Tension
+MWA-20-15-13: Cosphi
+MWA-20-15-2: "D\xE9bit actuel_high"
+MWA-20-15-203: Puissance total high2
+MWA-20-15-250: "Importation d'\xE9nergie 1_low2"
+MWA-20-15-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-15-3: "Volume r\xE9el_high"
+MWA-20-15-4: "Temp. actuelle d\xE9part"
+MWA-20-15-5: "Temp\xE9rature actuelle de retour"
+MWA-20-15-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-15-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-16-0: "\xC9nergie actuelle_high"
+MWA-20-16-1: Puissance actuelle_high
+MWA-20-16-11: "\xC9lectricit\xE9_high"
+MWA-20-16-12: Tension
+MWA-20-16-13: Cosphi
+MWA-20-16-2: "D\xE9bit actuel_high"
+MWA-20-16-203: Puissance total high2
+MWA-20-16-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-16-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-16-3: "Volume r\xE9el_high"
+MWA-20-16-4: "Temp. actuelle d\xE9part"
+MWA-20-16-5: "Temp\xE9rature actuelle de retour"
+MWA-20-16-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-16-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-2-0: "\xC9nergie actuelle_high"
+MWA-20-2-1: Puissance actuelle_high
+MWA-20-2-11: "\xC9lectricit\xE9_high"
+MWA-20-2-12: Tension
+MWA-20-2-13: Cosphi
+MWA-20-2-2: "D\xE9bit actuel_high"
+MWA-20-2-203: Puissance total high2
+MWA-20-2-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-2-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-2-3: "Volume r\xE9el_high"
+MWA-20-2-4: "Temp. actuelle d\xE9part"
+MWA-20-2-5: "Temp\xE9rature actuelle de retour"
+MWA-20-2-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-2-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-3-0: "\xC9nergie actuelle_high"
+MWA-20-3-1: Puissance actuelle_high
+MWA-20-3-11: "\xC9lectricit\xE9_high"
+MWA-20-3-12: Tension
+MWA-20-3-13: Cosphi
+MWA-20-3-2: "D\xE9bit actuel_high"
+MWA-20-3-203: Puissance total high2
+MWA-20-3-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-3-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-3-3: "Volume r\xE9el_high"
+MWA-20-3-4: "Temp. actuelle d\xE9part"
+MWA-20-3-5: "Temp\xE9rature actuelle de retour"
+MWA-20-3-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-3-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-4-0: "\xC9nergie actuelle_high"
+MWA-20-4-1: Puissance actuelle_high
+MWA-20-4-11: "\xC9lectricit\xE9_high"
+MWA-20-4-12: Tension
+MWA-20-4-13: Cosphi
+MWA-20-4-2: "D\xE9bit actuel_high"
+MWA-20-4-203: Puissance total high2
+MWA-20-4-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-4-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-4-3: "Volume r\xE9el_high"
+MWA-20-4-4: "Temp. actuelle d\xE9part"
+MWA-20-4-5: "Temp\xE9rature actuelle de retour"
+MWA-20-4-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-4-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-5-0: "\xC9nergie actuelle_high"
+MWA-20-5-1: Puissance actuelle_high
+MWA-20-5-11: "\xC9lectricit\xE9_high"
+MWA-20-5-12: Tension
+MWA-20-5-13: Cosphi
+MWA-20-5-2: "D\xE9bit actuel_high"
+MWA-20-5-203: Puissance total high2
+MWA-20-5-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-5-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-5-3: "Volume r\xE9el_high"
+MWA-20-5-4: "Temp. actuelle d\xE9part"
+MWA-20-5-5: "Temp\xE9rature actuelle de retour"
+MWA-20-5-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-5-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-6-0: "\xC9nergie actuelle_high"
+MWA-20-6-1: Puissance actuelle_high
+MWA-20-6-11: "\xC9lectricit\xE9_high"
+MWA-20-6-12: Tension
+MWA-20-6-13: Cosphi
+MWA-20-6-2: "D\xE9bit actuel_high"
+MWA-20-6-203: Puissance total high2
+MWA-20-6-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-6-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-6-3: "Volume r\xE9el_high"
+MWA-20-6-4: "Temp. actuelle d\xE9part"
+MWA-20-6-5: "Temp\xE9rature actuelle de retour"
+MWA-20-6-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-6-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-7-0: "\xC9nergie actuelle_high"
+MWA-20-7-1: Puissance actuelle_high
+MWA-20-7-11: "\xC9lectricit\xE9_high"
+MWA-20-7-12: Tension
+MWA-20-7-13: Cosphi
+MWA-20-7-2: "D\xE9bit actuel_high"
+MWA-20-7-203: Puissance total high2
+MWA-20-7-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-7-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-7-3: "Volume r\xE9el_high"
+MWA-20-7-4: "Temp. actuelle d\xE9part"
+MWA-20-7-5: "Temp\xE9rature actuelle de retour"
+MWA-20-7-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-7-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-8-0: "\xC9nergie actuelle_high"
+MWA-20-8-1: Puissance actuelle_high
+MWA-20-8-11: "\xC9lectricit\xE9_high"
+MWA-20-8-12: Tension
+MWA-20-8-13: Cosphi
+MWA-20-8-2: "D\xE9bit actuel_high"
+MWA-20-8-203: Puissance total high2
+MWA-20-8-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-8-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-8-3: "Volume r\xE9el_high"
+MWA-20-8-4: "Temp. actuelle d\xE9part"
+MWA-20-8-5: "Temp\xE9rature actuelle de retour"
+MWA-20-8-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-8-7: "Num\xE9ro de s\xE9rie_high"
+MWA-20-9-0: "\xC9nergie actuelle_high"
+MWA-20-9-1: Puissance actuelle_high
+MWA-20-9-11: "\xC9lectricit\xE9_high"
+MWA-20-9-12: Tension
+MWA-20-9-13: Cosphi
+MWA-20-9-2: "D\xE9bit actuel_high"
+MWA-20-9-203: Puissance total high2
+MWA-20-9-250: "Importation d'\xE9nergie 1_high2"
+MWA-20-9-252: "Exportation d'\xE9nergie 1_high2"
+MWA-20-9-3: "Volume r\xE9el_high"
+MWA-20-9-4: "Temp. actuelle d\xE9part"
+MWA-20-9-5: "Temp\xE9rature actuelle de retour"
+MWA-20-9-6: "Diff\xE9rence temp\xE9rature actuelle"
+MWA-20-9-7: "Num\xE9ro de s\xE9rie_high"
+PS-0-0-21036: VA1 sortie HW
+PS-0-0-21037: VA2 sortie HW
+PS-0-0-21038: VA3 sortie HW
+PS-0-0-21039: VA1-FE1 Sortie HW
+PS-0-0-21040: VA2-FE1 Sortie HW
+PS-0-0-21041: VA3-FE1 Sortie HW
+PS-0-0-21043: VA1-FE2 Sortie HW
+PS-0-0-21044: VA2-FE2 Sortie HW
+PS-0-0-21045: VA3-FE2 Sortie HW
+PS-0-0-21078: VA0-10V/PWM sortie HW
+PS-0-0-21079: VA0-10V/PWM-FE1 sortie HW
+PS-0-0-21080: VA0-10V/PWM-FE2 sortie HW
+PS-0-0-21120: Info 1
+PS-0-0-21121: Info 2
+PS-0-0-21122: Info 3
+PS-0-0-21123: Info 4
+PS-0-0-21124: Info 5
+PS-0-0-23084: Activer le test de relais
+PS-0-0-29042: Erreur active 1_appearance_time
+PS-0-0-29043: Erreur active 2_appearance_time
+PS-0-0-29044: Erreur active 3_appearance_time
+PS-0-0-29045: Erreur active 4_appearance_time
+PS-0-0-29046: Erreur active 5_appearance_time
+PS-21-0-1015: Valeur consigne accumulateur
+PS-21-0-15: "Accumulateur PF/KPF2 r\xE9el"
+PS-21-0-17: "Accumulateur PF2/KPF r\xE9el"
+PS-21-0-23082: Statut accumulateur
+SOL-0-0-21036: VA1 SORTIE
+SOL-0-0-21037: VA2 SORTIE
+SOL-0-0-21038: VA3 SORTIE
+SOL-0-0-21039: VA1-FE1 Sortie
+SOL-0-0-21040: VA2- FE1 Sortie
+SOL-0-0-21041: VA3-FE1 Sortie
+SOL-0-0-21043: VA1-FE2 Sortie
+SOL-0-0-21044: VA2- FE2 Sortie
+SOL-0-0-21045: VA3-FE2 Sortie
+SOL-0-0-21078: Sortie VA10V/PWM
+SOL-0-0-21079: Sortie VA10V/PWM-FE1
+SOL-0-0-21080: Sortie VA10V/PWM-FE2
+SOL-0-0-21120: Info 1
+SOL-0-0-21121: Info 2
+SOL-0-0-21122: Info 3
+SOL-0-0-21123: Info 4
+SOL-0-0-21124: Info 5
+SOL-0-0-23084: Activer le test de relais
+SOL-0-0-29042: Erreur active 1_appearance_time
+SOL-0-0-29043: Erreur active 2_appearance_time
+SOL-0-0-29044: Erreur active 3_appearance_time
+SOL-0-0-29045: Erreur active 4_appearance_time
+SOL-0-0-29046: Erreur active 5_appearance_time
+SOL-22-0-1050: Vitesse rotation actuelle pompe solaire
+SOL-22-0-14: "TKO1 temp\xE9rature collecteur"
+SOL-22-0-2030: Puissance capteur actuelle
+SOL-22-0-2032: Heures de fonctionnement pompe solaire
+SOL-22-0-2034: Rendement total collecteur_high
+SOL-22-0-2056: "Statut r\xE9gulation solaire"
+SOL-22-0-60: "TKV temp\xE9rature aller collecteur"
+SOL-22-0-61: "TKR temp\xE9rature retour collecteur"
+SOL-22-0-62: "VSol d\xE9bit volumique du circuit solaire"
+SOL-22-1-1050: Vitesse rotation actuelle pompe solaire
+SOL-22-1-14: "TKO2 temp\xE9rature capteur"
+SOL-22-1-2030: Puissance capteur actuelle
+SOL-22-1-2032: Heures de fonctionnement pompe solaire
+SOL-22-1-2034: Rendement total collecteur_high
+SOL-22-1-2056: "Statut r\xE9gulation solaire"
+SOL-22-1-60: "TKV temp\xE9rature aller collecteur"
+SOL-22-1-61: "TKR temp\xE9rature retour collecteur"
+SOL-22-1-62: "VSol d\xE9bit volumique du circuit solaire"
+SOL-23-0-15: "TO temp\xE9rature accumulateur sup\xE9rieur"
+SOL-23-0-16: "TU temp\xE9rature accumulateur inf\xE9rieur"
+SOL-23-1-15: "TO temp\xE9rature accumulateur sup\xE9rieur"
+SOL-23-1-16: "TU temp\xE9rature accumulateur inf\xE9rieur"
+SOL-23-2-15: "TO temp\xE9rature accumulateur sup\xE9rieur"
+SOL-23-2-16: "TU temp\xE9rature accumulateur inf\xE9rieur"
+SOL-23-3-15: "TO temp\xE9rature accumulateur sup\xE9rieur"
+SOL-23-3-16: "TU temp\xE9rature accumulateur inf\xE9rieur"
+WEZ-0-0-0: "AF 1 - sonde ext\xE9rieure 1"
+WEZ-0-0-21031: CM1 sortie HW
+WEZ-0-0-21032: YK1+ sortie HW
+WEZ-0-0-21033: YK1- sortie HW
+WEZ-0-0-21034: DKP sortie HW
+WEZ-0-0-21035: SLP sortie HW
+WEZ-0-0-21036: VA1 sortie HW
+WEZ-0-0-21037: VA2 sortie HW
+WEZ-0-0-21039: VA1-FE1 Sortie HW
+WEZ-0-0-21040: VA2-FE1 Sortie HW
+WEZ-0-0-21041: VA3-FE1 Sortie HW
+WEZ-0-0-21043: VA1-FE2 Sortie HW
+WEZ-0-0-21044: VA2-FE2 Sortie HW
+WEZ-0-0-21045: VA3-FE2 Sortie HW
+WEZ-0-0-21059: "Temp. d\xE9part r\xE9elle AVF"
+WEZ-0-0-21078: VA0-10V/PWM sortie HW
+WEZ-0-0-21079: VA0-10V/PWM-FE1 sortie HW
+WEZ-0-0-21100: "AF 2 - sonde ext\xE9rieure 2"
+WEZ-0-0-21120: Sonde info 1
+WEZ-0-0-21121: Sonde info 2
+WEZ-0-0-21122: Sonde info 3
+WEZ-0-0-21123: Sonde info 4
+WEZ-0-0-21124: Sonde info 5
+WEZ-0-0-21125: Info 1 0-10V
+WEZ-0-0-21126: Info 2 0-10V
+WEZ-0-0-21127: Info 3 0-10V
+WEZ-0-0-22021: "Temp\xE9rature de consigne de d\xE9part FAV"
+WEZ-0-0-22055: Pompe AVP
+WEZ-0-0-22056: "M\xE9langeur YAV"
+WEZ-0-0-23084: Activer le test de relais
+WEZ-0-0-29042: Erreur active 1_appearance_time
+WEZ-0-0-29043: Erreur active 2_appearance_time
+WEZ-0-0-29044: Erreur active 3_appearance_time
+WEZ-0-0-29045: Erreur active 4_appearance_time
+WEZ-0-0-29046: Erreur active 5_appearance_time
+WEZ-1-0-1: "Valeur r\xE9elle pi\xE8ce"
+WEZ-1-0-1001: "Valeur de consigne pi\xE8ce"
+WEZ-1-0-1002: Aller consigne
+WEZ-1-0-1020: Pompe
+WEZ-1-0-1021: "M\xE9langeur"
+WEZ-1-0-2: "Aller r\xE9el"
+WEZ-1-0-2051: "Statut r\xE9gulation circuit de chauffage"
+WEZ-1-0-3: "Retour r\xE9el"
+WEZ-1-0-3050: "S\xE9lection fonctionnement chauffage"
+WEZ-1-0-3051: "temp\xE9rature local normale mode chauffage"
+WEZ-1-0-3053: "temp\xE9rature local \xE9co mode chauffage"
+WEZ-1-0-7009: temp. consigne comm. man.
+WEZ-1-0-7036: "D\xE9p. consigne demande const. chauffer"
+WEZ-1-0-7047: "D\xE9p. consigne demande const. refroid."
+WEZ-1-1-1: "Valeur r\xE9elle pi\xE8ce"
+WEZ-1-1-1001: "Valeur de consigne pi\xE8ce"
+WEZ-1-1-1002: Aller consigne
+WEZ-1-1-1020: Pompe
+WEZ-1-1-1021: "M\xE9langeur"
+WEZ-1-1-2: "Aller r\xE9el"
+WEZ-1-1-2051: "Statut r\xE9gulation circuit de chauffage"
+WEZ-1-1-3: "Retour r\xE9el"
+WEZ-1-1-3050: "S\xE9lection fonctionnement chauffage"
+WEZ-1-1-3051: "temp\xE9rature local normale mode chauffage"
+WEZ-1-1-3053: "temp\xE9rature local \xE9co mode chauffage"
+WEZ-1-1-7009: temp. consigne comm. man.
+WEZ-1-1-7036: "D\xE9p. consigne demande const. chauffer"
+WEZ-1-1-7047: "D\xE9p. consigne demande const. refroid."
+WEZ-1-2-1: "Valeur r\xE9elle pi\xE8ce"
+WEZ-1-2-1001: "Valeur de consigne pi\xE8ce"
+WEZ-1-2-1002: Aller consigne
+WEZ-1-2-1020: Pompe
+WEZ-1-2-1021: "M\xE9langeur"
+WEZ-1-2-2: "Aller r\xE9el"
+WEZ-1-2-2051: "Statut r\xE9gulation circuit de chauffage"
+WEZ-1-2-3: "Retour r\xE9el"
+WEZ-1-2-3050: "S\xE9lection fonctionnement chauffage"
+WEZ-1-2-3051: "temp\xE9rature local normale mode chauffage"
+WEZ-1-2-3053: "temp\xE9rature local \xE9co mode chauffage"
+WEZ-1-2-7009: temp. consigne comm. man.
+WEZ-1-2-7036: "D\xE9p. consigne demande const. chauffer"
+WEZ-1-2-7047: "D\xE9p. consigne demande const. refroid."
+WEZ-10-0-1007: "G\xE9n\xE9rateur de chaleur consigne"
+WEZ-10-0-1009: "Valeur de consigne puiss. g\xE9n. chaleur"
+WEZ-10-0-1022: "Pompe g\xE9n\xE9rateur de chaleur"
+WEZ-10-0-1100: "Allure br\xFBleur"
+WEZ-10-0-2053: "Statut r\xE9gulation g\xE9n\xE9rateur de chaleur"
+WEZ-10-0-2080: "Cycles commutation g\xE9n\xE9rateur de chaleur_high"
+WEZ-10-0-2081: "Heures de fonct. g\xE9n\xE9rateur de chaleur_high"
+WEZ-10-0-21105: "D\xE9bit volumique"
+WEZ-10-0-22: Vitesse rot. Pompe principale
+WEZ-10-0-29050: "Quantit\xE9 de chaleur chauffage_high"
+WEZ-10-0-29051: Puissance actuelle chauffage_high
+WEZ-10-0-7: "G\xE9n\xE9rateur de chaleur r\xE9el"
+WEZ-10-0-8: "Temp\xE9rature retour g\xE9n\xE9rateur de chaleur"
+WEZ-10-0-9020: Temp. consigne comm. man.
+WEZ-10-0-9037: "Sur\xE9l\xE9vation temp. GDC"
+WEZ-10-0-9058: Valeur consigne puiss. commande manuelle
+WEZ-10-0-9075: "S\xE9lection fonct. g\xE9n\xE9rateur de chaleur"
+WEZ-10-1-1007: "G\xE9n\xE9rateur de chaleur consigne"
+WEZ-10-1-10110: "Test d'\xE9mission limitation de puissance"
+WEZ-10-1-1022: "Pompe g\xE9n\xE9rateur de chaleur"
+WEZ-10-1-20050: Pression hydraulique
+WEZ-10-1-20051: Statut FA
+WEZ-10-1-20052: Modulation
+WEZ-10-1-20053: Signalisation de marche
+WEZ-10-1-2053: "Statut r\xE9gulation g\xE9n\xE9rateur de chaleur"
+WEZ-10-1-2080: "Cycles commutation g\xE9n\xE9rateur de chaleur_high"
+WEZ-10-1-2081: "Heures de fonct. g\xE9n\xE9rateur de chaleur_high"
+WEZ-10-1-2082: "Heures de fonct. du g\xE9n. chaleur > 50%_high"
+WEZ-10-1-2083: "Cycles comm. g\xE9n\xE9rateur chaleur > 50%_high"
+WEZ-10-1-21105: "D\xE9bit volumique"
+WEZ-10-1-22: Vitesse rot. Pompe principale
+WEZ-10-1-23085: "Activer test d'\xE9mission"
+WEZ-10-1-29050: "Quantit\xE9 de chaleur chauffage_high"
+WEZ-10-1-29051: Puissance actuelle chauffage_high
+WEZ-10-1-29052: Quant. refroid. Froid_high
+WEZ-10-1-29053: Puissance actuelle refroid._high
+WEZ-10-1-7: "G\xE9n\xE9rateur de chaleur r\xE9el"
+WEZ-10-1-8: "Temp\xE9rature retour g\xE9n\xE9rateur de chaleur"
+WEZ-10-1-9020: Temp. consigne comm. man.
+WEZ-10-1-9037: "Sur\xE9l\xE9vation temp. GDC"
+WEZ-10-1-9058: Valeur consigne puiss. commande manuelle
+WEZ-10-1-9075: "S\xE9lection fonct. g\xE9n\xE9rateur de chaleur"
+WEZ-2-0-1004: Eau chaude consigne
+WEZ-2-0-1065: Pompe de circulation eau chaude
+WEZ-2-0-1066: SLP pompe de charge eau chaude
+WEZ-2-0-118: "temp\xE9rature circuit de circulation"
+WEZ-2-0-2052: "Statut r\xE9gulation eau chaude"
+WEZ-2-0-4: "Eau chaude r\xE9elle SF"
+WEZ-2-0-5050: "S\xE9lection fonct. eau chaude"
+WEZ-2-0-5051: "temp\xE9rature d'eau chaude normale"
+WEZ-2-0-5086: "temp\xE9rature eau chaude \xE9co"
+WEZ-3-0-1096: Temp. installation cons. chauffage act.
+WEZ-3-0-1097: "Temp\xE9rature d'installation cons. EC act."
+WEZ-3-0-2040: Puissance inst. cons. chauffage act.
+WEZ-3-0-2041: Puissance inst. cons. EC act.
+WEZ-3-0-2042: Puissance inst. cons. refroid. act.
+WEZ-3-0-21089: "Temp\xE9rature d\xE9part install. refroid"
+WEZ-3-0-22024: Statut froid module activ UKA
+WEZ-3-0-22098: Temp. installation cons. refroid. act.
+WEZ-3-0-22121: Statut froid module UHKA
+WEZ-3-0-96: "Temp\xE9rature d\xE9part install."
+WEZ-3-0-97: "Temp\xE9rature d\xE9part install. eau chaude"
+WEZ-4-0-1009: "Valeur de consigne puiss. g\xE9n. chaleur"
+WEZ-4-0-2043: 0 - 100% demande act. au GDC
+WEZ-4-0-2119: "G\xE9n\xE9rateur de chaleur principal"
+WEZ-4-0-6020: "Changement de s\xE9quence (temps)"
+WEZ-4-1-1009: "Valeur de consigne puiss. g\xE9n. chaleur"
+WEZ-4-1-2043: 0 - 100% demande act. au GDC
+WEZ-4-2-1009: "Valeur de consigne puiss. g\xE9n. chaleur"
+WEZ-4-2-2043: 0 - 100% demande act. au GDC
+WEZ-4-3-1009: "Valeur de consigne puiss. g\xE9n. chaleur"
+WEZ-4-3-2043: 0 - 100% demande act. au GDC
+WEZ-4-4-1009: "Valeur de consigne puiss. g\xE9n. chaleur"
+WEZ-4-4-2043: 0 - 100% demande act. au GDC
+WEZ-4-5-1009: "Valeur de consigne puiss. g\xE9n. chaleur"
+WEZ-4-5-2043: 0 - 100% demande act. au GDC
+WEZ-4-6-1009: "Valeur de consigne puiss. g\xE9n. chaleur"
+WEZ-4-6-2043: 0 - 100% demande act. au GDC
+WEZ-4-7-1009: "Valeur de consigne puiss. g\xE9n. chaleur"
+WEZ-4-7-2043: 0 - 100% demande act. au GDC
+WEZ-60-254-0: Valeur cons. pour fonct. circ. chaleur
+WEZ-60-254-1: Valeur cons. pour fonct. acc.
+WEZ-60-254-12: Valeur cons. pour mode refroidissement
+WEZ-60-254-17: "Temp\xE9rature GDC"
+WEZ-60-254-18: "Temp\xE9rature gaz comb. RS485"
+WEZ-60-254-19: "change Temp\xE9rature active / passive"
+WEZ-60-254-21: "Flamme br\xFBleur"
+WEZ-60-254-22: Valeur de consigne chauffage
+WEZ-60-254-23: Valeur de consigne acc.
+WEZ-60-254-24: Val. de consigne GDC
+WEZ-60-254-25: Limitation maximale ext. chauffage
+WEZ-60-254-26: Limitation maximale ext. acc.
+WEZ-60-254-27: Code erreur automate
+WEZ-60-254-29: "Temp\xE9rature de retour"
+WEZ-60-254-30: Puissance GDC
+WEZ-60-254-31: Puissance absolue
+WEZ-60-254-32: Pression hydraulique en bars
+WEZ-60-254-33: Statut GDC
+WEZ-60-254-34: Statut de service
+WEZ-60-254-35: "Index ID br\xFBleur"
+WEZ-60-254-36: Extensions de fonctions
+WEZ-60-254-37: Information statut
+WEZ-60-254-38: Valeur de consigne refroid.
+WEZ-60-254-8: Limitation de puissance
+WEZ-60-254-9: "Mesure des \xE9missions"
