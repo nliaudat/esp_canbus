@@ -66,7 +66,12 @@ def parse_and_merge(ws, ret_sensor):
             if datapoint_name and 'humidity' in datapoint_name.lower():
                 sensor['icon'] = "mdi:water-percent"
                 sensor['device_class'] = "humidity"
-                sensor['state_class'] = "measurement"            
+                sensor['state_class'] = "measurement"       
+
+            if unit_of_measurement in ['°C', '°F', 'K']:
+                sensor['icon'] = "mdi:temperature"
+                sensor['device_class'] = "temperature"
+                sensor['state_class'] = "measurement"                
             
             ret_sensor.append(sensor)
             dpid_set.add(dpid)
