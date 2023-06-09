@@ -16,7 +16,7 @@
 * Box is 3D printed or fit in a 86x86 electrical box
 
 ## Firmware : 
-* Esphome : Under dev
+* Esphome : actually for hoval devices, but can be general purpose
 
 ## Licence: 
 * Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC-BY-NC-SA)
