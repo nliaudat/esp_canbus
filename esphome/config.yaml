@@ -1,0 +1,29 @@
+# for flashing : press boot button for 2-3 seconds before the serial connection initialize
+# After OTA update, the EN (reset) button must be pressed to run firmware
+# do not use gpio12 (MTDI)
+
+substitutions:
+  name: canbus
+  friendly_name: "CanBus Controller"
+  
+  TZ: "Europe/Zurich" #timezone
+
+
+packages:
+  wifi: !include wifi.yaml
+  board: !include board.yaml
+  time: !include time.yaml
+  ## translations / substitutions
+  substitutions_EN: !include substitutions_EN.yaml
+#  substitutions_DE: !include substitutions_DE.yaml
+#  substitutions_FR: !include substitutions_FR.yaml
+#  substitutions_IT: !include substitutions_IT.yaml
+  canbus: !include canbus.yaml
+  sensor_canbus: !include sensor_canbus.yaml
+  sensor_others: !include sensor_others.yaml
+  switch: !include switch.yaml
+  
+### not compatible with framework esp-idf
+# web_server:
+  # port: 80    
+

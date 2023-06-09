@@ -1,0 +1,19 @@
+substitutions:
+    HV_0_0_29042: Aktiver Fehler 1_appearance_time
+    HV_0_0_29043: Aktiver Fehler 2_appearance_time
+    HV_0_0_29044: Aktiver Fehler 3_appearance_time
+    HV_0_0_29045: Aktiver Fehler 4_appearance_time
+    HV_0_0_29046: Aktiver Fehler 5_appearance_time
+    HV_50_0_0: Temperatur Aussenluft
+    HV_50_0_37600: Feuchtigkeit Abluft
+    HV_50_0_37602: Temperatur Abluft
+    HV_50_0_37608: VOC Abluft
+    HV_50_0_37611: VOC Aussenluft
+    HV_50_0_38600: Ventilator Fortluft soll
+    HV_50_0_38606: "L\xFCftungsmodulation"
+    HV_50_0_39600: "Luftqualit\xE4t Regulierung"
+    HV_50_0_39652: "Status L\xFCftungsregelung"
+    HV_50_0_40650: "Betriebswahl L\xFCftung"
+    HV_50_0_40651: "Normal_L\xFCftungsmodulation "
+    HV_50_0_40686: "Spar_L\xFCftungsmodulation "
+    HV_50_0_40687: Feuchte Sollwert
