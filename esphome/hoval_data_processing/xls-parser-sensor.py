@@ -46,10 +46,10 @@ def parse_and_merge(ws, ret_sensor):
             elif i == 17:  # Comment
                 all_data['comment'] = cell_value
 
-        dpid = "-".join(dpid)  # identifier like "HV-50-0-37600"
+        dpid = "_".join(dpid)  # identifier like "HV_50_0_37600"
 
         #if dpid not in dpid_set: ## for all devices
-        if dpid not in dpid_set and all_data.get('device') in computed_devices : # list your devices : in ['HV', 'SOL', 'HKW']:
+        if dpid not in dpid_set and all_data.get('device') in computed_devices : 
             sensor = {
                 'platform': 'template',
                 'id': dpid,
