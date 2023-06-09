@@ -30,7 +30,7 @@ def translate(ws, ret_substitutions):
             elif i == 6: #DatapointName
                 substitutions = cell.value
             i+=1
-        dpid = "-".join(dpid) #identifier like "HV-50-0-37600"
+        dpid = "_".join(dpid) #identifier like "HV_50_0_37600"
 
 
         #if dpid not in ret_substitutions:  #add only unique
