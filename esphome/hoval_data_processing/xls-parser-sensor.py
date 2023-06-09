@@ -51,10 +51,23 @@ def parse_and_merge(ws, ret_sensor):
                 'platform': 'template',
                 'id': dpid,
                 'name': "${" + dpid + "}",
-                'unit_of_measurement': all_data['unit_of_measurement'],
                 'accuracy_decimals': all_data.get('accuracy_decimals', 0)
             }
+            
+            unit_of_measurement = all_data.get('unit_of_measurement')
+            if unit_of_measurement != 0:
+                sensor['unit_of_measurement'] = unit_of_measurement
 
+            type_name = all_data.get('type')
+            if type_name == 'S16':
+                sensor['filters'] = [{'multiply': 0.1}]
+            
+            datapoint_name = all_data.get('descr')
+            if datapoint_name and 'humidity' in datapoint_name.lower():
+                sensor['icon'] = "mdi:water-percent"
+                sensor['device_class'] = "humidity"
+                sensor['state_class'] = "measurement"            
+            
             ret_sensor.append(sensor)
             dpid_set.add(dpid)
 
