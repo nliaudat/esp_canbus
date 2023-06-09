@@ -1,10 +1,8 @@
-
-#### adapted from https://github.com/zittix/Hoval-GW/tte-gw-xls-parser.py
-
 import openpyxl
-#import json
 import yaml
 import os
+
+computed_devices = ['HV'] #['FV', 'GLT', 'GW', 'HKW', 'HV','MWA', 'PS','SOL', 'WEZ']
 
 wb = openpyxl.load_workbook(filename = 'TTE-GW-Modbus-datapoints.xlsx', read_only=True)
 
@@ -21,19 +19,22 @@ def translate(ws, ret_substitutions):
             continue
         i = 0
         dpid=[]
-        substitutions = {
-        }
+        substitutions = {}
+        all_data = {}  # Dictionary to store all data
         for cell in row:
             if i >= 3 and i <=5:
                 dpid.append(str(cell.value))
             elif i == 1:
                 dpid.append(cell.value)
+                all_data['device'] = cell.value
             elif i == 6: #DatapointName
                 substitutions = cell.value
             i+=1
         dpid = "-".join(dpid) #identifier like "HV-50-0-37600"
 
-        if dpid not in ret_substitutions:  #add only unique
+
+        #if dpid not in ret_substitutions:  #add only unique
+        if dpid not in ret_substitutions and all_data.get('device') in computed_devices : 
             ret_substitutions[dpid] = substitutions
 
 
