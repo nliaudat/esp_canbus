@@ -2,6 +2,8 @@ import openpyxl
 import yaml
 import os
 
+computed_devices = ['HV'] #['FV', 'GLT', 'GW', 'HKW', 'HV','MWA', 'PS','SOL', 'WEZ']
+
 wb = openpyxl.load_workbook(filename='TTE-GW-Modbus-datapoints.xlsx', read_only=True)
 
 ret_sensor = []
@@ -46,7 +48,8 @@ def parse_and_merge(ws, ret_sensor):
 
         dpid = "-".join(dpid)  # identifier like "HV-50-0-37600"
 
-        if dpid not in dpid_set:
+        #if dpid not in dpid_set: ## for all devices
+        if dpid not in dpid_set and all_data.get('device') in computed_devices : # list your devices : in ['HV', 'SOL', 'HKW']:
             sensor = {
                 'platform': 'template',
                 'id': dpid,
