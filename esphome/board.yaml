@@ -21,12 +21,12 @@ preferences:
   
 # Enable logging
 logger:
-  level: DEBUG #NONE# ERROR #INFO #DEBUG  #VERBOSE
+  level: INFO #NONE# ERROR #INFO #DEBUG  #VERBOSE
   #baud_rate: 0 #to disable logging via UART
   logs:
     text_sensor : ERROR
     homeassistant.sensor: ERROR
-
+    canbus: INFO
 
 # Enable Home Assistant API
 api:
