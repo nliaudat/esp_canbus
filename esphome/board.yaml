@@ -26,7 +26,8 @@ logger:
   logs:
     text_sensor : ERROR
     homeassistant.sensor: ERROR
-    canbus: INFO
+    canbus: INFO # setting log level for canbus lower than INFO may crash  : esphome/issues#4051
+
 
 # Enable Home Assistant API
 api:
