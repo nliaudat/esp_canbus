@@ -18,72 +18,58 @@ canbus:
 
                     case 40651:
                         id(HV_50_0_40651).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_50_0_40651} is %f", tmp);
                         break;
                 
                     case 40686:
                         id(HV_50_0_40686).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_50_0_40686} is %f", tmp);
                         break;
                 
                     case 38606:
                         id(HV_50_0_38606).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_50_0_38606} is %f", tmp);
                         break;
                 
                     case 40687:
                         id(HV_50_0_40687).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_50_0_40687} is %f", tmp);
                         break;
                 
                     case 37600:
                         id(HV_50_0_37600).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_50_0_37600} is %f", tmp);
                         break;
                 
                     case 37608:
                         id(HV_50_0_37608).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_50_0_37608} is %f", tmp);
                         break;
                 
                     case 37611:
                         id(HV_50_0_37611).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_50_0_37611} is %f", tmp);
                         break;
                 
                     case 39652:
                         id(HV_50_0_39652).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_50_0_39652} is %f", tmp);
                         break;
                 
                     case 38600:
                         id(HV_50_0_38600).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_50_0_38600} is %f", tmp);
                         break;
                 
                     case 29042:
                         id(HV_0_0_29042).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_0_0_29042} is %f", tmp);
                         break;
                 
                     case 29043:
                         id(HV_0_0_29043).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_0_0_29043} is %f", tmp);
                         break;
                 
                     case 29044:
                         id(HV_0_0_29044).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_0_0_29044} is %f", tmp);
                         break;
                 
                     case 29045:
                         id(HV_0_0_29045).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_0_0_29045} is %f", tmp);
                         break;
                 
                     case 29046:
                         id(HV_0_0_29046).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_0_0_29046} is %f", tmp);
                         break;
                 
             }
@@ -94,13 +80,11 @@ canbus:
                 switch(myInt1) {
                     case 0:
                         id(HV_50_0_0).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_50_0_0} is %f", tmp);
                         break;
 
 
                     case 37602:
                         id(HV_50_0_37602).publish_state(tmp);
-                        ESP_LOGD("main", "${HV_50_0_37602} is %f", tmp);
                         break;
                     }
             }
