@@ -27,6 +27,11 @@ sensor:
                 (minutes ? to_string(minutes) + "m " : "") +
                 (to_string(seconds) + "s")
               ).c_str();      
+              
+              
+
+  # - platform: internal_temperature
+    # name: "${friendly_name} Internal Temperature"
 
 text_sensor:  
   - platform: template
