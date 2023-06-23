@@ -7,7 +7,7 @@
 * Full headers for extending or debug
 * The card use a ESP32-WROOM-32D as logics and wifi connection. (You can get a 32U if you want an external antenna)
 * The software runs under esphome to be easy to customize and linked with https://www.home-assistant.io 
-* Power is taken from CanBus 12V and converted to 3.3v with AMS1117-3.3V (not needed but recommended, the 3.3V cutout can link external power supply)
+* Power is taken from CanBus 12V and converted to 3.3v with AMS1117-3.3V (not needed but recommended, if cutting the "3v3V cutout", you can use external power supply)
 
 ## Fabrication : 
 
