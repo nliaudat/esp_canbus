@@ -21,12 +21,18 @@ preferences:
   
 # Enable logging
 logger:
-  level: INFO #NONE# ERROR #INFO #DEBUG  #VERBOSE
+  level: DEBUG #NONE# ERROR #INFO #DEBUG  #VERBOSE
   #baud_rate: 0 #to disable logging via UART
   logs:
     text_sensor : ERROR
     homeassistant.sensor: ERROR
     canbus: INFO # setting log level for canbus lower than INFO may crash  : esphome/issues#4051
+    #uptime: NONE
+    uptime.sensor: NONE
+    #wifi_signal : NONE
+    wifi_signal.sensor: NONE
+    esp32.preferences : NONE
+    internal_temperature : NONE
 
 
 # Enable Home Assistant API
