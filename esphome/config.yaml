@@ -27,5 +27,5 @@ packages:
 ### not compatible with framework esp-idf
 web_server:
   port: 80
-  #log: false
+  log: false
 

@@ -2,7 +2,7 @@
 number:
    
   - platform: template
-    name: ${HV_50_0_40687} #Humidity set value
+    name: "${HV_50_0_40687} update" #Humidity set value
     optimistic: true
     min_value: 30
     max_value: 65

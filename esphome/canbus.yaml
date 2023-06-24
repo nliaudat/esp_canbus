@@ -10,112 +10,108 @@ canbus:
       use_extended_id: true
       then:
       - lambda: |-
+       
             uint32_t addr = x[5] + (x[4] << 8);
-            //std::string b(x.begin(), x.end()); //debug
             
             if(x.size() > 6) {
-                uint8_t tmpU8 = (uint8_t)x[6];
-                //auto  tmpU8 = (uint8_t)x[6];
+
+                uint8_t tmpU8 = (uint8_t)x[6]; 
                 
-                if (std::abs(tmpU8) > 1e-9){  //uint8 > zero
+                if (std::abs(tmpU8) > 1e-9){  //> zero
                     
                     switch(addr) {
 
+                            //Normal ventilation modulation
                             case 40651:
-                                id(HV_50_0_40651).publish_state(tmpU8);
+                                //id(HV_50_0_40651).publish_state(tmpU8); //disabled
                                 break;
                         
+                            //Eco ventilation modulation
                             case 40686:
-                                id(HV_50_0_40686).publish_state(tmpU8);
+                                //id(HV_50_0_40686).publish_state(tmpU8); //disabled
                                 break;
                         
+                            //Ventilation modulation
                             case 38606:
                                 id(HV_50_0_38606).publish_state(tmpU8);
                                 break;
                         
+                            //Humidity set value
                             case 40687:
                                 id(HV_50_0_40687).publish_state(tmpU8);
                                 break;
                         
+                            //Humidity extract air
                             case 37600:
                                 id(HV_50_0_37600).publish_state(tmpU8);
                                 break;
                         
+                            //VOC extract air
                             case 37608:
-                                id(HV_50_0_37608).publish_state(tmpU8);
+                                //id(HV_50_0_37608).publish_state(tmpU8); //disabled
                                 break;
                         
-                            case 37611:
-                                id(HV_50_0_37611).publish_state(tmpU8);
+                            //VOC outdoor air
+                            case 37611:  
+                                //id(HV_50_0_37611).publish_state(tmpU8); //disabled
                                 break;
                         
+                            //Status vent. regulation
                             case 39652:
                                 id(HV_50_0_39652).publish_state(tmpU8);
                                 break;
                         
+                            //Fan exhaust air set
                             case 38600:
-                                id(HV_50_0_38600).publish_state(tmpU8);
+                                //id(HV_50_0_38600).publish_state(tmpU8); //disabled
                                 break;
                         
+                             //Active errors
                             case 29042:
-                                id(HV_0_0_29042).publish_state(tmpU8);
+                                //id(HV_0_0_29042).publish_state(tmpU8); //disabled
                                 break;
                         
                             case 29043:
-                                id(HV_0_0_29043).publish_state(tmpU8);
+                                //id(HV_0_0_29043).publish_state(tmpU8); //disabled
                                 break;
                         
                             case 29044:
-                                id(HV_0_0_29044).publish_state(tmpU8);
-                                break;
+                                //id(HV_0_0_29044).publish_state(tmpU8); //disabled
+                               break;
                         
                             case 29045:
-                                id(HV_0_0_29045).publish_state(tmpU8);
+                                //id(HV_0_0_29045).publish_state(tmpU8); //disabled
                                 break;
                         
                             case 29046:
-                                id(HV_0_0_29046).publish_state(tmpU8);
+                                //id(HV_0_0_29046).publish_state(tmpU8); //disabled
                                 break;
+                             
+                            //default: //case else
+                            //      //debug addresses received
+                            //      ESP_LOGI("canbus", "unknown canbus addr received : %i", addr);
+                            //     ESP_LOGI("canbus", "canbus addr 0 : Response Hex8: %x %x %x %x %x %x %x %x", int(x[0]), int(x[1]), int(x[2]), int(x[3]), int(x[4]), int(x[5]), int(x[6]), int(x[7])); 
+                            //      ESP_LOGI("canbus", "unknown canbus  : Response Hex16: %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x", int(x[0]), int(x[1]), int(x[2]), int(x[3]), int(x[4]), int(x[5]), int(x[6]), int(x[7]) ,int(x[8]), int(x[9]), int(x[10]), int(x[11]), int(x[12]), int(x[13]), int(x[14]), int(x[15]));
+                                  
                             
 
-                        } //end switch
-                     } //end if > 0   
+                        } //end switch case
+                     } //end if tmpU8 > 0   
 
+                    //response size max 8
                     if(x.size() > 7) {
-                            //int16_t tmpS16 = (int16_t)(x[6] << 8) + x[7]; 
-                            int tmpS16 = (int16_t)(x[6] << 8) + x[7];
-                            //auto tmpS16 = (int16_t)(x[6] << 8) + x[7];
-                            
-                                    //debug
-                                    int val0 = int(x[0]);
-                                    int val1 =int(x[1]);
-                                    int val2 =int(x[2]);
-                                    int val3 =int(x[3]);
-                                    int val4 =int(x[4]);
-                                    int val5 =int(x[5]);
-                                    int val6 =int(x[6]);
-                                    float val7 = float(int((x[6])+( (x[5])<<8)));
-                                    float val8 = float(int((x[4])+( (x[3])<<8)));
-                                    
-                                    //ESP_LOGI("main", "Response Hex: %x %x %x %x %x %x %x", val0, val1, val2, val3, val4, val5, val6);  
-                                    //ESP_LOGI("main", "Response Float: %f", val7);
-                                    //ESP_LOGI("main", "Response Dec: %i %i", val5, val6);
-                                    //ESP_LOGI("main", "Short response Float: %f", val8);
-                                    //ESP_LOGI("main", "Short response Dec.: %i %i", val3, val4);
-                                    
-                                    
-                                                        
-                            if (tmpS16 > 0){ // int16_t > zero
+                            int16_t tmpS16 = (int16_t)(x[6] << 8) + x[7]; 
+
+                            if (std::abs(tmpS16) > 1e-9){ //> zero
                             
                                 switch(addr) {
                                 
                                     //Outside air temp.
                                     case 0: 
-                                        ESP_LOGI("main", "canbus addr 0 : Response Hex: %x %x %x %x %x %x %x", val0, val1, val2, val3, val4, val5, val6);  
-                                        ESP_LOGI("main", "canbus addr 0 : Response Float: %f", val7);
-                                        ESP_LOGI("main", "canbus addr 0 : Response Dec: %i %i", val5, val6);
-                                        ESP_LOGI("main", "canbus addr 0 : Short response Float: %f", val8);
-                                        ESP_LOGI("main", "canbus addr 0 : Short response Dec.: %i %i", val3, val4);
+                                        //ESP_LOGI("canbus", "canbus addr 0 : tmpS16 : %f", tmpS16);
+                                        //ESP_LOGI("canbus", "canbus addr 0 : Response Hex8: %x %x %x %x %x %x %x %x", int(x[0]), int(x[1]), int(x[2]), int(x[3]), int(x[4]), int(x[5]), int(x[6]), int(x[7]));  
+                                        //ESP_LOGI("canbus", "canbus addr 0  : Response Hex16: %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x", int(x[0]), int(x[1]), int(x[2]), int(x[3]), int(x[4]), int(x[5]), int(x[6]), int(x[7]) ,int(x[8]), int(x[9]), int(x[10]), int(x[11]), int(x[12]), int(x[13]), int(x[14]), int(x[15]));
+                                        if(tmpS16 == 106) {break;} // prevent 10.6° false temperature, probably another value since addr 0 is not unique
                                         id(HV_50_0_0).publish_state(tmpS16);
                                         break;
                                         
@@ -128,4 +124,4 @@ canbus:
                                 } //end switch
                             } //end if tmpS16> 0
                     } //end if x.size() >7
-            }
+            } //end if x.size() >6

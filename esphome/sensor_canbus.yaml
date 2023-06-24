@@ -1,31 +1,42 @@
 sensor:
-    - platform: template
-      id: HV_50_0_40650
-      name: ${HV_50_0_40650}
-      accuracy_decimals: 0
-    - platform: template
-      id: HV_50_0_40651
-      name: ${HV_50_0_40651}
-      accuracy_decimals: 0
-      unit_of_measurement: '%'
-    - platform: template
-      id: HV_50_0_40686
-      name: ${HV_50_0_40686}
-      accuracy_decimals: 0
-      unit_of_measurement: '%'
+    #Op. choice ventilation
+    # - platform: template
+      # id: HV_50_0_40650
+      # name: ${HV_50_0_40650}
+      # accuracy_decimals: 0
+      
+      #Normal ventilation modulation
+    # - platform: template
+      # id: HV_50_0_40651
+      # name: ${HV_50_0_40651}
+      # accuracy_decimals: 0
+      # unit_of_measurement: '%'
+      
+     #Eco ventilation modulation 
+    # - platform: template
+      # id: HV_50_0_40686
+      # name: ${HV_50_0_40686}
+      # accuracy_decimals: 0
+      # unit_of_measurement: '%'
+      
+      #Ventilation modulation
     - platform: template
       id: HV_50_0_38606
       name: ${HV_50_0_38606}
       accuracy_decimals: 0
       unit_of_measurement: '%'
+      
+      #Humidity set value
     - platform: template
-      id: HV_50_0_40687 #Humidity set value
+      id: HV_50_0_40687 
       name: ${HV_50_0_40687}
       accuracy_decimals: 0
       unit_of_measurement: '%'
       icon: mdi:water_percent
       device_class: humidity
       state_class: measurement
+      
+      #Humidity extract air
     - platform: template
       id: HV_50_0_37600
       name: ${HV_50_0_37600}
@@ -34,24 +45,34 @@ sensor:
       icon: mdi:water_percent
       device_class: humidity
       state_class: measurement
-    - platform: template
-      id: HV_50_0_37608
-      name: ${HV_50_0_37608}
-      accuracy_decimals: 0
-      unit_of_measurement: '%'
-    - platform: template
-      id: HV_50_0_37611
-      name: ${HV_50_0_37611}
-      accuracy_decimals: 0
-      unit_of_measurement: '%'
-    - platform: template
-      id: HV_50_0_39600
-      name: ${HV_50_0_39600}
-      accuracy_decimals: 0
+      
+      #VOC extract air
+    # - platform: template
+      # id: HV_50_0_37608
+      # name: ${HV_50_0_37608}
+      # accuracy_decimals: 0
+      # unit_of_measurement: '%'
+      
+      #VOC outdoor air
+    # - platform: template
+      # id: HV_50_0_37611
+      # name: ${HV_50_0_37611}
+      # accuracy_decimals: 0
+      # unit_of_measurement: '%'
+      
+      #Air quality control
+    # - platform: template
+      # id: HV_50_0_39600
+      # name: ${HV_50_0_39600}
+      # accuracy_decimals: 0
+      
+      #Status vent. regulation
     - platform: template
       id: HV_50_0_39652
       name: ${HV_50_0_39652}
       accuracy_decimals: 0
+      
+      #Outside air temp.
     - platform: template
       id: HV_50_0_0
       name: ${HV_50_0_0}
@@ -62,6 +83,8 @@ sensor:
       icon: mdi:temperature
       device_class: temperature
       state_class: measurement
+      
+      #Extract air temp.
     - platform: template
       id: HV_50_0_37602
       name: ${HV_50_0_37602}
@@ -72,28 +95,32 @@ sensor:
       icon: mdi:temperature
       device_class: temperature
       state_class: measurement
-    - platform: template
-      id: HV_50_0_38600
-      name: ${HV_50_0_38600}
-      accuracy_decimals: 0
-      unit_of_measurement: '%'
-    - platform: template
-      id: HV_0_0_29042
-      name: ${HV_0_0_29042}
-      accuracy_decimals: 0
-    - platform: template
-      id: HV_0_0_29043
-      name: ${HV_0_0_29043}
-      accuracy_decimals: 0
-    - platform: template
-      id: HV_0_0_29044
-      name: ${HV_0_0_29044}
-      accuracy_decimals: 0
-    - platform: template
-      id: HV_0_0_29045
-      name: ${HV_0_0_29045}
-      accuracy_decimals: 0
-    - platform: template
-      id: HV_0_0_29046
-      name: ${HV_0_0_29046}
-      accuracy_decimals: 0
+      
+      #Fan exhaust air set
+    # - platform: template
+      # id: HV_50_0_38600
+      # name: ${HV_50_0_38600}
+      # accuracy_decimals: 0
+      # unit_of_measurement: '%'
+      
+      # Active error
+    # - platform: template
+      # id: HV_0_0_29042
+      # name: ${HV_0_0_29042}
+      # accuracy_decimals: 0
+    # - platform: template
+      # id: HV_0_0_29043
+      # name: ${HV_0_0_29043}
+      # accuracy_decimals: 0
+    # - platform: template
+      # id: HV_0_0_29044
+      # name: ${HV_0_0_29044}
+      # accuracy_decimals: 0
+    # - platform: template
+      # id: HV_0_0_29045
+      # name: ${HV_0_0_29045}
+      # accuracy_decimals: 0
+    # - platform: template
+      # id: HV_0_0_29046
+      # name: ${HV_0_0_29046}
+      # accuracy_decimals: 0
