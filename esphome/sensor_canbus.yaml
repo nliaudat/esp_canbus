@@ -19,7 +19,7 @@ sensor:
       accuracy_decimals: 0
       unit_of_measurement: '%'
     - platform: template
-      id: HV_50_0_40687
+      id: HV_50_0_40687 #Humidity set value
       name: ${HV_50_0_40687}
       accuracy_decimals: 0
       unit_of_measurement: '%'

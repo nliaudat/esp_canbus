@@ -22,7 +22,7 @@ preferences:
 # Enable logging
 logger:
   level: DEBUG #NONE# ERROR #INFO #DEBUG  #VERBOSE
-  #baud_rate: 0 #to disable logging via UART
+  baud_rate: 0 #to disable logging via UART
   logs:
     text_sensor : ERROR
     homeassistant.sensor: ERROR
