@@ -72,7 +72,7 @@ def parse_and_merge(ws, ret_sensor):
                 sensor['state_class'] = "measurement"       
 
             if unit_of_measurement in ['°C', '°F', 'K']:
-                sensor['icon'] = "mdi:temperature"
+                sensor['icon'] = "mdi:temperature-celsius"
                 sensor['device_class'] = "temperature"
                 sensor['state_class'] = "measurement"                
             
