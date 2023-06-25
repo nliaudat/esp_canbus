@@ -1,5 +1,6 @@
 canbus:
   - platform: esp32_can
+    id: cbus
     tx_pin: GPIO22 #GPIO5
     rx_pin: GPIO21 #GPIO4
     can_id: 8
@@ -17,6 +18,32 @@ canbus:
 
                 uint8_t tmpU8 = (uint8_t)x[6]; 
                 
+                //debug : dump value
+                    switch(addr) {
+                    
+                        //Humidity set value
+                        //case 40687:
+                        //    id(HV_50_0_40687).publish_state(tmpU8);
+                        //    ESP_LOGI("canbus", "Humidity set value : Response Hex8: %x %x %x %x %x %x %x %x", int(x[0]), int(x[1]), int(x[2]), int(x[3]), int(x[4]), int(x[5]), int(x[6]), int(x[7])); 
+                       //Humidity set value : Response Hex8: 1 42 32 0 9e ef 33 78
+                        //   break;
+                            
+                        //CO2 extract air
+                        case 37606:
+                            ESP_LOGI("canbus", "CO2 extract air : Response Hex8: %x %x %x %x %x %x %x %x", int(x[0]), int(x[1]), int(x[2]), int(x[3]), int(x[4]), int(x[5]), int(x[6]), int(x[7])); 
+                            break;
+                            
+                        //input voltage ?
+                        //case 00001:
+                         //   ESP_LOGI("canbus", "input voltage: Response Hex8: %x %x %x %x %x %x %x %x", int(x[0]), int(x[1]), int(x[2]), int(x[3]), int(x[4]), int(x[5]), int(x[6]), int(x[7])); 
+                         //   break;
+
+
+                     } //end switch debug
+                        
+                    
+                
+                // if value > 0 then update
                 if (std::abs(tmpU8) > 1e-9){  //> zero
                     
                     switch(addr) {
@@ -39,6 +66,7 @@ canbus:
                             //Humidity set value
                             case 40687:
                                 id(HV_50_0_40687).publish_state(tmpU8);
+                                //ESP_LOGI("canbus", "Humidity set value : Response Hex8: %x %x %x %x %x %x %x %x", int(x[0]), int(x[1]), int(x[2]), int(x[3]), int(x[4]), int(x[5]), int(x[6]), int(x[7])); 
                                 break;
                         
                             //Humidity extract air
