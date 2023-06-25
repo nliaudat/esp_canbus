@@ -27,8 +27,8 @@ def parse_and_merge(ws, ret_canbus):
                 all_data['device'] = cell_value
             if i == 5:  #DatapointId
                 all_data['DatapointId'] = cell_value
-            # elif i == 6:  # DatapointName
-                # all_data['descr'] = cell_value
+            elif i == 6:  # DatapointName
+                 all_data['descr'] = cell_value
             elif i == 8:  # TypeName
                 all_data['type'] = cell_value
             # elif i == 9:  # Decimal
@@ -61,16 +61,16 @@ def parse_and_merge(ws, ret_canbus):
             type_name = all_data.get('type')
             if type_name == 'U8':
                 output_string = f'''
-                    case {datapointID}:
-                        id({dpid}).publish_state((uint8_t)x[6]);
-                        ESP_LOGD("main", "{datapointSubst} is %f", (uint8_t)x[6]);
+                    case {datapointID}: // {all_data['descr'] }
+                        id({dpid}).publish_state(tmpU8);
+                        //ESP_LOGI("canbus", "{datapointSubst} is %f", tmpU8);
                         break;
                 '''          
             elif type_name == 'S16':                
                 output_string = f'''
-                    case {datapointID}:
-                        id({dpid}).publish_state((int16_t)(x[6] << 8) + x[7]);
-                        ESP_LOGD("main", "{datapointSubst} is %f", (int16_t)(x[6] << 8) + x[7]);
+                    case {datapointID}:  // {all_data['descr'] }
+                        id({dpid}).publish_state(tmpS16);
+                        //ESP_LOGI("canbus", "{datapointSubst} is %f", tmpS16);
                         break;
                 '''       
 
