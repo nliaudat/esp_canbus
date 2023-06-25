@@ -32,7 +32,7 @@ sensor:
       name: ${HV_50_0_40687}
       accuracy_decimals: 0
       unit_of_measurement: '%'
-      icon: mdi:water_percent
+      icon: mdi:water-percent
       device_class: humidity
       state_class: measurement
       
@@ -42,7 +42,7 @@ sensor:
       name: ${HV_50_0_37600}
       accuracy_decimals: 0
       unit_of_measurement: '%'
-      icon: mdi:water_percent
+      icon: mdi:water-percent
       device_class: humidity
       state_class: measurement
       
@@ -80,7 +80,7 @@ sensor:
       unit_of_measurement: "\xB0C"
       filters:
       - multiply: 0.1
-      icon: mdi:temperature
+      icon: mdi:temperature-celsius
       device_class: temperature
       state_class: measurement
       
@@ -92,7 +92,7 @@ sensor:
       unit_of_measurement: "\xB0C"
       filters:
       - multiply: 0.1
-      icon: mdi:temperature
+      icon: mdi:temperature-celsius
       device_class: temperature
       state_class: measurement
       
