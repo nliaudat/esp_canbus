@@ -9,7 +9,7 @@ number:
     step: 1
     restore_value: false
     unit_of_measurement: '%'
-    icon: mdi:water_percent
+    icon: mdi:water-percent
     device_class: humidity
     id: HV_50_0_40687_set
 
