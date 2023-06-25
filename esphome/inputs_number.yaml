@@ -1,15 +1,101 @@
+# https://github.com/chrishrb/hoval-gateway/blob/main/gateway/message.py
+    # """Operations in CAN-Message"""
+    # RESPONSE = 0x42
+    # GET_REQUEST = 0x40
+    # SET_REQUEST = 0x46
 
+#https://github.com/chrishrb/hoval-gateway/blob/main/gateway/message.py#L72C24-L72C24
 number:
    
+   #Humidity set value
+    #data : message_len = 1, operation = 70 (0x46), function_group = 50 (0x32), function_number = 0 (0x00), datapoint = 40687 (9eef) , data
   - platform: template
-    name: "${HV_50_0_40687} update" #Humidity set value
+    name: "${HV_50_0_40687} update" 
     optimistic: true
     min_value: 30
     max_value: 65
     step: 1
     restore_value: false
+    initial_value: 50
     unit_of_measurement: '%'
     icon: mdi:water-percent
     device_class: humidity
+    on_value:
+        then: 
+            # - lambda: |-
+                  # uint32_t can_id = 8;
+                  # bool use_extended_id = 1;
+                  # std::vector< uint8_t > data{0x1, 0x46, 0x32, 0x00, 0x9e, 0xef, (uint8_t) id(HV_50_0_40687_set).state}; 
+                  # id(cbus)->send_data(can_id, use_extended_id, data);
+            # - canbus.send:
+                  # data: [ 0x1, 0x46, 0x32, 0x00, 0x9e, 0xef, 0x23]
+                  # canbus_id: cbus # optional if you only have 1 canbus device
+                  # can_id: 8 # override the can_id configured in the can bus
+                  # use_extended_id: true
+            # - canbus.send:
+                  # data: [ 0x1, 0x46, 0x32, 0x00, 0x9e, 0xef, 0x23]
+                  # canbus_id: cbus # optional if you only have 1 canbus device
+                  # can_id: 8 # override the can_id configured in the can bus
+                  # use_extended_id: true
+            # - delay: 200ms
+            - canbus.send: !lambda
+                    return {0x01, 0x46, 0x32, 0x00, 0x9e, 0xef, (uint8_t) id(HV_50_0_40687_set).state}; 
+            # - delay: 200ms
+            - delay: 200ms
+            - logger.log:
+                format: "canbus send Humidity set value %f and hex %x"
+                args: [ 'id(HV_50_0_40687_set).state', '(uint8_t) id(HV_50_0_40687_set).state' ]
     id: HV_50_0_40687_set
 
+
+
+
+##### to debug canbus : 
+#https://www.rapidtables.com/convert/number/decimal-to-hex.html
+# https://community.home-assistant.io/t/send-hexadecimal-content-from-input-text/409091
+
+
+
+# text_sensor:
+
+  # - platform: template
+    # name: debug_canbus_message_1
+    # id: debug_canbus_message_1
+    
+  # - platform: template
+    # name: debug_canbus_message_2
+    # id: debug_canbus_message_2
+    
+  # - platform: template
+    # name: debug_canbus_message_3
+    # id: debug_canbus_message_3
+    
+  # - platform: template
+    # name: debug_canbus_message_4
+    # id: debug_canbus_message_4
+    
+  # - platform: template
+    # name: debug_canbus_message_5
+    # id: debug_canbus_message_5
+    
+  # - platform: template
+    # name: debug_canbus_message_6
+    # id: debug_canbus_message_6
+    
+  # - platform: template
+    # name: debug_canbus_message_7
+    # id: debug_canbus_message_7
+    
+  - platform: template
+    name: debug_canbus_message_8
+    id: debug_canbus_message_8
+    
+# switch:
+  # - platform: template
+    # name: ${name} Send canbus message
+    # id: send_can_message
+    # turn_on_action:
+        # - canbus.send: 
+        //return {(uint8_t) id(debug_canbus_message_1),(uint8_t) id(debug_canbus_message_2),(uint8_t) id(debug_canbus_message_3),(uint8_t) id(debug_canbus_message_4), (uint8_t) id(debug_canbus_message_5),(uint8_t) id(debug_canbus_message_6),(uint8_t) id(debug_canbus_message_7)};
+              # data: !lambda
+                # return {id(debug_canbus_message_1),id(debug_canbus_message_2),id(debug_canbus_message_3),id(debug_canbus_message_4), id(debug_canbus_message_5),id(debug_canbus_message_6),id(debug_canbus_message_7)};
