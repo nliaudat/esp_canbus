@@ -86,9 +86,9 @@ number:
     # name: debug_canbus_message_7
     # id: debug_canbus_message_7
     
-  - platform: template
-    name: debug_canbus_message_8
-    id: debug_canbus_message_8
+  # - platform: template
+    # name: debug_canbus_message_8
+    # id: debug_canbus_message_8
     
 # switch:
   # - platform: template
@@ -96,6 +96,6 @@ number:
     # id: send_can_message
     # turn_on_action:
         # - canbus.send: 
-        //return {(uint8_t) id(debug_canbus_message_1),(uint8_t) id(debug_canbus_message_2),(uint8_t) id(debug_canbus_message_3),(uint8_t) id(debug_canbus_message_4), (uint8_t) id(debug_canbus_message_5),(uint8_t) id(debug_canbus_message_6),(uint8_t) id(debug_canbus_message_7)};
+        #//return {(uint8_t) id(debug_canbus_message_1),(uint8_t) id(debug_canbus_message_2),(uint8_t) id(debug_canbus_message_3),(uint8_t) id(debug_canbus_message_4), (uint8_t) id(debug_canbus_message_5),(uint8_t) id(debug_canbus_message_6),(uint8_t) id(debug_canbus_message_7)};
               # data: !lambda
                 # return {id(debug_canbus_message_1),id(debug_canbus_message_2),id(debug_canbus_message_3),id(debug_canbus_message_4), id(debug_canbus_message_5),id(debug_canbus_message_6),id(debug_canbus_message_7)};
