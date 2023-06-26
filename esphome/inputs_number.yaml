@@ -5,6 +5,10 @@
     # SET_REQUEST = 0x46
 
 #https://github.com/chrishrb/hoval-gateway/blob/main/gateway/message.py#L72C24-L72C24
+
+#https://github.com/Uksa007/esphome-jk-bms-can/blob/main/esp32-example-can.yaml
+
+
 number:
    
    #Humidity set value
@@ -47,6 +51,204 @@ number:
                 args: [ 'id(HV_50_0_40687_set).state', '(uint8_t) id(HV_50_0_40687_set).state' ]
     id: HV_50_0_40687_set
 
+#Humidity set value
+#data : message_len = 1, operation = 70 (0x46), function_group = 50 (0x32), function_number = 0 (0x00), datapoint = 40687 (9eef) , data
+
+select:
+  - platform: template
+    name: "Debug"
+    id: canbus_debug_tag
+    optimistic: true
+    options:
+      - "1"
+      - "2"
+      - "3"
+      - "4"
+      - "5"
+      - "6"
+      - "7"
+      - "8"
+      - "9"
+      - "10"
+    set_action:
+      then:
+          - delay: 500ms
+          - if:
+              condition:
+                - lambda: |-
+                    return (id(canbus_debug_tag).state) == "1";
+              then:
+                - canbus.send: 
+                    data: [ 0x1, 0x46, 0x32, 0x00, 0x9e, 0xef, 0x23]
+          - if:
+              condition:
+                - lambda: |-
+                    return (id(canbus_debug_tag).state) == "2";
+              then:
+                - canbus.send: 
+                    data: [ 0x46, 0x32, 0x00, 0x9e, 0xef, 0x23]
+          - if:
+              condition:
+                - lambda: |-
+                    return (id(canbus_debug_tag).state) == "3";
+              then:
+                - canbus.send: 
+                    data: [ 0x46, 0x32, 0x9e, 0xef, 0x23]
+          - if:
+              condition:
+                - lambda: |-
+                    return (id(canbus_debug_tag).state) == "4";
+              then:
+                - canbus.send: 
+                    data: [ 0x46, 0x9e, 0xef, 0x23]
+          - if:
+              condition:
+                - lambda: |-
+                    return (id(canbus_debug_tag).state) == "5";
+              then:
+                - canbus.send: 
+                    data: [ 0x9e, 0xef, 0x23]
+          - if:
+              condition:
+                - lambda: |-
+                    return (id(canbus_debug_tag).state) == "6";
+              then:
+                - canbus.send: 
+                    data: [ 0x1, 0x46, 0x32, 0x00, 0x9e, 0xef, 0x23]
+                    canbus_id: cbus # optional if you only have 1 canbus device
+                    can_id: 8 # override the can_id configured in the can bus
+                    use_extended_id: true
+          - if:
+              condition:
+                - lambda: |-
+                    return (id(canbus_debug_tag).state) == "7";
+              then:
+                - canbus.send: 
+                    data: [ 0x46, 0x32, 0x00, 0x9e, 0xef, 0x23]
+                    canbus_id: cbus # optional if you only have 1 canbus device
+                    can_id: 8 # override the can_id configured in the can bus
+                    use_extended_id: true
+          - if:
+              condition:
+                - lambda: |-
+                    return (id(canbus_debug_tag).state) == "8";
+              then:
+                - canbus.send: 
+                    data: [ 0x46, 0x32, 0x9e, 0xef, 0x23]
+                    canbus_id: cbus # optional if you only have 1 canbus device
+                    can_id: 8 # override the can_id configured in the can bus
+                    use_extended_id: true
+          - if:
+              condition:
+                - lambda: |-
+                    return (id(canbus_debug_tag).state) == "9";
+              then:
+                - canbus.send: 
+                    data: [ 0x46, 0x9e, 0xef, 0x23]
+                    canbus_id: cbus # optional if you only have 1 canbus device
+                    can_id: 8 # override the can_id configured in the can bus
+                    use_extended_id: true
+          - if:
+              condition:
+                - lambda: |-
+                    return (id(canbus_debug_tag).state) == "10";
+              then:
+                - canbus.send: 
+                    data: [ 0x9e, 0xef, 0x23]
+                    canbus_id: cbus # optional if you only have 1 canbus device
+                    can_id: 8 # override the can_id configured in the can bus
+                    use_extended_id: true
+          # - delay: 500ms
+          # - canbus.send: 
+              # data: [ 0x31, 0x00, 0xfa,0x05,0x6c,0x00,0x00 ]
+
+
+#################################
+###https://community.home-assistant.io/t/configured-my-esphome-with-mcp2515-can-bus-for-stiebel-eltron-heating-pump/366053/66
+
+# globals:
+## Variablen für senden von CAN-Bus Befehlen zum Umschalten auf Warmwasserbetrieb (evtl. ersetzen durch Array)
+  # - id: dataframe0
+    # type: int
+    # restore_value: no
+  # - id: dataframe1
+    # type: int
+    # restore_value: no
+  # - id: dataframe2
+    # type: int
+    # restore_value: no
+  # - id: dataframe3
+    # type: int
+    # restore_value: no
+  # - id: dataframe4
+    # type: int
+    # restore_value: no
+  # - id: dataframe5
+    # type: int
+    # restore_value: no
+  # - id: dataframe6
+    # type: int
+    # restore_value: no
+
+
+
+###Auswahlfeld zum Umschalten der Betriebsmodi
+# select:
+  # - platform: template
+    # name: "hot water operation"
+    # id: wasserbetrieb
+    # optimistic: true
+    # options:
+      # - Notbetrieb
+      # - Bereitschaft
+      # - Automatik
+      # - Komfort
+      # - Eco
+      # - Warmwasserbetrieb
+    # initial_option: Automatik
+    # on_value:
+      # then:
+        # - lambda: |-
+            # id(dataframe0)=0x30;
+            # id(dataframe1)=0x00;
+            # id(dataframe2)=0xfa;
+            # id(dataframe3)=0x01;
+            # id(dataframe4)=0x12;
+            # id(dataframe6)=0x00;
+            # if (x=="Automatik"){
+              # id(dataframe5)=0x02;
+            # }
+            # else if (x=="Komfort"){
+              # id(dataframe5)=0x03;
+            # }
+            # else if (x=="Eco"){
+              # id(dataframe5)=0x04;
+            # }
+            # else if (x=="Warmwasserbetrieb"){
+              # id(dataframe5)=0x05;
+            # }
+            # else if (x=="Bereitschaft"){
+              # id(dataframe5)=0x01;
+            # }
+            # else if (x=="Notbetrieb"){
+              # id(dataframe5)=0x00;
+            # }
+            # ESP_LOGD("main", "The current value of hot water operation is %x", id(dataframe5));
+
+
+
+
+# button:
+  # - platform: template
+    # name: Switch hot water mode
+    # id: warmwasserbetrieb_umschalten
+    # on_press:
+      # then:
+        # - canbus.send: 
+            # data: !lambda
+              # return {(uint8_t) id(dataframe0),(uint8_t) id(dataframe1),(uint8_t) id(dataframe2),(uint8_t) id(dataframe3), (uint8_t) id(dataframe4),(uint8_t) id(dataframe5),(uint8_t) id(dataframe6)};
+            # can_id: 0x680
+
 
 
 
@@ -55,40 +257,79 @@ number:
 # https://community.home-assistant.io/t/send-hexadecimal-content-from-input-text/409091
 
 
-
-# text_sensor:
+  # - platform: template
+    # name: debug_canbus_message_0
+    # mode: box
+    # optimistic: true
+    # min_value: 0
+    # max_value: 255
+    # step: 1
+    # id: debug_canbus_message_0
 
   # - platform: template
     # name: debug_canbus_message_1
+    # mode: box
+    # optimistic: true
+    # min_value: 0
+    # max_value: 255
+    # step: 1
     # id: debug_canbus_message_1
     
   # - platform: template
     # name: debug_canbus_message_2
+    # mode: box
+    # optimistic: true
+    # min_value: 0
+    # max_value: 255
+    # step: 1
     # id: debug_canbus_message_2
     
   # - platform: template
     # name: debug_canbus_message_3
+    # mode: box
+    # optimistic: true
+    # min_value: 0
+    # max_value: 255
+    # step: 1
     # id: debug_canbus_message_3
     
   # - platform: template
     # name: debug_canbus_message_4
+    # mode: box
+    # optimistic: true
+    # min_value: 0
+    # max_value: 255
+    # step: 1
     # id: debug_canbus_message_4
     
   # - platform: template
     # name: debug_canbus_message_5
+    # mode: box
+    # optimistic: true
+    # min_value: 0
+    # max_value: 255
+    # step: 1
     # id: debug_canbus_message_5
     
   # - platform: template
     # name: debug_canbus_message_6
+    # mode: box
+    # optimistic: true
+    # min_value: 0
+    # max_value: 255
+    # step: 1
     # id: debug_canbus_message_6
     
   # - platform: template
     # name: debug_canbus_message_7
+    # mode: box
+    # optimistic: true
+    # min_value: 0
+    # max_value: 255
+    # step: 1
     # id: debug_canbus_message_7
     
-  # - platform: template
-    # name: debug_canbus_message_8
-    # id: debug_canbus_message_8
+
     
 # switch:
   # - platform: template
@@ -96,6 +337,8 @@ number:
     # id: send_can_message
     # turn_on_action:
         # - canbus.send: 
-        #//return {(uint8_t) id(debug_canbus_message_1),(uint8_t) id(debug_canbus_message_2),(uint8_t) id(debug_canbus_message_3),(uint8_t) id(debug_canbus_message_4), (uint8_t) id(debug_canbus_message_5),(uint8_t) id(debug_canbus_message_6),(uint8_t) id(debug_canbus_message_7)};
-              # data: !lambda
-                # return {id(debug_canbus_message_1),id(debug_canbus_message_2),id(debug_canbus_message_3),id(debug_canbus_message_4), id(debug_canbus_message_5),id(debug_canbus_message_6),id(debug_canbus_message_7)};
+                # data: !lambda
+                    # return {{ (uint8_t) id(debug_canbus_message_0)},{(uint8_t) id(debug_canbus_message_1)}, {(uint8_t) id(debug_canbus_message_2)}, {(uint8_t) id(debug_canbus_message_3)},{ (uint8_t) id(debug_canbus_message_4)},  {(uint8_t) id(debug_canbus_message_5)}, {(uint8_t) id(debug_canbus_message_6)}, {(uint8_t) id(debug_canbus_message_7)}};
+                    
+                    
+                    
