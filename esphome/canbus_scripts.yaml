@@ -32,6 +32,38 @@ script:
             data: [0x01, 0x40, 0x32, 0x00, 0x00, 0x00]
             use_extended_id: true
 
+  - id: HV_50_0_38606_request #datapoint 38606 : Ventilation modulation
+    then:
+        - canbus.send:
+            canbus_id: cbus
+            can_id: 0x1FE04208
+            data: [0x01, 0x40, 0x32, 0x00, 0x96, 0xCE]
+            use_extended_id: true
+
+  - id: HV_50_0_40650_request #datapoint 40650 : Op. choice ventilation
+    then:
+        - canbus.send:
+            canbus_id: cbus
+            can_id: 0x1FE04208
+            data: [0x01, 0x40, 0x32, 0x00, 0x9E, 0xCA]
+            use_extended_id: true            
+            
+  - id: HV_50_0_40651_request #datapoint 40651 : Normal ventilation modulation
+    then:
+        - canbus.send:
+            canbus_id: cbus
+            can_id: 0x1FE04208
+            data: [0x01, 0x40, 0x32, 0x00, 0x9E, 0xCB]
+            use_extended_id: true    
+            
+  - id: HV_50_0_40686_request #datapoint 40686 : Eco ventilation modulation 
+    then:
+        - canbus.send:
+            canbus_id: cbus
+            can_id: 0x1FE04208
+            data: [0x01, 0x40, 0x32, 0x00, 0x9E, 0xEE]
+            use_extended_id: true    
+
 
 ########### Canbus on boot requests #########
 
@@ -43,5 +75,13 @@ script:
         - script.execute: HV_50_0_37602_request
         - delay: 2s
         - script.execute: HV_50_0_0_request
+        - delay: 2s
+        - script.execute: HV_50_0_38606_request
+        - delay: 2s
+        - script.execute: HV_50_0_40650_request
+        - delay: 2s
+        - script.execute: HV_50_0_40651_request
+        - delay: 2s
+        - script.execute: HV_50_0_40686_request
 
       

@@ -1,23 +1,23 @@
 sensor:
     #Op. choice ventilation
-    # - platform: template
-      # id: HV_50_0_40650
-      # name: ${HV_50_0_40650}
-      # accuracy_decimals: 0
+    - platform: template
+      id: HV_50_0_40650
+      name: ${HV_50_0_40650}
+      accuracy_decimals: 0
       
       #Normal ventilation modulation
-    # - platform: template
-      # id: HV_50_0_40651
-      # name: ${HV_50_0_40651}
-      # accuracy_decimals: 0
-      # unit_of_measurement: '%'
+    - platform: template
+      id: HV_50_0_40651
+      name: ${HV_50_0_40651}
+      accuracy_decimals: 0
+      unit_of_measurement: '%'
       
      #Eco ventilation modulation 
-    # - platform: template
-      # id: HV_50_0_40686
-      # name: ${HV_50_0_40686}
-      # accuracy_decimals: 0
-      # unit_of_measurement: '%'
+    - platform: template
+      id: HV_50_0_40686
+      name: ${HV_50_0_40686}
+      accuracy_decimals: 0
+      unit_of_measurement: '%'
       
       #Ventilation modulation
     - platform: template
