@@ -19,13 +19,13 @@ packages:
 #  substitutions_FR: !include substitutions_FR.yaml
 #  substitutions_IT: !include substitutions_IT.yaml
   canbus: !include canbus.yaml
+  canbus_scripts: !include canbus_scripts.yaml
   sensor_canbus: !include sensor_canbus.yaml
   sensor_others: !include sensor_others.yaml
   switch: !include switch.yaml
   number: !include inputs_number.yaml
   
-### not compatible with framework esp-idf
 web_server:
   port: 80
-  log: false
+  #log: false
 

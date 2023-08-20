@@ -5,10 +5,13 @@
     # SET_REQUEST = 0x46
 
 
+######### Input numbers
+
+
 number:
    
-   # Humidity set value
-    #data : message_len = 1, operation = 70 (0x46), function_group = 50 (0x32), function_number = 0 (0x00), datapoint = 40687 (9eef) , data
+    # Humidity set value
+    #data : message_len = 0x01, operation = 0x46, function_group = 50 (0x32), function_number = 0 (0x00), datapoint = 40687 (9eef) , data
   - platform: template
     name: "${HV_50_0_40687} update" 
     optimistic: true
@@ -22,76 +25,111 @@ number:
     device_class: humidity
     on_value:
         then: 
-            # - canbus.send: 
-                # canbus_id: cbus
-                # can_id: 0x1FE04208
-                # data: [0x01, 0x46, 0x32, 0x00, 0x9E, 0xEF, atoi(id(HV_50_0_40687_set).state.c_str())]
-                # use_extended_id: true
             - lambda: |-
                     uint32_t can_id = 0x1FE04208;
                     bool use_extended_id = 1;
                     std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xEF, (uint8_t) id(HV_50_0_40687_set).state}; 
                     id(cbus)->send_data(can_id, use_extended_id, data);
+                    //std::vector< uint8_t > validate{0x01, 0x44, 0x32, 0x00, 0x9E, 0xEF}; 
+                    //id(cbus)->send_data(can_id, use_extended_id, validate);
             - delay: 200ms
             - logger.log:
                 format: "canbus send Humidity set value %f and hex %x"
                 args: [ 'id(HV_50_0_40687_set).state', '(uint8_t) id(HV_50_0_40687_set).state' ]
     id: HV_50_0_40687_set
 
+    # Ventilation modulation set value
+    #data : message_len = 0x01, operation = 0x46, function_group = 50 (0x32), function_number = 0 (0x00), datapoint = 38606 (96CE) , data
+  - platform: template
+    name: "${HV_50_0_38606} update" 
+    optimistic: true
+    min_value: 0
+    max_value: 100
+    step: 5
+    restore_value: false
+    initial_value: 70
+    unit_of_measurement: '%'
+    icon: mdi:fan
+    device_class: speed
+    on_value:
+        then: 
+            - lambda: |-
+                    uint32_t can_id = 0x1FE04208;
+                    bool use_extended_id = 1;
+                    std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x96, 0xCE, (uint8_t) id(HV_50_0_38606_set).state}; 
+                    id(cbus)->send_data(can_id, use_extended_id, data);
+                    //std::vector< uint8_t > validate{0x01, 0x44, 0x32, 0x00, 0x96, 0xCE}; 
+                    //id(cbus)->send_data(can_id, use_extended_id, validate);
+            - delay: 200ms
+            - logger.log:
+                format: "canbus send Ventilation modulation set value %f and hex %x"
+                args: [ 'id(HV_50_0_38606_set).state', '(uint8_t) id(HV_50_0_38606_set).state' ]
+    id: HV_50_0_38606_set
+    
+    # Constant ventilation modulation set value
+    #data : message_len = 0x01, operation = 0x46, function_group = 50 (0x32), function_number = 0 (0x00), datapoint = 40651 (9ECB) , data
+  - platform: template
+    name: "Constant ventilation modulation update" 
+    optimistic: true
+    min_value: 0
+    max_value: 100
+    step: 5
+    restore_value: false
+    initial_value: 70
+    unit_of_measurement: '%'
+    icon: mdi:fan
+    device_class: speed
+    on_value:
+        then: 
+            - lambda: |-
+                    uint32_t can_id = 0x1FE04208;
+                    bool use_extended_id = 1;
+                    std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xCB, (uint8_t) id(HV_50_0_40651_set).state}; 
+                    id(cbus)->send_data(can_id, use_extended_id, data);
+                    //std::vector< uint8_t > validate{0x01, 0x44, 0x32, 0x00, 0x9E, 0xCB}; 
+                    //id(cbus)->send_data(can_id, use_extended_id, validate);
+            - delay: 200ms
+            - logger.log:
+                format: "canbus send Ventilation modulation set value %f and hex %x"
+                args: [ 'id(HV_50_0_40651_set).state', '(uint8_t) id(HV_50_0_40651_set).state' ]
+    id: HV_50_0_40651_set
 
+    
+######### select 
 
 select:
   - platform: template
-    name: "Debug"
-    id: canbus_debug_tag
+    name: "Debug sensors"
+    id: canbus_debug_sensors
     optimistic: true
     options:
       - "none"
       - "GET-Humidity-extract-air"
       - "GET-Extract-air-temp"
       - "GET-Outside-air-temp"
-      #- "SET-Humidity-set"
     set_action:
       then:
-          - delay: 500ms
           - if: ## GET_REQUEST : 37600 : Humidity extract air
               condition:
                 - lambda: |-
-                    return (id(canbus_debug_tag).state) == "GET-Humidity-extract-air";
-              then:                       
-                        # Send the hexadecimal code "01 40 32 00 92 E0" over the CAN bus at address 0x1FE04208
-                        # Candump = can0  1FE04208   [6]  01 40 32 00 92 E0
-                        - canbus.send:
-                            canbus_id: cbus
-                            can_id: 0x1FE04208
-                            data: [0x01, 0x40, 0x32, 0x00, 0x92, 0xE0]
-                            use_extended_id: true
+                    return (id(canbus_debug_sensors).state) == "GET-Humidity-extract-air";
+              then: 
+                - script.execute: HV_50_0_37600_request              
+
                     
           - if: ## GET_REQUEST : 37602: Extract air temp.
               condition:
                 - lambda: |-
-                    return (id(canbus_debug_tag).state) == "GET-Extract-air-temp";
-              then:                       
-                        # Send the hexadecimal code "01 40 32 00 92 E2" over the CAN bus at address 0x1FE04208
-                        # Candump = can0  1FE04208   [6]  01 40 32 00 92 E2
-                        - canbus.send:
-                            canbus_id: cbus
-                            can_id: 0x1FE04208
-                            data: [0x01, 0x40, 0x32, 0x00, 0x92, 0xE2]
-                            use_extended_id: true
+                    return (id(canbus_debug_sensors).state) == "GET-Extract-air-temp";
+              then: 
+                - script.execute: HV_50_0_37602_request 
                                 
           - if: ## GET_REQUEST : 0 : Outside air temp.
               condition:
                 - lambda: |-
-                    return (id(canbus_debug_tag).state) == "GET-Outside-air-temp";
-              then:                       
-                        # Send the hexadecimal code "01 40 32 00 00 00" over the CAN bus at address 0x1FE04208
-                        # Candump = can0  1FE04208   [6]  01 40 32 00 00 00
-                        - canbus.send:
-                            canbus_id: cbus
-                            can_id: 0x1FE04208
-                            data: [0x01, 0x40, 0x32, 0x00, 0x00, 0x00]
-                            use_extended_id: true
+                    return (id(canbus_debug_sensors).state) == "GET-Outside-air-temp";
+              then: 
+                - script.execute: HV_50_0_0_request 
                                 
                                 
                                 

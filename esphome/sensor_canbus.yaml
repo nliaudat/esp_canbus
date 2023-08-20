@@ -71,6 +71,13 @@ sensor:
       id: HV_50_0_39652
       name: ${HV_50_0_39652}
       accuracy_decimals: 0
+      on_raw_value:
+          then:
+            - text_sensor.template.publish:
+                id: HV_50_0_39652_text
+                state: !lambda |-
+                  int val = (id(HV_50_0_39652).raw_state);
+                  return val == 0 ? "Off": (val == 1 ? "Normal ventilation mode": (val == 2 ? "VOC mode active": (val == 3 ? "Humidity mode active": (val == 4 ? "Frost protection active": (val == 5 ? "CoolVet active": (val == 6 ? "Fault status": (val == 7 ? "Summer humidity": (val == 8 ? "Switch-off stop set value": "Undefined"))))))));
       
       #Outside air temp.
     - platform: template
@@ -124,3 +131,10 @@ sensor:
       # id: HV_0_0_29046
       # name: ${HV_0_0_29046}
       # accuracy_decimals: 0
+
+
+text_sensor:  
+      #Status vent. regulation (text)
+    - platform: template
+      id: HV_50_0_39652_text
+      name: ${HV_50_0_39652} text

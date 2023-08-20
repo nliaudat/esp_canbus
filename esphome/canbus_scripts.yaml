@@ -1,0 +1,47 @@
+
+
+script:
+
+########### Canbus Sensors #########
+
+  - id: HV_50_0_37600_request #datapoint 37600 : Humidity extract air
+    # the hard part was to find the correct can ID with candump. (sending to 0x1F do not works)
+    # Candump = can0  1FE04208   [6]  01 40 32 00 92 E0
+    # 37600 to hex = 92E0
+    #data : message_len = 0x01, operation = 0x40, function_group = 50 (0x32), function_number = 0 (0x00), datapoint = 37600 (92E0) 
+    then:
+        - canbus.send:
+            canbus_id: cbus
+            can_id: 0x1FE04208
+            data: [0x01, 0x40, 0x32, 0x00, 0x92, 0xE0]
+            use_extended_id: true
+            
+  - id: HV_50_0_37602_request #datapoint 37602: Extract air temp.
+    then:
+        - canbus.send:
+            canbus_id: cbus
+            can_id: 0x1FE04208
+            data: [0x01, 0x40, 0x32, 0x00, 0x92, 0xE2]
+            use_extended_id: true
+            
+  - id: HV_50_0_0_request #datapoint 0 : Outside air temp.
+    then:
+        - canbus.send:
+            canbus_id: cbus
+            can_id: 0x1FE04208
+            data: [0x01, 0x40, 0x32, 0x00, 0x00, 0x00]
+            use_extended_id: true
+
+
+########### Canbus on boot requests #########
+
+  - id: canbus_on_boot_requests # 1 time request is enough to get values until hoval reboot
+    then:
+        - delay: 2s
+        - script.execute: HV_50_0_37600_request
+        - delay: 2s
+        - script.execute: HV_50_0_37602_request
+        - delay: 2s
+        - script.execute: HV_50_0_0_request
+
+      

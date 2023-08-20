@@ -7,11 +7,13 @@ esphome:
           condition:
             wifi.connected: 
           timeout: 15s
+      - delay: 30s
+      - script.execute: canbus_on_boot_requests # 1 time request is enough to get values until hoval reboot
   
 esp32:
   board: nodemcu-32s
   framework:
-    type: arduino #esp-idf  not ready missing json and async_tcp
+    type: esp-idf #arduino #esp-idf  not ready missing json and async_tcp
     version: recommended #latest
 #    sdkconfig_options:
 #      CONFIG_COMPILER_OPTIMIZATION_SIZE: y
@@ -27,9 +29,9 @@ logger:
     text_sensor : ERROR
     homeassistant.sensor: ERROR
     canbus: INFO # setting log level for canbus lower than INFO may crash  : esphome/issues#4051
-    #uptime: NONE
+    uptime: NONE
     uptime.sensor: NONE
-    #wifi_signal : NONE
+    wifi_signal : NONE
     wifi_signal.sensor: NONE
     esp32.preferences : NONE
     internal_temperature : NONE
