@@ -15,9 +15,9 @@ packages:
   time: !include time.yaml
   ## translations / substitutions
   substitutions_EN: !include substitutions_EN.yaml
-#  substitutions_DE: !include substitutions_DE.yaml
-#  substitutions_FR: !include substitutions_FR.yaml
-#  substitutions_IT: !include substitutions_IT.yaml
+  #substitutions_DE: !include substitutions_DE.yaml
+  #substitutions_FR: !include substitutions_FR.yaml
+  #substitutions_IT: !include substitutions_IT.yaml
   canbus: !include canbus.yaml
   canbus_scripts: !include canbus_scripts.yaml
   sensor_canbus: !include sensor_canbus.yaml

@@ -17,3 +17,15 @@ substitutions:
     HV_50_0_40651: "Normal_L\xFCftungsmodulation "
     HV_50_0_40686: "Spar_L\xFCftungsmodulation "
     HV_50_0_40687: Feuchte Sollwert
+    
+    
+    ##### values
+    
+    HV_50_0_39652_val_1: "Normaler L\xFCftungsbetrieb"
+    HV_50_0_39652_val_2: "VOC Modus aktiv"
+    HV_50_0_39652_val_3: "Feuchtigkeitsmodus aktiv"
+    HV_50_0_39652_val_4: "Frostschutz aktiv"
+    HV_50_0_39652_val_5: "CoolVet aktiv"
+    HV_50_0_39652_val_6: Fehlerzustand
+    HV_50_0_39652_val_7: Sommerfeuchte
+    HV_50_0_39652_val_8: Ausschaltstop

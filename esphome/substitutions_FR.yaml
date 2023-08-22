@@ -17,3 +17,15 @@ substitutions:
     HV_50_0_40651: Modulation de la ventilation normale
     HV_50_0_40686: "Modulation de la ventilation \xE9conomique"
     HV_50_0_40687: "Valeur de consigne humidit\xE9"
+    
+    
+    ##### values
+    
+    HV_50_0_39652_val_1: "Mode ventilation normale"
+    HV_50_0_39652_val_2: "Mode VOC activ\xE9"
+    HV_50_0_39652_val_3: "Mode humidit\xE9 activ\xE9"
+    HV_50_0_39652_val_4: "Protection antigel activ\xE9e"
+    HV_50_0_39652_val_5: "CoolVent activ\xE9"
+    HV_50_0_39652_val_6: "Etat d’erreur"
+    HV_50_0_39652_val_7: "Humidit\xE9 d\x27\xE9t\xE9"
+    HV_50_0_39652_val_8: "Arr\xEAt coupure valeur de consigne"

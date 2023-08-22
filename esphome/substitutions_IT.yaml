@@ -17,3 +17,15 @@ substitutions:
     HV_50_0_40651: Modulazione ventilazione normale
     HV_50_0_40686: Modulazione ventilazione risparmio
     HV_50_0_40687: "Valore nominale umidit\xE0"
+    
+    
+    ##### values
+    
+    HV_50_0_39652_val_1: Modo ventilazione normale
+    HV_50_0_39652_val_2: Modo VOC attivo
+    HV_50_0_39652_val_3: "Modo umidit\xE0 attivo"
+    HV_50_0_39652_val_4: Protezione antigelo attiva
+    HV_50_0_39652_val_5: CoolVent attivo
+    HV_50_0_39652_val_6: Stato errore
+    HV_50_0_39652_val_7: Summer humidity
+    HV_50_0_39652_val_8: Switch-off stop

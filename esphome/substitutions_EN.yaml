@@ -17,3 +17,15 @@ substitutions:
     HV_50_0_40651: Normal ventilation modulation
     HV_50_0_40686: Eco ventilation modulation
     HV_50_0_40687: Humidity set value
+    
+    
+    ##### values
+    
+    HV_50_0_39652_val_1: Normal ventilation mode
+    HV_50_0_39652_val_2: VOC mode active
+    HV_50_0_39652_val_3: Humidity mode active
+    HV_50_0_39652_val_4: Frost protection active
+    HV_50_0_39652_val_5: CoolVent active
+    HV_50_0_39652_val_6: Fault status
+    HV_50_0_39652_val_7: Summer humidity
+    HV_50_0_39652_val_8: Switch-off stop
