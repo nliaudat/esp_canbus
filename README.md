@@ -20,6 +20,7 @@
 
 ## Firmware : 
 * Actually runs under Esphome to link hoval homevent devices, but can be general purpose
+* (to update ventilation modulation, you must be in "Constant mode")
 * Webserver enabled
 * Hassio recognized
   <img src="https://github.com/nliaudat/esp_canbus/blob/main/esphome/webserver.PNG" width=75% height=75%>
