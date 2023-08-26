@@ -5,9 +5,16 @@
 substitutions:
   name: canbus
   friendly_name: "CanBus Controller"
-  
   TZ: "Europe/Zurich" #timezone
-
+  
+  ### canbus 
+  can_tx_pin: "GPIO22" #GPIO5
+  can_rx_pin: "GPIO21" #GPIO4
+  can_can_id: "8"
+  hoval_homevent_canID: "0x1FD047FF" # to get sensors values | 0x1f ## works, but must process all frames and cpu is heating
+  hoval_toptronic_canID: "0x1FE04208" #to send sensors requests
+  
+  
 
 packages:
   wifi: !include wifi.yaml
@@ -24,6 +31,7 @@ packages:
   sensor_others: !include sensor_others.yaml
   switch: !include switch.yaml
   number: !include inputs_number.yaml
+  select: !include inputs_select.yaml
   
 web_server:
   port: 80

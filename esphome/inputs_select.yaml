@@ -1,0 +1,188 @@
+   
+######### select 
+
+
+### debug sensors
+# select:
+  # - platform: template
+    # name: "Debug sensors"
+    # id: canbus_debug_sensors
+    # optimistic: true
+    # options:
+      # - "none"
+      # - "GET-Humidity-extract-air"
+      # - "GET-Extract-air-temp"
+      # - "GET-Outside-air-temp"
+      # - "GET-Ventilation-modulation"
+      # - "GET-Op-choice-ventilation"
+      # - "GET-Normal-ventilation-modulation"
+      # - "GET-Eco-ventilation-modulation"
+    # set_action:
+      # then:
+          # - if: ## GET_REQUEST : 37600 : Humidity extract air
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "GET-Humidity-extract-air";
+              # then: 
+                # - script.execute: HV_50_0_37600_request              
+
+                    
+          # - if: ## GET_REQUEST : 37602: Extract air temp.
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "GET-Extract-air-temp";
+              # then: 
+                # - script.execute: HV_50_0_37602_request 
+                                
+          # - if: ## GET_REQUEST : 0 : Outside air temp.
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "GET-Outside-air-temp";
+              # then: 
+                # - script.execute: HV_50_0_0_request 
+ 
+          # - if: ## GET_REQUEST : 38606 : Ventilation modulation
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "GET-Ventilation-modulation";
+              # then: 
+                # - script.execute: HV_50_0_38606_request  
+                
+          # - if: ## GET_REQUEST : 40650 : Op. choice ventilation
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "GET-Op-choice-ventilation";
+              # then: 
+                # - script.execute: HV_50_0_40650_request                                 
+                                
+          # - if: ## GET_REQUEST : 40651 : Normal ventilation modulation
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "GET-Normal-ventilation-modulation";
+              # then: 
+                # - script.execute: HV_50_0_40651_request       
+
+          # - if: ## GET_REQUEST : 40686 : Eco ventilation modulation 
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "GET-Eco-ventilation-modulation";
+              # then: 
+                # - script.execute: HV_50_0_40686_request            
+
+
+
+####### do not works
+###select: # 40650 : Op. choice ventilation (e.g. week 1 / 2, constant, standby)
+  # - platform: template
+    # name: "${HV_50_0_40650} update"
+    # id: HV_50_0_40650_set
+    # optimistic: true
+    # options:
+      # - "Standby" #0
+      # - "Week 1" #1
+      # - "Week 2" #2
+      # - "undef" #3
+      # - "Constant" #4
+      # - "Constant v2" #4
+      # - "Eco" #5
+      # - "Party" #??
+    # set_action:
+      # then:
+          # - if: 
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "Standby";
+              # then: 
+                # - lambda: |-
+                        # uint32_t can_id = 0x1FE04208;
+                        # bool use_extended_id = 1;
+                        # std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xCA, 0x00}; //can0  1FE04208   [7]  01 46 32 00 9E CA 00
+                        # id(cbus)->send_data(can_id, use_extended_id, data);     
+
+          # - if: 
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "Week 1";
+              # then: 
+                # - lambda: |-
+                        # uint32_t can_id = 0x1FE04208;
+                        # bool use_extended_id = 1;
+                        # std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xCA, 0x01}; //can0  1FE04208   [7]  01 46 32 00 9E CA 01
+                        # id(cbus)->send_data(can_id, use_extended_id, data);     
+                        
+          # - if: 
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "Week 2";
+              # then: 
+                # - lambda: |-
+                        # uint32_t can_id = 0x1FE04208;
+                        # bool use_extended_id = 1;
+                        # std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xCA, 0x02}; //can0  1FE04208   [7]  01 46 32 00 9E CA 02
+                        # id(cbus)->send_data(can_id, use_extended_id, data); 
+                        
+          # - if: 
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "undef";
+              # then: 
+                # - lambda: |-
+                        # uint32_t can_id = 0x1FE04208;
+                        # bool use_extended_id = 1;
+                        # std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xCA, 0x03}; 
+                        # id(cbus)->send_data(can_id, use_extended_id, data); 
+                        
+          # - if: 
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "Constant";
+              # then: 
+                # - lambda: |-
+                        # uint32_t can_id = 0x1FE04208;
+                        # bool use_extended_id = 1;
+                        # std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xCA, 0x04}; //can0  1FE04208   [7]  01 46 32 00 9E CA 04
+                        # id(cbus)->send_data(can_id, use_extended_id, data); 
+                        
+          # - if: 
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "Constant v2";
+              # then:
+                # - canbus.send:
+                    # canbus_id: cbus
+                    # can_id: 0x1FE04208
+                    # data: [0x01, 0x46, 0x32, 0x00, 0x9E, 0xCA, 0x04] #//can0  1FE04208   [7]  01 46 32 00 9E CA 04
+                    # use_extended_id: true    
+                # - delay: 2s
+                # - canbus.send:
+                    # canbus_id: cbus
+                    # can_id: 0x1FE04208
+                    # data: [0x43, 0x6F, 0x6E, 0x73, 0x74, 0x61, 0x6E, 0x74] # 43 6F 6E 73 74 61 6E 74 => string = Constant
+                    # use_extended_id: true    
+                ## - canbus.send:
+                    ## canbus_id: cbus
+                    ## can_id: 0x1FE04208
+                    ## data: [0x19, 0xA6, 0x46, 0x32, 0x00, 0x01, 0xF9] #//can0  1F604208   [8]  19 A6 46 32 00 01 F9 |..F2...|
+                    ## use_extended_id: true    
+                        
+          # - if: 
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "Eco";
+              # then: 
+                # - lambda: |-
+                        # uint32_t can_id = 0x1FE04208;
+                        # bool use_extended_id = 1;
+                        # std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xCA, 0x05}; //can0  1FE04208   [7]  01 46 32 00 9E CA 05
+                        # id(cbus)->send_data(can_id, use_extended_id, data); 
+                        
+          # - if: 
+              # condition:
+                # - lambda: |-
+                    # return (id(canbus_debug_sensors).state) == "Party";
+              # then: 
+                # - lambda: |-
+                        # uint32_t can_id = 0x1FE04208;
+                        # bool use_extended_id = 1;
+                        # std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xCA, 0x06}; 
+                        # id(cbus)->send_data(can_id, use_extended_id, data); 

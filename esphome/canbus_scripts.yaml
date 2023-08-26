@@ -12,7 +12,7 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: 0x1FE04208
+            can_id: ${hoval_toptronic_canID} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x92, 0xE0]
             use_extended_id: true
             
@@ -20,7 +20,7 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: 0x1FE04208
+            can_id: ${hoval_toptronic_canID} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x92, 0xE2]
             use_extended_id: true
             
@@ -28,7 +28,7 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: 0x1FE04208
+            can_id: ${hoval_toptronic_canID} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x00, 0x00]
             use_extended_id: true
 
@@ -36,7 +36,7 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: 0x1FE04208
+            can_id: ${hoval_toptronic_canID} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x96, 0xCE]
             use_extended_id: true
 
@@ -44,7 +44,7 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: 0x1FE04208
+            can_id: ${hoval_toptronic_canID} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x9E, 0xCA]
             use_extended_id: true            
             
@@ -52,7 +52,7 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: 0x1FE04208
+            can_id: ${hoval_toptronic_canID} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x9E, 0xCB]
             use_extended_id: true    
             
@@ -60,7 +60,7 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: 0x1FE04208
+            can_id: ${hoval_toptronic_canID} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x9E, 0xEE]
             use_extended_id: true    
 
