@@ -1,4 +1,4 @@
-# An ESP32 CanBus shield
+# An ESP32 CanBus shield - made for hoval homevent, but for all canbus applications
  
 ![alt text](https://github.com/nliaudat/esp_canbus/blob/main/pcb/3d_view.PNG "board")
 
