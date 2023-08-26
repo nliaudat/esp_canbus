@@ -20,6 +20,8 @@
 
 ## Firmware : 
 * Actually runs under Esphome to link hoval homevent devices, but can be general purpose
+* Webserver enabled
+* Hassio recognized
   <img src="https://github.com/nliaudat/esp_canbus/blob/main/esphome/webserver.PNG" width=75% height=75%>
 
 ## Licence: 
