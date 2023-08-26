@@ -1,6 +1,8 @@
 # An ESP32 CanBus shield
  
 ![alt text](https://github.com/nliaudat/esp_canbus/blob/main/pcb/3d_view.PNG "board")
+
+<img src="https://github.com/nliaudat/esp_canbus/blob/main/pcb/hoval_wiring.jpg" width=50% height=50%>
     
 ## Functionalities : 
 * Compatible with 1000 or 900 mil width ESP devkit
@@ -17,7 +19,8 @@
 * Box is 3D printed or fit in a 86x86 electrical box
 
 ## Firmware : 
-* Actually runs under Esphome to link hoval devices, but can be general purpose
+* Actually runs under Esphome to link hoval homevent devices, but can be general purpose
+  <img src="https://github.com/nliaudat/esp_canbus/blob/main/esphome/webserver.PNG" width=75% height=75%>
 
 ## Licence: 
 * Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC-BY-NC-SA)
