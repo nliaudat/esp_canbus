@@ -11,6 +11,7 @@ substitutions:
   can_tx_pin: "GPIO22" #GPIO5
   can_rx_pin: "GPIO21" #GPIO4
   can_can_id: "8"
+  ## you can get the next values by activating the code under the section "Find can_id " in canbus.yaml
   hoval_homevent_canID: "0x1FD047FF" # to get sensors values | 0x1f ## works, but must process all frames and cpu is heating
   hoval_toptronic_canID: "0x1FE04208" #to send sensors requests
   
