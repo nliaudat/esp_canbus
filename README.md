@@ -18,7 +18,7 @@
 * ESP32-WROOM-32D costs approx 3.8$
 * Box is 3D printed or fit in a 86x86 electrical box
 
-## Firmware : 
+## Firmware : (see wiki)
 * Actually runs under Esphome to link hoval homevent devices, but can be general purpose
 * (to update ventilation modulation, you must be in "Constant mode")
 * Webserver enabled
