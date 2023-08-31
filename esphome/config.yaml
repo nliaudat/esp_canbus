@@ -10,10 +10,11 @@ substitutions:
   ### canbus 
   can_tx_pin: "GPIO22" #GPIO5
   can_rx_pin: "GPIO21" #GPIO4
-  can_can_id: "8"
+  TTE_HV_can_id: "8" #hoval homevent can_id (you can find it in room control unit (toptronic) under maintenance
+  TTE_BM_can_id: "8" #hoval toptronic can_id (used for password reveal)
   ## you can get the next values by activating the code under the section "Find can_id " in canbus.yaml
-  hoval_homevent_canID: "0x1FD047FF" # to get sensors values | 0x1f ## works, but must process all frames and cpu is heating
-  hoval_toptronic_canID: "0x1FE04208" #to send sensors requests
+  hoval_homevent_can_Addr: "0x1FD047FF" # to get sensors values | 0x1f ## works, but must process all frames and cpu is heating
+  hoval_toptronic_can_Addr: "0x1FE04208" #to send sensors requests
   
   
 
@@ -30,9 +31,11 @@ packages:
   canbus_scripts: !include canbus_scripts.yaml
   sensor_canbus: !include sensor_canbus.yaml
   sensor_others: !include sensor_others.yaml
-  switch: !include switch.yaml
   number: !include inputs_number.yaml
   select: !include inputs_select.yaml
+  switch: !include switch.yaml
+
+  
   
 web_server:
   port: 80

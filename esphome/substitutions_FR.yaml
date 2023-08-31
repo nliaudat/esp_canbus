@@ -18,6 +18,9 @@ substitutions:
     HV_50_0_40686: "Modulation de la ventilation \xE9conomique"
     HV_50_0_40687: "Valeur de consigne humidit\xE9"
     
+    HV_83_1_0: Photosensor
+    HV_50_0_2010: Party mode timer [h]
+    
     
     ##### values
     
@@ -29,3 +32,9 @@ substitutions:
     HV_50_0_39652_val_6: "Etat d’erreur"
     HV_50_0_39652_val_7: "Humidit\xE9 d\x27\xE9t\xE9"
     HV_50_0_39652_val_8: "Arr\xEAt coupure valeur de consigne"
+    
+    HV_50_0_40650_val_1 : "Veille"
+    HV_50_0_40650_val_2 : "Semaine 1"
+    HV_50_0_40650_val_3 : "Semaine 2"
+    HV_50_0_40650_val_4 : Constant
+    HV_50_0_40650_val_5 : Eco

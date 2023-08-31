@@ -1,4 +1,8 @@
 
+    # """Operations in CAN-Message"""
+    # RESPONSE = 0x42
+    # GET_REQUEST = 0x40
+    # SET_REQUEST = 0x46
 
 script:
 
@@ -12,7 +16,7 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: ${hoval_toptronic_canID} #0x1FE04208
+            can_id: ${hoval_toptronic_can_Addr} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x92, 0xE0]
             use_extended_id: true
             
@@ -20,7 +24,7 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: ${hoval_toptronic_canID} #0x1FE04208
+            can_id: ${hoval_toptronic_can_Addr} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x92, 0xE2]
             use_extended_id: true
             
@@ -28,7 +32,7 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: ${hoval_toptronic_canID} #0x1FE04208
+            can_id: ${hoval_toptronic_can_Addr} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x00, 0x00]
             use_extended_id: true
 
@@ -36,7 +40,7 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: ${hoval_toptronic_canID} #0x1FE04208
+            can_id: ${hoval_toptronic_can_Addr} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x96, 0xCE]
             use_extended_id: true
 
@@ -44,7 +48,7 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: ${hoval_toptronic_canID} #0x1FE04208
+            can_id: ${hoval_toptronic_can_Addr} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x9E, 0xCA]
             use_extended_id: true            
             
@@ -52,7 +56,7 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: ${hoval_toptronic_canID} #0x1FE04208
+            can_id: ${hoval_toptronic_can_Addr} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x9E, 0xCB]
             use_extended_id: true    
             
@@ -60,9 +64,39 @@ script:
     then:
         - canbus.send:
             canbus_id: cbus
-            can_id: ${hoval_toptronic_canID} #0x1FE04208
+            can_id: ${hoval_toptronic_can_Addr} #0x1FE04208
             data: [0x01, 0x40, 0x32, 0x00, 0x9E, 0xEE]
             use_extended_id: true    
+            
+  # - id: HV_50_0_2010_request #datapoint 2010: undocumented HV_50_0_2010 Party mode timer [h]
+    # then:
+        # - canbus.send:
+            # canbus_id: cbus
+            # can_id: ${hoval_toptronic_can_Addr} 
+            # data: [0x01, 0x40, 0x32, 0x00, 0x07, 0xDA]
+            # use_extended_id: true   
+            
+            
+  # - id: HV_83_1_0_request #datapoint 0: undocumented photosensor in fct group 83 
+    # then:
+        # - canbus.send:
+            # canbus_id: cbus
+            # can_id: ${hoval_toptronic_can_Addr} #0x1FE04208
+            # data: [0x01, 0x40, 0x53, 0x01, 0x00, 0x00]
+            # use_extended_id: true   
+
+ 
+            
+
+  # - id: HV_50_0_40650_set_constant #cansend can0 1FE04208#014632009ECA04
+    # then:
+        # - canbus.send:
+            # canbus_id: cbus
+            # can_id: ${hoval_toptronic_can_Addr} #0x1FE04208;
+            # data: [0x01, 0x46, 0x32, 0x00, 0x9E, 0xCA, 0x04] #can0  1FE04208   [7]  01 46 32 00 9E CA 04
+            # use_extended_id: true   
+
+
 
 
 ########### Canbus on boot requests #########
@@ -83,5 +117,7 @@ script:
         - script.execute: HV_50_0_40651_request
         - delay: 2s
         - script.execute: HV_50_0_40686_request
+        #- delay: 2s
+        #- script.execute: HV_83_1_0_request
 
       

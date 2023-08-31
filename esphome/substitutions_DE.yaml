@@ -18,6 +18,9 @@ substitutions:
     HV_50_0_40686: "Spar_L\xFCftungsmodulation "
     HV_50_0_40687: Feuchte Sollwert
     
+    HV_83_1_0: Photosensor
+    HV_50_0_2010: Party mode timer [h]
+    
     
     ##### values
     
@@ -29,3 +32,9 @@ substitutions:
     HV_50_0_39652_val_6: Fehlerzustand
     HV_50_0_39652_val_7: Sommerfeuchte
     HV_50_0_39652_val_8: Ausschaltstop
+    
+    HV_50_0_40650_val_1 : Standby
+    HV_50_0_40650_val_2 : Woche 1
+    HV_50_0_40650_val_3 : Woche 2
+    HV_50_0_40650_val_4 : Konstante
+    HV_50_0_40650_val_5 : Eco

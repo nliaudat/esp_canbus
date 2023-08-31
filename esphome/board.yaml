@@ -15,8 +15,8 @@ esp32:
   framework:
     type: esp-idf #arduino #esp-idf  not ready missing json and async_tcp
     version: recommended #latest
-#    sdkconfig_options:
-#      CONFIG_COMPILER_OPTIMIZATION_SIZE: y
+    sdkconfig_options:
+      CONFIG_COMPILER_OPTIMIZATION_SIZE: y
 
 preferences:
   flash_write_interval: 60min
@@ -26,15 +26,19 @@ logger:
   level: DEBUG #NONE# ERROR #INFO #DEBUG  #VERBOSE
   baud_rate: 0 #to disable logging via UART
   logs:
-    text_sensor : ERROR
+    text_sensor: ERROR
     homeassistant.sensor: ERROR
-    canbus: INFO # setting log level for canbus lower than INFO may crash  : esphome/issues#4051
-    uptime: NONE
-    uptime.sensor: NONE
-    wifi_signal : NONE
-    wifi_signal.sensor: NONE
-    esp32.preferences : NONE
-    internal_temperature : NONE
+    canbus: ERROR # setting log level for canbus lower than INFO may crash  : esphome/issues#4051
+    uptime: ERROR
+    uptime.sensor: ERROR
+    wifi_signal: ERROR
+    wifi_signal.sensor: ERROR
+    esp32.preferences: ERROR
+    internal_temperature: ERROR
+    esp-idf: ERROR
+    select: ERROR
+    number: ERROR
+    sensor: INFO
 
 
 # Enable Home Assistant API

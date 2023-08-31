@@ -132,6 +132,16 @@ sensor:
       # name: ${HV_0_0_29046}
       # accuracy_decimals: 0
 
+    # - platform: template
+      # id: HV_50_0_2010 #Party mode timer [h]
+      # name: ${HV_50_0_2010}
+      # accuracy_decimals: 0
+      
+    # - platform: template
+      # id: HV_83_1_0
+      # name: ${HV_83_1_0} # Photosensor
+      # accuracy_decimals: 0
+
 
 text_sensor:  
       #Status vent. regulation (text)

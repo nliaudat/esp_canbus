@@ -27,7 +27,7 @@ number:
     on_value:
         then: 
             - lambda: |-
-                    uint32_t can_id = ${hoval_toptronic_canID}; //0x1FE04208;
+                    uint32_t can_id = ${hoval_toptronic_can_Addr}; //0x1FE04208;
                     bool use_extended_id = 1;
                     std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xEF,(uint8_t) id(HV_50_0_40687_set).state}; 
                     id(cbus)->send_data(can_id, use_extended_id, data);
@@ -55,7 +55,7 @@ number:
     on_value:
         then: 
             - lambda: |-
-                    uint32_t can_id = ${hoval_toptronic_canID}; //0x1FE04208;
+                    uint32_t can_id = ${hoval_toptronic_can_Addr}; //0x1FE04208;
                     bool use_extended_id = 1;
                     std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xCB, (uint8_t) id(HV_50_0_40651_set).state}; 
                     id(cbus)->send_data(can_id, use_extended_id, data);
@@ -82,7 +82,7 @@ number:
     on_value:
         then: 
             - lambda: |-
-                    uint32_t can_id = ${hoval_toptronic_canID}; //0x1FE04208;
+                    uint32_t can_id = ${hoval_toptronic_can_Addr}; //0x1FE04208;
                     bool use_extended_id = 1;
                     std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xEE, (uint8_t) id(HV_50_0_40686_set).state}; 
                     id(cbus)->send_data(can_id, use_extended_id, data);
@@ -92,32 +92,3 @@ number:
                 args: [ 'id(HV_50_0_40686_set).state', '(uint8_t) id(HV_50_0_40686_set).state' ]
     id: HV_50_0_40686_set
 
-    ## Ventilation modulation set value : update value, but no impact as it's read only
-    ##data : message_len = 0x01, operation = 0x46, function_group = 50 (0x32), function_number = 0 (0x00), datapoint = 38606 (96CE) , data
-  # - platform: template
-    # name: "${HV_50_0_38606} update" 
-    # optimistic: true
-    # min_value: 0
-    # max_value: 100
-    # step: 5
-    # restore_value: false
-    # initial_value: 70
-    # unit_of_measurement: '%'
-    # icon: mdi:fan
-    # device_class: speed
-    # on_value:
-        # then: 
-            # - lambda: |-
-                    # uint32_t can_id = 0x1FE04208; //0x1FD047FF; //0x1FE04208;
-                    # bool use_extended_id = 1;
-                    # std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x96, 0xCE, (uint8_t) id(HV_50_0_38606_set).state}; 
-                    # id(cbus)->send_data(can_id, use_extended_id, data);
-                    # //std::vector< uint8_t > validate{0x01, 0x44, 0x32, 0x00, 0x96, 0xCE}; 
-                    # //id(cbus)->send_data(can_id, use_extended_id, validate);
-            # - delay: 200ms
-            # - logger.log:
-                # format: "canbus send Ventilation modulation set value %f and hex %x"
-                # args: [ 'id(HV_50_0_38606_set).state', '(uint8_t) id(HV_50_0_38606_set).state' ]
-    # id: HV_50_0_38606_set
-    
-    

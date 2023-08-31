@@ -12,11 +12,14 @@ substitutions:
     HV_50_0_38600: Fan exhaust air set
     HV_50_0_38606: Ventilation modulation
     HV_50_0_39600: Air quality control
-    HV_50_0_39652: Status vent. regulation
+    HV_50_0_39652: Status vent regulation
     HV_50_0_40650: Op. choice ventilation
     HV_50_0_40651: Normal ventilation modulation
     HV_50_0_40686: Eco ventilation modulation
     HV_50_0_40687: Humidity set value
+    
+    HV_83_1_0: Photosensor
+    HV_50_0_2010: Party mode timer [h]
     
     
     ##### values
@@ -29,3 +32,11 @@ substitutions:
     HV_50_0_39652_val_6: Fault status
     HV_50_0_39652_val_7: Summer humidity
     HV_50_0_39652_val_8: Switch-off stop
+    
+    
+    HV_50_0_40650_val_1 : Standby
+    HV_50_0_40650_val_2 : Week 1
+    HV_50_0_40650_val_3 : Week 2
+    HV_50_0_40650_val_4 : Constant
+    HV_50_0_40650_val_5 : Eco
+    

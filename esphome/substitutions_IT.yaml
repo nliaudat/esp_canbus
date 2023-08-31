@@ -18,6 +18,9 @@ substitutions:
     HV_50_0_40686: Modulazione ventilazione risparmio
     HV_50_0_40687: "Valore nominale umidit\xE0"
     
+    HV_83_1_0: Photosensor
+    HV_50_0_2010: Party mode timer [h]
+    
     
     ##### values
     
@@ -29,3 +32,9 @@ substitutions:
     HV_50_0_39652_val_6: Stato errore
     HV_50_0_39652_val_7: Summer humidity
     HV_50_0_39652_val_8: Switch-off stop
+    
+    HV_50_0_40650_val_1 : Standby
+    HV_50_0_40650_val_2 : Settimana 1
+    HV_50_0_40650_val_3 : Settimana 2
+    HV_50_0_40650_val_4 : Costante
+    HV_50_0_40650_val_5 : Eco
