@@ -14,7 +14,7 @@ substitutions:
     HV_50_0_39600: "Qualit\xE9 de l'air, r\xE9gulation"
     HV_50_0_39652: "\xC9tat r\xE9gulation de la ventilation"
     HV_50_0_40650: "S\xE9lection de fonctionnement ventilation"
-    HV_50_0_40651: Modulation de la ventilation normale
+    HV_50_0_40651: Modulation de la ventilation constant
     HV_50_0_40686: "Modulation de la ventilation \xE9conomique"
     HV_50_0_40687: "Valeur de consigne humidit\xE9"
     
@@ -24,7 +24,7 @@ substitutions:
     
     ##### values
     
-    HV_50_0_39652_val_1: "Mode ventilation normale"
+    HV_50_0_39652_val_1: "Mode ventilation constant"
     HV_50_0_39652_val_2: "Mode VOC activ\xE9"
     HV_50_0_39652_val_3: "Mode humidit\xE9 activ\xE9"
     HV_50_0_39652_val_4: "Protection antigel activ\xE9e"

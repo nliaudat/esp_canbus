@@ -14,7 +14,7 @@ substitutions:
     HV_50_0_39600: "Luftqualit\xE4t Regulierung"
     HV_50_0_39652: "Status L\xFCftungsregelung"
     HV_50_0_40650: "Betriebswahl L\xFCftung"
-    HV_50_0_40651: "Normal_L\xFCftungsmodulation "
+    HV_50_0_40651: "Konstante_L\xFCftungsmodulation "
     HV_50_0_40686: "Spar_L\xFCftungsmodulation "
     HV_50_0_40687: Feuchte Sollwert
     
@@ -24,7 +24,7 @@ substitutions:
     
     ##### values
     
-    HV_50_0_39652_val_1: "Normaler L\xFCftungsbetrieb"
+    HV_50_0_39652_val_1: "Konstante L\xFCftungsbetrieb"
     HV_50_0_39652_val_2: "VOC Modus aktiv"
     HV_50_0_39652_val_3: "Feuchtigkeitsmodus aktiv"
     HV_50_0_39652_val_4: "Frostschutz aktiv"
