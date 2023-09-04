@@ -11,8 +11,9 @@ select:
     name: "${HV_50_0_40650} update"
     id: HV_50_0_40650_set
     optimistic: true
-    #initial_option: "Constant"
+    initial_option: "--"
     options:
+      - "--"
       - "${HV_50_0_40650_val_1}" #0 Standby
       - "${HV_50_0_40650_val_2}" #1 Week 1
       - "${HV_50_0_40650_val_3}" #2 Week 2
@@ -32,11 +33,16 @@ select:
               action = 4;
             }else if ( x == "${HV_50_0_40650_val_5}") {
               action = 5;
-            }  
+            }else if ( x == "--") {
+              return;
+            }
             uint32_t can_id = ${hoval_toptronic_can_Addr}; //0x1FE04208;
             bool use_extended_id = 1;
             std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xCA, action}; //can0  1FE04208   [7]  01 46 32 00 9E CA 04
-            id(cbus)->send_data(can_id, use_extended_id, data);   
+            id(cbus)->send_data(can_id, use_extended_id, data);  
+            
+        - delay: 2s
+        - script.execute: HV_50_0_40650_request
   
 
 ### debug sensors
