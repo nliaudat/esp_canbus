@@ -25,6 +25,10 @@ select:
             uint8_t action = 99;
             if ( x == "${HV_50_0_40650_val_1}") {
               action = 0;
+              // there is no update of sensors in standby mode ...
+              id(HV_50_0_40650).publish_state(0); //Op. choice ventilation
+              id(HV_50_0_39652).publish_state(0); //Status vent regulation
+              id(HV_50_0_38606).publish_state(0); //Ventilation modulation
             }else if ( x == "${HV_50_0_40650_val_2}") {
               action = 1;
             }else if ( x == "${HV_50_0_40650_val_3}") {
@@ -41,8 +45,8 @@ select:
             std::vector< uint8_t > data{0x01, 0x46, 0x32, 0x00, 0x9E, 0xCA, action}; //can0  1FE04208   [7]  01 46 32 00 9E CA 04
             id(cbus)->send_data(can_id, use_extended_id, data);  
             
-        - delay: 2s
-        - script.execute: HV_50_0_40650_request
+        # - delay: 2s
+        # - script.execute: HV_50_0_40650_request
   
 
 ### debug sensors
