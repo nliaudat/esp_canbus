@@ -1,14 +1,14 @@
 esphome:
   name: $name
-  on_boot:
-    priority: 200  
-    then:
-      - wait_until:  
-          condition:
-            wifi.connected: 
-          timeout: 15s
-      - delay: 30s
-      - script.execute: canbus_on_boot_requests # 1 time request is enough to get values until hoval reboot
+  # on_boot:
+  #   priority: 200  
+  #   then:
+  #     - wait_until:  
+  #         condition:
+  #           wifi.connected: 
+  #         timeout: 15s
+  #     - delay: 30s
+  #     - script.execute: canbus_on_boot_requests # 1 time request is enough to get values until hoval reboot
   
 esp32:
   board: nodemcu-32s

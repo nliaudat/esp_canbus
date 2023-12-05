@@ -16,7 +16,10 @@ substitutions:
   hoval_homevent_can_Addr: "0x1FD047FF" # to get sensors values | 0x1f ## works, but must process all frames and cpu is heating
   hoval_toptronic_can_Addr: "0x1FE04208" #to send sensors requests
   
-  
+external_components:
+  - source:
+      type: local
+      path: components
 
 packages:
   wifi: !include wifi.yaml
@@ -28,12 +31,13 @@ packages:
   #substitutions_FR: !include substitutions_FR.yaml
   #substitutions_IT: !include substitutions_IT.yaml
   canbus: !include canbus.yaml
-  canbus_scripts: !include canbus_scripts.yaml
-  sensor_canbus: !include sensor_canbus.yaml
+  #canbus_scripts: !include canbus_scripts.yaml
+  #sensor_canbus: !include sensor_canbus.yaml
   sensor_others: !include sensor_others.yaml
-  number: !include inputs_number.yaml
-  select: !include inputs_select.yaml
+  #number: !include inputs_number.yaml
+  #select: !include inputs_select.yaml
   switch: !include switch.yaml
+  toptronic: !include toptronic.yaml
 
   
   
