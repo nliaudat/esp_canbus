@@ -8,7 +8,7 @@ namespace toptronic {
 
 static const char *const TAG = "tt";
 
-uint32_t TopTronicSensor::get_device_id() {
+uint32_t TopTronicSensorBase::get_device_id() {
     return (device_type_ << 8) | device_addr_;
 }
 
@@ -16,15 +16,26 @@ uint32_t build_can_id(uint8_t message_id, uint8_t priority, uint8_t device_type,
     return (message_id << 24) | (priority << 16) | (device_type << 8) | device_id;
 }
 
-uint32_t TopTronicSensor::get_id() {
+uint32_t TopTronicSensorBase::get_id() {
     return function_group_
         + (function_number_ << 8)
         + (datapoint_ << 16);
 }
 
+std::vector<uint8_t> TopTronicSensorBase::request_data() {
+    return {
+        0x01,   // message length
+        0x40,   // operation
+        function_group_,
+        function_number_,
+        (uint8_t)(datapoint_ >> 8),
+        (uint8_t)(datapoint_),
+    };
+}
+
 template <typename T> 
 T bytesToInt(std::vector<uint8_t> value) {
-    T a;
+    T a = 0;
     for(int i = 0; i < value.size(); i++) {
         a += value[i] << 8*i;
     }
@@ -75,31 +86,10 @@ float TopTronicSensor::parse_value(std::vector<uint8_t> value) {
     return res;
 }
 
-std::vector<uint8_t> TopTronicSensor::request_data() {
-    return {
-        0x01,   // message length
-        0x40,   // operation
-        function_group_,
-        function_number_,
-        (uint8_t)(datapoint_ >> 8),
-        (uint8_t)(datapoint_),
-    };
+std::string TopTronicTextSensor::parse_value(std::vector<uint8_t> value) {
+    int16_t intValue = bytesToInt<int16_t>(value);
+    return toText_[intValue];
 }
-
-// uint32_t TopTronic::int_id_(std::string id) {
-//     //split id HV_{function_group}_{function_number}_{datapoint}
-//     std::vector<std::string> strings;
-    
-//     std::stringstream ss(id); 
-//     std::string s;
-//     while(getline(ss, s, '_')) {
-//         strings.push_back(s);
-//     }
-
-//     return std::stoi(strings[1])            // function_group
-//         + std::stoi(strings[2]) << 8        // function_number
-//         + std::stoi(strings[2]) << 16;      // datapoint
-// }
 
 TopTronicDevice* TopTronic::get_or_create_device(uint32_t device_id) {
     if (devices_.count(device_id) <= 0) {
@@ -108,7 +98,7 @@ TopTronicDevice* TopTronic::get_or_create_device(uint32_t device_id) {
     return devices_[device_id];
 }
 
-void TopTronic::add_sensor(TopTronicSensor *sensor) {
+void TopTronic::add_sensor(TopTronicSensorBase *sensor) {
     TopTronicDevice *device = get_or_create_device(sensor->get_device_id());
     device->sensors[sensor->get_id()] = sensor;
 }
@@ -163,14 +153,21 @@ void TopTronic::parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool rem
         + (datapoint << 16);
 
     if (device->sensors.count(id) <= 0) {
-        ESP_LOGD(TAG, "ignoring: unknown sensor %x", device_id);
+        ESP_LOGD(TAG, "ignoring: unknown sensor %x", id);
         return;
     }
-    TopTronicSensor *sensor = device->sensors[id];
+    TopTronicSensorBase *sensorBase = device->sensors[id];
 
-    float value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 6, data.end()));
-    ESP_LOGD(TAG, "publish %f", value);
-    sensor->publish_state(value);
+    if (sensorBase->sensor_type() == SENSOR) {
+        TopTronicSensor *sensor = (TopTronicSensor*)sensorBase;
+        float value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 6, data.end()));
+        ESP_LOGD(TAG, "publish %f", value);
+        sensor->publish_state(value);
+    } else if (sensorBase->sensor_type() == TEXTSENSOR) {
+        TopTronicTextSensor *sensor = (TopTronicTextSensor*)sensorBase;
+        std::string value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 6, data.end()));
+        sensor->publish_state(value);
+    }
 }
 
 }  // namespace toptronic

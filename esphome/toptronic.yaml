@@ -15,3 +15,26 @@ sensor:
     accuracy_decimals: 1
     filters:
       - multiply: 0.1
+
+# Row: 1379
+text_sensor:
+  - platform: toptronic
+    name: Betriebswahl Heizung
+    device_type: 0
+    device_addr: 0
+    function_group: 1
+    function_number: 0
+    datapoint: 3050
+    list:
+      - value: 0
+        text: Standby
+      - value: 1
+        text: Woche 1
+      - value: 2
+        text: Woche 2
+      - value: 4
+        text: Konstant
+      - value: 5
+        text: Sparbetrieb
+      - value: 7
+        text: Handbetrieb
