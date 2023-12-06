@@ -1,13 +1,19 @@
 #include "toptronic.h"
+#include "esphome/core/log.h"
 
 #include <sstream>
 #include <string>
-
 namespace esphome {
 namespace toptronic {
 
-uint32_t TopTronicSensor::get_can_id() {
-    return 0; //TODO
+static const char *const TAG = "tt";
+
+uint32_t TopTronicSensor::get_device_id() {
+    return (device_type_ << 8) | device_addr_;
+}
+
+uint32_t build_can_id(uint8_t message_id, uint8_t priority, uint8_t device_type, uint8_t device_id) {
+    return (message_id << 24) | (priority << 16) | (device_type << 8) | device_id;
 }
 
 uint32_t TopTronicSensor::get_id() {
@@ -29,22 +35,41 @@ float TopTronicSensor::parse_value(std::vector<uint8_t> value) {
     float res = 0.0f;
     switch(type_) {
         case U8:
+            {
+                res = (float)bytesToInt<uint8_t>(value);
+                break;
+            }
         case U16:
+            {
+                res = (float)bytesToInt<uint16_t>(value);
+                break;
+            }
         case U32:
             {
-                uint32_t u = bytesToInt<uint32_t>(value);
-                res = (float)u;
+                res = (float)bytesToInt<uint32_t>(value);
                 break;
             }
         case S8:
-        case S16:
-        case S32:
-        case S64:
             {
-                int32_t s = bytesToInt<int32_t>(value);
-                res = (float)s;
+                res = (float)bytesToInt<int8_t>(value);
                 break;
             }
+        case S16:
+            {
+                res = (float)bytesToInt<int16_t>(value);
+                break;
+            }
+        case S32:
+            {
+                res = (float)bytesToInt<int32_t>(value);
+                break;
+            }
+        case S64:
+            {
+                res = (float)bytesToInt<int64_t>(value);
+                break;
+            }
+            
             
     }
     return res;
@@ -76,28 +101,33 @@ std::vector<uint8_t> TopTronicSensor::request_data() {
 //         + std::stoi(strings[2]) << 16;      // datapoint
 // }
 
-TopTronicDevice* TopTronic::get_or_create_device(uint32_t can_id) {
-    if (devices_.count(can_id) <= 0) {
-        devices_[can_id] = new TopTronicDevice();
+TopTronicDevice* TopTronic::get_or_create_device(uint32_t device_id) {
+    if (devices_.count(device_id) <= 0) {
+        devices_[device_id] = new TopTronicDevice();
     }
-    return devices_[can_id];
+    return devices_[device_id];
 }
 
 void TopTronic::add_sensor(TopTronicSensor *sensor) {
-    TopTronicDevice *device = get_or_create_device(sensor->get_can_id());
+    TopTronicDevice *device = get_or_create_device(sensor->get_device_id());
     device->sensors[sensor->get_id()] = sensor;
 }
 
-void TopTronic::setup() {
-    
-    // send requests
+void TopTronic::send_requests() {
     for (const auto &d : devices_) {
         auto device = d.second;
+        uint8_t message_id = 30;
         for (const auto &s : device->sensors) {
             auto sensor = s.second;
-            canbus_->send_data(sensor->get_can_id(), true, sensor->request_data());
+            uint32_t can_id = build_can_id(message_id, 200, 50, 50);
+            canbus_->send_data(can_id, true, sensor->request_data());
+            message_id += 1;
         }
     }
+}
+
+void TopTronic::setup() {
+    send_requests();
 }
 
 void TopTronic::loop() {
@@ -110,14 +140,21 @@ void TopTronic::dump_config() {
 
 void TopTronic::parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool remote_transmission_request) {
     // check if operation is of type RESPONSE
+    ESP_LOGD(TAG, "FRAME_START");
+    ESP_LOGD(TAG, "can_id: %x", can_id);
+    
     if (data[1] != 0x42) {
+        ESP_LOGD(TAG, "ignoring: no response frame");
         return;
     }
 
-    if (devices_.count(can_id) <= 0) {
+    uint32_t device_id = can_id & 0xFFFF;
+
+    if (devices_.count(device_id) <= 0) {
+        ESP_LOGD(TAG, "ignoring: unknown device %x", device_id);
         return;
     }
-    TopTronicDevice *device = devices_[can_id];   
+    TopTronicDevice *device = devices_[device_id];   
 
     // check if sensor exists for the received value
     uint32_t datapoint = data[5] + (data[4] << 8);
@@ -126,11 +163,13 @@ void TopTronic::parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool rem
         + (datapoint << 16);
 
     if (device->sensors.count(id) <= 0) {
+        ESP_LOGD(TAG, "ignoring: unknown sensor %x", device_id);
         return;
     }
     TopTronicSensor *sensor = device->sensors[id];
 
     float value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 6, data.end()));
+    ESP_LOGD(TAG, "publish %f", value);
     sensor->publish_state(value);
 }
 

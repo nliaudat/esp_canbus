@@ -20,8 +20,6 @@ enum TypeName {
 
 class TopTronicSensor: public sensor::Sensor {
    public:
-    // explicit TopTronicSensor(TopTronic *parent): parent_(parent){};
-
     void set_device_type(uint8_t device_type) { device_type_ = device_type; }
     void set_device_addr(uint8_t device_addr) { device_addr_ = device_addr; }
 
@@ -32,12 +30,11 @@ class TopTronicSensor: public sensor::Sensor {
 
     float parse_value(std::vector<uint8_t> value);
     uint32_t get_id();
-    uint32_t get_can_id();
+    uint32_t get_device_id();
 
     std::vector<uint8_t> request_data();
 
    protected:
-    // TopTronic *parent_;
     uint8_t device_type_;
     uint8_t device_addr_;
 
@@ -58,6 +55,7 @@ class TopTronic : public Component {
 
     void add_sensor(TopTronicSensor *sensor);
     void parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool remote_transmission_request);
+    void send_requests();
 
     void setup() override;
     void loop() override;
@@ -68,8 +66,6 @@ class TopTronic : public Component {
 
     canbus::Canbus *canbus_;
     std::map<uint32_t, TopTronicDevice*> devices_;
-    
-    // uint32_t int_id_(std::string id);
 };
 
 }  // namespace toptronic
