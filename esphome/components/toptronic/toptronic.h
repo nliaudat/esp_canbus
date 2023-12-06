@@ -24,6 +24,10 @@ enum SensorType {
     TEXTSENSOR,
 };
 
+uint32_t build_can_id(uint8_t message_id, uint8_t priority, uint8_t device_type, uint8_t device_id);
+std::vector<uint8_t> build_get_request(uint8_t function_group, uint8_t function_number, uint32_t datapoint);
+std::vector<uint8_t> build_set_request(uint8_t function_group, uint8_t function_number, uint32_t datapoint, std::vector<uint8_t> value);
+
 class TopTronicSensorBase {
    public:
     void set_device_type(uint8_t device_type) { device_type_ = device_type; }
@@ -35,7 +39,7 @@ class TopTronicSensorBase {
 
     uint32_t get_id();
     uint32_t get_device_id();
-    std::vector<uint8_t> request_data();
+    std::vector<uint8_t> get_request_data();
 
     virtual SensorType sensor_type();
 
@@ -86,7 +90,7 @@ class TopTronic : public Component {
 
     void add_sensor(TopTronicSensorBase *sensor);
     void parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool remote_transmission_request);
-    void send_requests();
+    void get_sensors();
 
     void setup() override;
     void loop() override;

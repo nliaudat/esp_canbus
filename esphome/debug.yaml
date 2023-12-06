@@ -1,0 +1,48 @@
+button:
+  - platform: template
+    name: Raum-Ist 21
+    on_press:
+      - lambda: !lambda |-
+            int16_t value = 210;
+            uint16_t datapoint = 1;
+
+            std::vector<uint8_t> x = {
+                0x00,
+                0x42,   // operation
+                0x01,   // function group
+                0x00,   // function number
+                (uint8_t)(datapoint >> 8),  // datapoint-HI
+                (uint8_t)datapoint,         // datapoint-LO
+                (uint8_t)value,         // S16-LO
+                (uint8_t)(value >> 8),  // S16-HI
+            };
+
+            uint8_t device_type = 0;
+            uint8_t device_addr = 0;
+            uint32_t can_id = (device_type << 8) | device_addr;
+
+            id(tt).parse_frame(x, can_id, false);
+
+  - platform: template
+    name: Betriebswahl Woche1
+    on_press:
+      - lambda: !lambda |-
+            int16_t value = 1;
+            uint16_t datapoint = 3050;
+
+            std::vector<uint8_t> x = {
+                0x00,
+                0x42,   // operation
+                0x01,   // function group
+                0x00,   // function number
+                (uint8_t)(datapoint >> 8),  // datapoint-HI
+                (uint8_t)datapoint,         // datapoint-LO
+                (uint8_t)value,         // S16-LO
+                (uint8_t)(value >> 8),  // S16-HI
+            };
+
+            uint8_t device_type = 0;
+            uint8_t device_addr = 0;
+            uint32_t can_id = (device_type << 8) | device_addr;
+
+            id(tt).parse_frame(x, can_id, false);

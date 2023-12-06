@@ -38,6 +38,7 @@ packages:
   #select: !include inputs_select.yaml
   switch: !include switch.yaml
   toptronic: !include toptronic.yaml
+  debug: !include debug.yaml
 
   
   

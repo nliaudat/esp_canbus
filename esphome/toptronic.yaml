@@ -16,6 +16,19 @@ sensor:
     filters:
       - multiply: 0.1
 
+  - platform: toptronic
+    name: Aussenfühler 1
+    device_type: 0
+    device_addr: 0
+    function_group: 0
+    function_number: 0
+    datapoint: 0
+    type: S16
+    unit_of_measurement: "\xB0C"
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
 # Row: 1379
 text_sensor:
   - platform: toptronic

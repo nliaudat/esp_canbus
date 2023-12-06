@@ -16,21 +16,42 @@ uint32_t build_can_id(uint8_t message_id, uint8_t priority, uint8_t device_type,
     return (message_id << 24) | (priority << 16) | (device_type << 8) | device_id;
 }
 
+std::vector<uint8_t> build_get_request(uint8_t function_group, uint8_t function_number, uint32_t datapoint) {
+    return {
+        0x01,   // message length
+        0x40,   // GET_REQUEST = 0x40
+        function_group,
+        function_number,
+        (uint8_t)(datapoint >> 8),
+        (uint8_t)(datapoint),
+    };
+}
+
+std::vector<uint8_t> build_set_request(uint8_t function_group, uint8_t function_number, uint32_t datapoint, std::vector<uint8_t> value) {
+    std::vector<uint8_t> data = {
+        0x01,   // message length
+        0x46,   // SET_REQUEST = 0x46
+        function_group,
+        function_number,
+        (uint8_t)(datapoint >> 8),
+        (uint8_t)(datapoint),
+    };
+
+    for (int i = 0; i < value.size(); i++) {
+        data.push_back(value[i]);
+    }
+    
+    return data;
+}
+
 uint32_t TopTronicSensorBase::get_id() {
     return function_group_
         + (function_number_ << 8)
         + (datapoint_ << 16);
 }
 
-std::vector<uint8_t> TopTronicSensorBase::request_data() {
-    return {
-        0x01,   // message length
-        0x40,   // operation
-        function_group_,
-        function_number_,
-        (uint8_t)(datapoint_ >> 8),
-        (uint8_t)(datapoint_),
-    };
+std::vector<uint8_t> TopTronicSensorBase::get_request_data() {
+    return build_get_request(function_group_, function_number_, datapoint_);
 }
 
 template <typename T> 
@@ -103,21 +124,21 @@ void TopTronic::add_sensor(TopTronicSensorBase *sensor) {
     device->sensors[sensor->get_id()] = sensor;
 }
 
-void TopTronic::send_requests() {
+void TopTronic::get_sensors() {
     for (const auto &d : devices_) {
         auto device = d.second;
         uint8_t message_id = 30;
         for (const auto &s : device->sensors) {
             auto sensor = s.second;
             uint32_t can_id = build_can_id(message_id, 200, 50, 50);
-            canbus_->send_data(can_id, true, sensor->request_data());
+            canbus_->send_data(can_id, true, sensor->get_request_data());
             message_id += 1;
         }
     }
 }
 
 void TopTronic::setup() {
-    send_requests();
+    get_sensors();
 }
 
 void TopTronic::loop() {
@@ -131,7 +152,7 @@ void TopTronic::dump_config() {
 void TopTronic::parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool remote_transmission_request) {
     // check if operation is of type RESPONSE
     ESP_LOGD(TAG, "FRAME_START");
-    ESP_LOGD(TAG, "can_id: %x", can_id);
+    ESP_LOGD(TAG, "can_id: 0x%X", can_id);
     
     if (data[1] != 0x42) {
         ESP_LOGD(TAG, "ignoring: no response frame");
@@ -141,7 +162,7 @@ void TopTronic::parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool rem
     uint32_t device_id = can_id & 0xFFFF;
 
     if (devices_.count(device_id) <= 0) {
-        ESP_LOGD(TAG, "ignoring: unknown device %x", device_id);
+        ESP_LOGD(TAG, "ignoring: unknown device 0x%X", device_id);
         return;
     }
     TopTronicDevice *device = devices_[device_id];   
@@ -153,7 +174,7 @@ void TopTronic::parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool rem
         + (datapoint << 16);
 
     if (device->sensors.count(id) <= 0) {
-        ESP_LOGD(TAG, "ignoring: unknown sensor %x", id);
+        ESP_LOGD(TAG, "ignoring: unknown sensor 0x%X", id);
         return;
     }
     TopTronicSensorBase *sensorBase = device->sensors[id];
