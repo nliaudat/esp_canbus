@@ -2,6 +2,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/select/select.h"
+#include "esphome/components/number/number.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/canbus/canbus.h"
 
@@ -64,9 +65,21 @@ class TopTronicSensor: public sensor::Sensor, public TopTronicBase {
     TypeName type_;
 };
 
+class TopTronicNumber: public number::Number, public TopTronicBase {
+   public:
+    explicit TopTronicNumber(canbus::Canbus *canbus): canbus_(canbus){};
+    
+    void set_type(TypeName type) { type_ = type; }
+    SensorType type() override { return SENSOR; };
+    void control(float value) override;
+
+   protected:
+    canbus::Canbus *canbus_;
+    TypeName type_;
+};
+
 class TopTronicTextSensor: public text_sensor::TextSensor, public TopTronicBase {
    public:
-
     std::string parse_value(std::vector<uint8_t> value);
     SensorType type() override { return TEXTSENSOR; };
 
@@ -84,7 +97,6 @@ class TopTronicSelect: public select::Select, public TopTronicBase {
    public:
     explicit TopTronicSelect(canbus::Canbus *canbus): canbus_(canbus){};
 
-    std::string parse_value(std::vector<uint8_t> value);
     SensorType type() override { return TEXTSENSOR; };
 
     void add_option(uint8_t value, std::string text) {

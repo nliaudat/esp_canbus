@@ -17,22 +17,12 @@ from . import (
     CONF_FUNCTION_GROUP,
     CONF_FUNCTION_NUMBER,
     CONF_DATAPOINT,
+    TT_TYPE_OPTIONS
 )
 
 TopTronicSensor = toptronic.class_(
     "TopTronicSensor", sensor.Sensor
 )
-
-TT_TYPE = toptronic.enum("TypeName")
-TT_TYPE_OPTIONS = {
-    "U8": TT_TYPE.U8,
-    "U16": TT_TYPE.U16,
-    "U32": TT_TYPE.U32,
-    "S8": TT_TYPE.S8,
-    "S16": TT_TYPE.S16,
-    "S32": TT_TYPE.S32,
-    "S64": TT_TYPE.S64,
-}
 
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(CONF_TT_ID): cv.use_id(TopTronicComponent),

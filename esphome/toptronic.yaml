@@ -29,6 +29,21 @@ sensor:
     filters:
       - multiply: 0.1
 
+# Row: 3510
+number:
+  - platform: toptronic
+    name: Normal-Raumtemperatur Heizbetrieb
+    device_type: 0 # ???
+    device_addr: 0
+    function_group: 1
+    function_number: 0
+    datapoint: 3051
+    type: S16
+    # unit_of_measurement: "\xB0C"
+    min_value: 100
+    max_value: 300
+    step: 5
+
 # Row: 1379
 text_sensor:
   - platform: toptronic

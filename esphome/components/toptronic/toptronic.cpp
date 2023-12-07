@@ -55,7 +55,7 @@ std::vector<uint8_t> TopTronicBase::get_request_data() {
 }
 
 template <typename T> 
-T bytesToInt(std::vector<uint8_t> value) {
+T bytesToNumber(std::vector<uint8_t> value) {
     T a = 0;
     for(int i = 0; i < value.size(); i++) {
         a += value[i] << 8*i;
@@ -63,52 +63,99 @@ T bytesToInt(std::vector<uint8_t> value) {
     return a;
 }
 
-float TopTronicSensor::parse_value(std::vector<uint8_t> value) {
-    float res = 0.0f;
-    switch(type_) {
+float bytesToFloat(std::vector<uint8_t> value, TypeName type) {
+    switch(type) {
         case U8:
             {
-                res = (float)bytesToInt<uint8_t>(value);
-                break;
+                return (float)bytesToNumber<uint8_t>(value);
             }
         case U16:
             {
-                res = (float)bytesToInt<uint16_t>(value);
-                break;
+                return (float)bytesToNumber<uint16_t>(value);
             }
         case U32:
             {
-                res = (float)bytesToInt<uint32_t>(value);
-                break;
+                return (float)bytesToNumber<uint32_t>(value);
             }
         case S8:
             {
-                res = (float)bytesToInt<int8_t>(value);
-                break;
+                return (float)bytesToNumber<int8_t>(value);
             }
         case S16:
             {
-                res = (float)bytesToInt<int16_t>(value);
-                break;
+                return (float)bytesToNumber<int16_t>(value);
             }
         case S32:
             {
-                res = (float)bytesToInt<int32_t>(value);
-                break;
+                return (float)bytesToNumber<int32_t>(value);
             }
         case S64:
             {
-                res = (float)bytesToInt<int64_t>(value);
-                break;
-            }
-            
-            
+                return (float)bytesToNumber<int64_t>(value);
+            }            
     }
-    return res;
+    return 0.0f;
+}
+
+template <typename T> 
+std::vector<uint8_t> numberToBytes(T value) {
+    std::vector<uint8_t> a;
+    for(int i = 0; i < sizeof(value); i++) {
+        a.push_back((uint8_t)(value >> 8*i));
+    }
+    return a;
+}
+
+std::vector<uint8_t> floatToBytes(float value, TypeName type) {
+    switch(type) {
+        case U8:
+            {
+                return numberToBytes((uint8_t)value);
+            }
+        case U16:
+            {
+                return numberToBytes((uint16_t)value);
+            }
+        case U32:
+            {
+                return numberToBytes((uint32_t)value);
+            }
+        case S8:
+            {
+                return numberToBytes((int8_t)value);
+            }
+        case S16:
+            {
+                return numberToBytes((int16_t)value);
+            }
+        case S32:
+            {
+                return numberToBytes((int32_t)value);
+            }
+        case S64:
+            {
+                return numberToBytes((int64_t)value);
+            }            
+    }
+    return {};
+}
+
+float TopTronicSensor::parse_value(std::vector<uint8_t> value) {
+    return bytesToFloat(value, type_);
+}
+
+void TopTronicNumber::control(float value) {
+    std::vector<uint8_t> bytes = floatToBytes(value, type_);
+
+    uint32_t can_id = build_can_id(30, 200, 50, 50);
+    std::vector<uint8_t> data = build_set_request(function_group_, function_number_, datapoint_, bytes);
+    canbus_->send_data(can_id, true, data);
+
+    ESP_LOGD(TAG, "%s: %f", get_name().c_str(), value);
 }
 
 std::string TopTronicTextSensor::parse_value(std::vector<uint8_t> value) {
-    uint8_t intValue = bytesToInt<uint8_t>(value);
+    uint8_t intValue = bytesToNumber<uint8_t>(value);
     return toText_[intValue];
 }
 

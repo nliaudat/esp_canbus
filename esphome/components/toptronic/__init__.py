@@ -12,6 +12,18 @@ TopTronicComponent = toptronic.class_(
     "TopTronic", cg.Component
 )
 
+TT_TYPE = toptronic.enum("TypeName")
+TT_TYPE_OPTIONS = {
+    "U8": TT_TYPE.U8,
+    "U16": TT_TYPE.U16,
+    "U32": TT_TYPE.U32,
+    "S8": TT_TYPE.S8,
+    "S16": TT_TYPE.S16,
+    "S32": TT_TYPE.S32,
+    "S64": TT_TYPE.S64,
+}
+
+
 CONF_DEVICE_TYPE = "device_type"
 CONF_DEVICE_ADDR = "device_addr"
 
