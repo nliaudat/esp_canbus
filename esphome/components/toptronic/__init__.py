@@ -18,6 +18,7 @@ CONF_DEVICE_ADDR = "device_addr"
 CONF_FUNCTION_GROUP = "function_group"
 CONF_FUNCTION_NUMBER = "function_number"
 CONF_DATAPOINT = "datapoint"
+CONF_VALUES = "values"
 
 CONFIG_SCHEMA_BASE = cv.Schema(
     {

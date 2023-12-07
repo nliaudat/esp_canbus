@@ -8,7 +8,7 @@ namespace toptronic {
 
 static const char *const TAG = "tt";
 
-uint32_t TopTronicSensorBase::get_device_id() {
+uint32_t TopTronicBase::get_device_id() {
     return (device_type_ << 8) | device_addr_;
 }
 
@@ -44,13 +44,13 @@ std::vector<uint8_t> build_set_request(uint8_t function_group, uint8_t function_
     return data;
 }
 
-uint32_t TopTronicSensorBase::get_id() {
+uint32_t TopTronicBase::get_id() {
     return function_group_
         + (function_number_ << 8)
         + (datapoint_ << 16);
 }
 
-std::vector<uint8_t> TopTronicSensorBase::get_request_data() {
+std::vector<uint8_t> TopTronicBase::get_request_data() {
     return build_get_request(function_group_, function_number_, datapoint_);
 }
 
@@ -108,8 +108,18 @@ float TopTronicSensor::parse_value(std::vector<uint8_t> value) {
 }
 
 std::string TopTronicTextSensor::parse_value(std::vector<uint8_t> value) {
-    int16_t intValue = bytesToInt<int16_t>(value);
+    uint8_t intValue = bytesToInt<uint8_t>(value);
     return toText_[intValue];
+}
+
+void TopTronicSelect::control(const std::string &text) {
+    uint8_t value = toValue_[text];
+    
+    uint32_t can_id = build_can_id(30, 200, 50, 50);
+    std::vector<uint8_t> data = build_set_request(function_group_, function_number_, datapoint_, {value});
+    canbus_->send_data(can_id, true, data);
+
+    ESP_LOGD(TAG, "%s: %s selected", get_name().c_str(), text.c_str());
 }
 
 TopTronicDevice* TopTronic::get_or_create_device(uint32_t device_id) {
@@ -119,9 +129,14 @@ TopTronicDevice* TopTronic::get_or_create_device(uint32_t device_id) {
     return devices_[device_id];
 }
 
-void TopTronic::add_sensor(TopTronicSensorBase *sensor) {
+void TopTronic::add_sensor(TopTronicBase *sensor) {
     TopTronicDevice *device = get_or_create_device(sensor->get_device_id());
     device->sensors[sensor->get_id()] = sensor;
+}
+
+void TopTronic::add_input(TopTronicBase *input) {
+    TopTronicDevice *device = get_or_create_device(input->get_device_id());
+    device->inputs[input->get_id()] = input;
 }
 
 void TopTronic::get_sensors() {
@@ -137,8 +152,47 @@ void TopTronic::get_sensors() {
     }
 }
 
+TopTronicBase* TopTronic::get_sensor(uint32_t device_id, uint32_t sensor_id) {
+    if (devices_.count(device_id) == 0) {
+        return NULL;
+    }
+    TopTronicDevice* device = devices_[device_id];
+
+    if (device->sensors.count(sensor_id) == 0) {
+        return NULL;
+    }
+    return device->sensors[sensor_id];
+}
+
+void TopTronic::link_inputs() {
+    ESP_LOGD(TAG, "Linking inputs ...");
+
+    for (const auto &d : devices_) {
+        auto device = d.second;
+        for (const auto &i : device->inputs) {
+            auto inputBase = i.second;
+            auto sensorBase = get_sensor(inputBase->get_device_id(), inputBase->get_id());
+            if (sensorBase == NULL) {
+                continue;
+            }
+            if (sensorBase->type() == SENSOR) {
+                auto sensor = (TopTronicSensor*) sensorBase;
+            } else if (sensorBase->type() == TEXTSENSOR) {
+                auto sensor = (TopTronicTextSensor*) sensorBase;
+                auto input = (TopTronicSelect*) inputBase;
+                sensor->add_on_state_callback([input](std::string state) -> void {
+                    ESP_LOGD(TAG, "Updating %s", input->get_name().c_str());
+                    input->publish_state(state);
+                });
+                ESP_LOGD(TAG, "Linked %s with %s", sensor->get_name().c_str(), input->get_name().c_str());
+            }
+        }
+    }
+}
+
 void TopTronic::setup() {
     get_sensors();
+    link_inputs();
 }
 
 void TopTronic::loop() {
@@ -177,14 +231,14 @@ void TopTronic::parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool rem
         ESP_LOGD(TAG, "ignoring: unknown sensor 0x%X", id);
         return;
     }
-    TopTronicSensorBase *sensorBase = device->sensors[id];
+    TopTronicBase *sensorBase = device->sensors[id];
 
-    if (sensorBase->sensor_type() == SENSOR) {
+    if (sensorBase->type() == SENSOR) {
         TopTronicSensor *sensor = (TopTronicSensor*)sensorBase;
         float value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 6, data.end()));
         ESP_LOGD(TAG, "publish %f", value);
         sensor->publish_state(value);
-    } else if (sensorBase->sensor_type() == TEXTSENSOR) {
+    } else if (sensorBase->type() == TEXTSENSOR) {
         TopTronicTextSensor *sensor = (TopTronicTextSensor*)sensorBase;
         std::string value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 6, data.end()));
         sensor->publish_state(value);

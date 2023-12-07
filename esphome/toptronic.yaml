@@ -51,3 +51,26 @@ text_sensor:
         text: Sparbetrieb
       - value: 7
         text: Handbetrieb
+
+select:
+  - platform: toptronic
+    name: Betriebswahl Heizung Select
+    device_type: 0
+    device_addr: 0
+    function_group: 1
+    function_number: 0
+    datapoint: 3050
+    options:
+      - Standby
+      - Woche 1
+      - Woche 2
+      - Konstant
+      - Sparbetrieb
+      - Handbetrieb
+    values:
+      - 0
+      - 1
+      - 2
+      - 4
+      - 5
+      - 7
