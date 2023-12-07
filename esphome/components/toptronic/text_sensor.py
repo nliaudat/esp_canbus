@@ -5,6 +5,7 @@ import esphome.config_validation as cv
 from esphome.components import text_sensor
 from esphome.const import (
     CONF_VALUE,
+    CONF_OPTIONS,
 )
 from . import (
     toptronic, 
@@ -17,23 +18,21 @@ from . import (
     CONF_FUNCTION_GROUP,
     CONF_FUNCTION_NUMBER,
     CONF_DATAPOINT,
+    CONF_VALUES,
 )
 
 TopTronicTextSensor = toptronic.class_(
     "TopTronicTextSensor", text_sensor.TextSensor
 )
 
-CONF_LIST = "list"
-CONF_TEXT = "text"
-
-validate_list = cv.Schema({
-    cv.Required(CONF_VALUE): cv.uint8_t,
-    cv.Required(CONF_TEXT): cv.string,
-})
-
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(CONF_TT_ID): cv.use_id(TopTronicComponent),
-    cv.Required(CONF_LIST): cv.ensure_list(validate_list),
+    cv.Required(CONF_OPTIONS): cv.All(
+        cv.ensure_list(cv.string_strict), cv.Length(min=1)
+    ),
+    cv.Required(CONF_VALUES): cv.All(
+        cv.ensure_list(cv.int_), cv.Length(min=1)
+    ),
 }).extend(text_sensor.text_sensor_schema(
     TopTronicTextSensor
 )).extend(CONFIG_SCHEMA_BASE)
@@ -48,7 +47,9 @@ async def to_code(config):
     cg.add(sens.set_function_number(config[CONF_FUNCTION_NUMBER]))
     cg.add(sens.set_datapoint(config[CONF_DATAPOINT]))
     
-    for option in config[CONF_LIST]:
-        cg.add(sens.add_option(option['value'], option['text']))
+    for i in range(len(config[CONF_OPTIONS])):
+        value = config[CONF_VALUES][i]
+        text = config[CONF_OPTIONS][i]
+        cg.add(sens.add_option(value, text))
     
     cg.add(tt.add_sensor(sens))

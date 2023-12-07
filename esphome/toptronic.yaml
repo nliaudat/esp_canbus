@@ -38,19 +38,20 @@ text_sensor:
     function_group: 1
     function_number: 0
     datapoint: 3050
-    list:
-      - value: 0
-        text: Standby
-      - value: 1
-        text: Woche 1
-      - value: 2
-        text: Woche 2
-      - value: 4
-        text: Konstant
-      - value: 5
-        text: Sparbetrieb
-      - value: 7
-        text: Handbetrieb
+    options:
+      - Standby
+      - Woche 1
+      - Woche 2
+      - Konstant
+      - Sparbetrieb
+      - Handbetrieb
+    values:
+      - 0
+      - 1
+      - 2
+      - 4
+      - 5
+      - 7
 
 select:
   - platform: toptronic
