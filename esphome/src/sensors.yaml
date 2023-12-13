@@ -1,6 +1,3 @@
-toptronic:
-    id: tt
-
 sensor:
   # Row: 1382
   - platform: toptronic

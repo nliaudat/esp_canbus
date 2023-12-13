@@ -22,24 +22,21 @@ external_components:
       path: components
 
 packages:
-  wifi: !include wifi.yaml
-  board: !include board.yaml
-  time: !include time.yaml
-  ## translations / substitutions
-  substitutions_EN: !include substitutions_EN.yaml
-  #substitutions_DE: !include substitutions_DE.yaml
-  #substitutions_FR: !include substitutions_FR.yaml
-  #substitutions_IT: !include substitutions_IT.yaml
-  canbus: !include canbus.yaml
-  #canbus_scripts: !include canbus_scripts.yaml
-  #sensor_canbus: !include sensor_canbus.yaml
-  sensor_others: !include sensor_others.yaml
-  #number: !include inputs_number.yaml
-  #select: !include inputs_select.yaml
-  switch: !include switch.yaml
-  sensor_tt: !include sensor_tt.yaml
-  inputs_tt: !include inputs_tt.yaml
-  #debug: !include debug.yaml
+  wifi: !include src/wifi.yaml
+  board: !include src/board.yaml
+  time: !include src/time.yaml
+  ## TODO: translations / substitutions
+  # substitutions_EN: !include src/substitutions/en.yaml
+  # substitutions_DE: !include src/substitutions/de.yaml
+  # substitutions_FR: !include src/substitutions/fr.yaml
+  # substitutions_IT: !include src/substitutions/it.yaml
+  canbus: !include src/canbus.yaml
+  toptronic: !include src/toptronic.yaml
+  sensors: !include src/sensors.yaml
+  inputs: !include src/inputs.yaml
+  sensors_others: !include src/sensors_others.yaml
+  switch: !include src/switch.yaml
+  # debug: !include debug.yaml
 
   
   
