@@ -63,5 +63,6 @@ async def to_code(config):
     cg.add(var.set_function_group(config[CONF_FUNCTION_GROUP]))
     cg.add(var.set_function_number(config[CONF_FUNCTION_NUMBER]))
     cg.add(var.set_datapoint(config[CONF_DATAPOINT]))
+    cg.add(var.set_type(config[CONF_TYPE]))
     
     cg.add(tt.add_input(var))

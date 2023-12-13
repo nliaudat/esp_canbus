@@ -39,6 +39,7 @@ logger:
     select: ERROR
     number: ERROR
     sensor: INFO
+    tt: INFO
 
 
 # Enable Home Assistant API

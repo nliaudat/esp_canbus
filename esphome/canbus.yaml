@@ -23,14 +23,14 @@ canbus:
             # ESP_LOGI("candump", "%x : %x %x %x %x %x %x %x %x", can_id, int(x[0]), int(x[1]), int(x[2]), int(x[3]), int(x[4]), int(x[5]), int(x[6]), int(x[7])); //1FD047FF   [8]  01 42 32 00 92 E2 00 FF
     
     #### Find can_id 
-    - can_id: 0  # listen to all messages
-      can_id_mask: 0
-      use_extended_id: true
-      then:
-      - lambda: |-
-            if(x[1] == 0x42) { // response frame
-                ESP_LOGI("can_id_find", "Response frame : hoval_homevent_can_Addr is probably : %x", can_id);
-            }else if(x[1] == 0x40) { // request frame
-                ESP_LOGI("can_id_find", "Request frame : hoval_toptronic_can_Addr is probably : %x", can_id);
-            }
+    # - can_id: 0  # listen to all messages
+    #   can_id_mask: 0
+    #   use_extended_id: true
+    #   then:
+    #   - lambda: |-
+    #         if(x[1] == 0x42) { // response frame
+    #             ESP_LOGI("can_id_find", "Response frame : hoval_homevent_can_Addr is probably : %x", can_id);
+    #         }else if(x[1] == 0x40) { // request frame
+    #             ESP_LOGI("can_id_find", "Request frame : hoval_toptronic_can_Addr is probably : %x", can_id);
+    #         }
 

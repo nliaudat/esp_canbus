@@ -1,15 +1,14 @@
 toptronic:
     id: tt
 
-# Row: 3536
 sensor:
   - platform: toptronic
-    name: Raum-Ist
+    name: Normal-Raumtemperatur Heizbetrieb
     device_type: 0
     device_addr: 0
     function_group: 1
     function_number: 0
-    datapoint: 1
+    datapoint: 3051
     type: S16
     unit_of_measurement: "\xB0C"
     accuracy_decimals: 1
