@@ -3,7 +3,7 @@ wifi:
 #highest priority is chosen
   networks:
   - ssid: !secret wifi_ssid_1
-    hidden: true 
+    # hidden: true 
     password: !secret wifi_password_1
     priority : 2
   - ssid: !secret wifi_ssid_2

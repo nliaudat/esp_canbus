@@ -47,3 +47,9 @@ web_server:
   port: 80
   #log: false
 
+interval:
+  - interval: 1min
+    then:
+      - lambda: |-
+            id(tt)->get_sensors();
+

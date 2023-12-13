@@ -209,12 +209,13 @@ void TopTronic::add_input(TopTronicBase *input) {
 void TopTronic::get_sensors() {
     for (const auto &d : devices_) {
         auto device = d.second;
-        uint8_t message_id = 30;
         for (const auto &s : device->sensors) {
             auto sensor = s.second;
             uint32_t can_id = build_can_id(0xF1, 0xE0, 0x90, 0x01);
-            canbus_->send_data(can_id, true, sensor->get_request_data());
-            message_id += 1;
+            auto data = sensor->get_request_data();
+            canbus_->send_data(can_id, true, data);
+
+            ESP_LOGI(TAG, "[GET] Data: 0x%s", hex_str(&data[0], data.size()).c_str());
         }
     }
 }

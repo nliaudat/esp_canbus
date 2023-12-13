@@ -58,6 +58,19 @@ sensor:
     filters:
       - multiply: 0.1
 
+  - platform: toptronic
+    name: Raum-Ist
+    device_type: 0
+    device_addr: 0
+    function_group: 83
+    function_number: 0
+    datapoint: 10
+    type: S16
+    unit_of_measurement: "\xB0C"
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
   # Row: 3529
   - platform: toptronic
     name: Warmwasser-Ist
@@ -82,6 +95,62 @@ sensor:
     datapoint: 30
     type: S16
     unit_of_measurement: "%"
+
+  # Row: 1414
+  - platform: toptronic
+    name: Vorlauf-Ist (1)
+    device_type: 0
+    device_addr: 0
+    function_group: 1
+    function_number: 0
+    datapoint: 2
+    type: S16
+    unit_of_measurement: "\xB0C"
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  # Row: 1415
+  - platform: toptronic
+    name: Vorlauf-Ist (2)
+    device_type: 0
+    device_addr: 0
+    function_group: 1
+    function_number: 1
+    datapoint: 2
+    type: S16
+    unit_of_measurement: "\xB0C"
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  # Row: 18774
+  # - platform: toptronic
+  #   name: Rücklauf-Ist (1)
+  #   device_type: 0
+  #   device_addr: 0
+  #   function_group: 1
+  #   function_number: 0
+  #   datapoint: 3
+  #   type: S16
+  #   unit_of_measurement: "\xB0C"
+  #   accuracy_decimals: 1
+  #   filters:
+  #     - multiply: 0.1
+
+  # Row: 18775
+  # - platform: toptronic
+  #   name: Rücklauf-Ist (2)
+  #   device_type: 0
+  #   device_addr: 0
+  #   function_group: 1
+  #   function_number: 1
+  #   datapoint: 3
+  #   type: S16
+  #   unit_of_measurement: "\xB0C"
+  #   accuracy_decimals: 1
+  #   filters:
+  #     - multiply: 0.1
 
 text_sensor:
   # Row: 1379
