@@ -1,52 +1,50 @@
-toptronic:
-    id: tt
-
-sensor:
-  - platform: toptronic
-    name: Normal-Raumtemperatur Heizbetrieb
-    device_type: 0
-    device_addr: 0
-    function_group: 1
-    function_number: 0
-    datapoint: 3051
-    type: S16
-    unit_of_measurement: "\xB0C"
-    accuracy_decimals: 1
-    filters:
-      - multiply: 0.1
-
-  - platform: toptronic
-    name: Aussenfühler 1
-    device_type: 0
-    device_addr: 0
-    function_group: 0
-    function_number: 0
-    datapoint: 0
-    type: S16
-    unit_of_measurement: "\xB0C"
-    accuracy_decimals: 1
-    filters:
-      - multiply: 0.1
-
-# Row: 3510
 number:
+  # Row: 1382
   - platform: toptronic
-    name: Normal-Raumtemperatur Heizbetrieb
-    device_type: 0 # ???
+    name: Normal-Raumtemperatur Heizbetrieb (1)
+    device_type: 0
     device_addr: 0
     function_group: 1
     function_number: 0
     datapoint: 3051
     type: S16
-    # unit_of_measurement: "\xB0C"
+    unit_of_measurement: "\xB0C"
     min_value: 100
     max_value: 300
     step: 5
 
-# Row: 1379
-text_sensor:
+  # Row: 1384
   - platform: toptronic
-    name: Betriebswahl Heizung
+    name: Normal-Raumtemperatur Heizbetrieb (2)
+    device_type: 0
+    device_addr: 0
+    function_group: 1
+    function_number: 1
+    datapoint: 3051
+    type: S16
+    unit_of_measurement: "\xB0C"
+    min_value: 100
+    max_value: 300
+    step: 5
+
+  # Row: 3526
+  - platform: toptronic
+    name: Normal-Warmwassertemperatur
+    device_type: 0
+    device_addr: 0
+    function_group: 2
+    function_number: 0
+    datapoint: 5051
+    type: S16
+    unit_of_measurement: "\xB0C"
+    min_value: 100
+    max_value: 700
+    step: 10
+
+select:
+  # Row: 1379
+  - platform: toptronic
+    name: Betriebswahl Heizung (1)
     device_type: 0
     device_addr: 0
     function_group: 1
@@ -67,13 +65,13 @@ text_sensor:
       - 5
       - 7
 
-select:
+  # Row: 1380
   - platform: toptronic
-    name: Betriebswahl Heizung Select
+    name: Betriebswahl Heizung (2)
     device_type: 0
     device_addr: 0
     function_group: 1
-    function_number: 0
+    function_number: 1
     datapoint: 3050
     options:
       - Standby
@@ -89,3 +87,24 @@ select:
       - 4
       - 5
       - 7
+
+  # Row: 3525
+  - platform: toptronic
+    name: Betriebswahl Warmwasser
+    device_type: 0
+    device_addr: 0
+    function_group: 2
+    function_number: 0
+    datapoint: 5050
+    options:
+      - Standby
+      - Woche 1
+      - Woche 2
+      - Konstant
+      - Sparbetrieb
+    values:
+      - 0
+      - 1
+      - 2
+      - 4
+      - 6
