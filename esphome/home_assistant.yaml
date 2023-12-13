@@ -1,0 +1,32 @@
+title: Heizung
+views:
+  - path: default_view
+    title: Home
+    cards:
+      - type: entities
+        entities:
+          - entity: sensor.raum_ist
+          - entity: sensor.aussenfuhler_1
+          - entity: sensor.wez_leistung
+        title: Allgemein
+      - type: entities
+        entities:
+          - entity: select.betriebswahl_heizung_1
+          - entity: number.normal_raumtemperatur_heizbetrieb_1
+          - entity: sensor.normal_raumtemperatur_heizbetrieb_1
+          - entity: sensor.vorlauf_ist_1
+        title: Heizkörper
+      - type: entities
+        entities:
+          - entity: select.betriebswahl_heizung_2
+          - entity: number.normal_raumtemperatur_heizbetrieb_2
+          - entity: sensor.normal_raumtemperatur_heizbetrieb_2
+          - entity: sensor.vorlauf_ist_2
+        title: Fußbodenheizung
+      - type: entities
+        entities:
+          - entity: select.betriebswahl_warmwasser
+          - entity: number.normal_warmwassertemperatur
+          - entity: sensor.normal_warmwassertemperatur
+          - entity: sensor.warmwasser_ist
+        title: Warmwasser
