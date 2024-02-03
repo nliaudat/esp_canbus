@@ -6,6 +6,7 @@ from esphome.components.canbus import CanbusComponent
 
 CONF_TT_ID = "toptronic_id"
 CONF_CANBUS_ID = "canbus_id"
+CONF_DECIMAL = "decimal"
 
 toptronic = cg.esphome_ns.namespace("toptronic")
 TopTronicComponent = toptronic.class_(

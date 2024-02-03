@@ -12,6 +12,7 @@ number:
     min_value: 100
     max_value: 300
     step: 5
+    decimal: 1
 
   # Row: 1384
   - platform: toptronic
@@ -26,6 +27,7 @@ number:
     min_value: 100
     max_value: 300
     step: 5
+    decimal: 1
 
   # Row: 3526
   - platform: toptronic
@@ -40,6 +42,7 @@ number:
     min_value: 100
     max_value: 700
     step: 10
+    decimal: 1
 
 select:
   # Row: 1379

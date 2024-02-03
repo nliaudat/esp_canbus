@@ -165,13 +165,14 @@ float TopTronicSensor::parse_value(std::vector<uint8_t> value) {
 }
 
 void TopTronicNumber::control(float value) {
-    std::vector<uint8_t> bytes = floatToBytes(value, type_);
+    float v = multiplier_ * value;
+    std::vector<uint8_t> bytes = floatToBytes(v, type_);
 
-    uint32_t can_id = build_can_id(0xF1, 0xE0, 0x90, 0x01);
+    uint32_t can_id = 0xF1E40801;
     std::vector<uint8_t> data = build_set_request(function_group_, function_number_, datapoint_, bytes);
     canbus_->send_data(can_id, true, data);
 
-    ESP_LOGI(TAG, "[SET] %s: %f, Data: 0x%s", get_name().c_str(), value, hex_str(&data[0], data.size()).c_str());
+    ESP_LOGI(TAG, "[SET] %s: %f, Data: 0x%s", get_name().c_str(), v, hex_str(&data[0], data.size()).c_str());
 }
 
 std::string TopTronicTextSensor::parse_value(std::vector<uint8_t> value) {
@@ -182,7 +183,7 @@ std::string TopTronicTextSensor::parse_value(std::vector<uint8_t> value) {
 void TopTronicSelect::control(const std::string &text) {
     uint8_t value = toValue_[text];
     
-    uint32_t can_id = build_can_id(0xF1, 0xE0, 0x90, 0x01);
+    uint32_t can_id = 0xF1E40801;
     std::vector<uint8_t> data = build_set_request(function_group_, function_number_, datapoint_, {value});
     canbus_->send_data(can_id, true, data);
 
@@ -211,7 +212,7 @@ void TopTronic::get_sensors() {
         auto device = d.second;
         for (const auto &s : device->sensors) {
             auto sensor = s.second;
-            uint32_t can_id = build_can_id(0xF1, 0xE0, 0x90, 0x01);
+            uint32_t can_id = 0xF1E40801;
             auto data = sensor->get_request_data();
             canbus_->send_data(can_id, true, data);
 
@@ -244,9 +245,9 @@ void TopTronic::link_inputs() {
             if (sensorBase->type() == SENSOR) {
                 auto sensor = (TopTronicSensor*) sensorBase;
                 auto input = (TopTronicNumber*) inputBase;
-                uint8_t decimals = sensor->get_accuracy_decimals();
                 sensor->add_on_raw_state_callback([input](float state) -> void {
-                    input->publish_state(state);
+                    float divider = input->get_multiplier();
+                    input->publish_state(state / divider);
                 });
             } else if (sensorBase->type() == TEXTSENSOR) {
                 auto sensor = (TopTronicTextSensor*) sensorBase;

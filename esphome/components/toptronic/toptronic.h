@@ -70,12 +70,15 @@ class TopTronicNumber: public number::Number, public TopTronicBase {
     explicit TopTronicNumber(canbus::Canbus *canbus): canbus_(canbus){};
     
     void set_type(TypeName type) { type_ = type; }
+    void set_multiplier(float multiplier) { multiplier_ = multiplier; }
+    float get_multiplier() { return multiplier_; }
     SensorType type() override { return SENSOR; };
     void control(float value) override;
 
    protected:
     canbus::Canbus *canbus_;
     TypeName type_;
+    float multiplier_ = 1;
 };
 
 class TopTronicTextSensor: public text_sensor::TextSensor, public TopTronicBase {

@@ -24,6 +24,7 @@ from . import (
     CONF_FUNCTION_NUMBER,
     CONF_DATAPOINT,
     TT_TYPE_OPTIONS,
+    CONF_DECIMAL,
 )
 
 TopTronicNumber = toptronic.class_(
@@ -37,6 +38,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Required(CONF_MAX_VALUE): cv.float_,
     cv.Required(CONF_MIN_VALUE): cv.float_,
     cv.Required(CONF_STEP): cv.positive_float,
+    cv.Optional(CONF_DECIMAL, default=0): cv.positive_float,
 }).extend(number.number_schema(
     TopTronicNumber
 )).extend(CONFIG_SCHEMA_BASE)
@@ -50,12 +52,13 @@ async def new_number(config, *, min_value: float, max_value: float, step: float)
     return var
 
 async def to_code(config):
+    divider = pow(10, config[CONF_DECIMAL])
     tt = await cg.get_variable(config[CONF_TT_ID])
     var = await new_number(
         config, 
-        min_value=config[CONF_MIN_VALUE],
-        max_value=config[CONF_MAX_VALUE],
-        step=config[CONF_STEP],
+        min_value=config[CONF_MIN_VALUE] / divider,
+        max_value=config[CONF_MAX_VALUE] / divider,
+        step=config[CONF_STEP] / divider,
     )
    
     cg.add(var.set_device_type(config[CONF_DEVICE_TYPE]))
@@ -64,5 +67,6 @@ async def to_code(config):
     cg.add(var.set_function_number(config[CONF_FUNCTION_NUMBER]))
     cg.add(var.set_datapoint(config[CONF_DATAPOINT]))
     cg.add(var.set_type(config[CONF_TYPE]))
+    cg.add(var.set_multiplier(divider))
     
     cg.add(tt.add_input(var))
