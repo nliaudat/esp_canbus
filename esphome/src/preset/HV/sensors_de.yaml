@@ -1,0 +1,132 @@
+sensor:
+- platform: toptronic
+  name: "Normal-L\xFCftungsmodulation "
+  function_group: 50
+  function_number: 0
+  datapoint: 40651
+  id: HV_50_0_40651
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: "Spar-L\xFCftungsmodulation "
+  function_group: 50
+  function_number: 0
+  datapoint: 40686
+  id: HV_50_0_40686
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: "L\xFCftungsmodulation"
+  function_group: 50
+  function_number: 0
+  datapoint: 38606
+  id: HV_50_0_38606
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: Feuchte Sollwert
+  function_group: 50
+  function_number: 0
+  datapoint: 40687
+  id: HV_50_0_40687
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: Feuchtigkeit Abluft
+  function_group: 50
+  function_number: 0
+  datapoint: 37600
+  id: HV_50_0_37600
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: VOC Abluft
+  function_group: 50
+  function_number: 0
+  datapoint: 37608
+  id: HV_50_0_37608
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: VOC Aussenluft
+  function_group: 50
+  function_number: 0
+  datapoint: 37611
+  id: HV_50_0_37611
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: Temperatur Aussenluft
+  function_group: 50
+  function_number: 0
+  datapoint: 0
+  id: HV_50_0_0
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Temperatur Abluft
+  function_group: 50
+  function_number: 0
+  datapoint: 37602
+  id: HV_50_0_37602
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Ventilator Fortluft soll
+  function_group: 50
+  function_number: 0
+  datapoint: 38600
+  id: HV_50_0_38600
+  type: U8
+  unit_of_measurement: '%'
+text_sensor:
+- platform: toptronic
+  name: "Betriebswahl L\xFCftung"
+  function_group: 50
+  function_number: 0
+  datapoint: 40650
+  id: HV_50_0_40650
+  options:
+  - Standby
+  - Woche 1
+  - Woche 2
+  - Konstantbetrieb, Sollwert 40651
+  - Sparbetrieb, Sollwert DAP40686
+  values:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 5
+- platform: toptronic
+  name: "Status L\xFCftungsregelung"
+  function_group: 50
+  function_number: 0
+  datapoint: 39652
+  id: HV_50_0_39652
+  options:
+  - Aus, z.B. Standbybetrieb
+  - "Normaler L\xFCftungsbetrieb"
+  - VOC Modus aktiv
+  - Feuchtigkeitsmodus aktiv
+  - Frostschutz aktiv
+  - CoolVet aktiv
+  - Fehlerzustand
+  - Sommerfeuchte
+  - Ausschaltstop
+  values:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8

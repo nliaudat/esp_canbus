@@ -25,15 +25,14 @@ packages:
   wifi: !include src/wifi.yaml
   board: !include src/board.yaml
   time: !include src/time.yaml
-  ## TODO: translations / substitutions
-  # substitutions_EN: !include src/substitutions/en.yaml
-  # substitutions_DE: !include src/substitutions/de.yaml
-  # substitutions_FR: !include src/substitutions/fr.yaml
-  # substitutions_IT: !include src/substitutions/it.yaml
   canbus: !include src/canbus.yaml
   toptronic: !include src/toptronic.yaml
   sensors: !include src/sensors.yaml
   inputs: !include src/inputs.yaml
+  # sensors: !include src/preset/HV/sensors_en.yaml
+  # inputs: !include src/preset/HV/inputs_en.yaml
+  # sensors: !include src/preset/WEZ/sensors_en.yaml
+  # inputs: !include src/preset/WEZ/inputs_en.yaml
   sensors_others: !include src/sensors_others.yaml
   switch: !include src/switch.yaml
   # debug: !include debug.yaml

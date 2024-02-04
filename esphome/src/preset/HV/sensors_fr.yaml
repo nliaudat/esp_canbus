@@ -1,0 +1,132 @@
+sensor:
+- platform: toptronic
+  name: Modulation de la ventilation normale
+  function_group: 50
+  function_number: 0
+  datapoint: 40651
+  id: HV_50_0_40651
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: "Modulation de la ventilation \xE9conomique"
+  function_group: 50
+  function_number: 0
+  datapoint: 40686
+  id: HV_50_0_40686
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: Modulation de la ventilation
+  function_group: 50
+  function_number: 0
+  datapoint: 38606
+  id: HV_50_0_38606
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: "Valeur de consigne humidit\xE9"
+  function_group: 50
+  function_number: 0
+  datapoint: 40687
+  id: HV_50_0_40687
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: "Humidit\xE9 de l'air extrait"
+  function_group: 50
+  function_number: 0
+  datapoint: 37600
+  id: HV_50_0_37600
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: VOC air extrait
+  function_group: 50
+  function_number: 0
+  datapoint: 37608
+  id: HV_50_0_37608
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: "VOC air ext\xE9rieur"
+  function_group: 50
+  function_number: 0
+  datapoint: 37611
+  id: HV_50_0_37611
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: "Temp\xE9rature de l'air ext\xE9rieur"
+  function_group: 50
+  function_number: 0
+  datapoint: 0
+  id: HV_50_0_0
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "Temp\xE9rature de l'air extrait"
+  function_group: 50
+  function_number: 0
+  datapoint: 37602
+  id: HV_50_0_37602
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "Ventilateur air \xE9vacu\xE9 val. de consigne"
+  function_group: 50
+  function_number: 0
+  datapoint: 38600
+  id: HV_50_0_38600
+  type: U8
+  unit_of_measurement: '%'
+text_sensor:
+- platform: toptronic
+  name: "S\xE9lection de fonctionnement ventilation"
+  function_group: 50
+  function_number: 0
+  datapoint: 40650
+  id: HV_50_0_40650
+  options:
+  - Stand-by
+  - Semaine 1
+  - Semaine 2
+  - Mode constant, valeur de consigne 40651
+  - "Mode \xE9conomique, valeur de consigne DAP40686"
+  values:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 5
+- platform: toptronic
+  name: "\xC9tat r\xE9gulation de la ventilation"
+  function_group: 50
+  function_number: 0
+  datapoint: 39652
+  id: HV_50_0_39652
+  options:
+  - "Appareil \xE0 l\u2019arr\xEAt, mode stand-by par ex."
+  - Mode ventilation normale
+  - "Mode VOC activ\xE9"
+  - "Mode humidit\xE9 activ\xE9"
+  - "Protection antigel activ\xE9e"
+  - "CoolVet activ\xE9"
+  - "\xC9tat d\u2019erreur"
+  - "Humidit\xE9 d'\xE9t\xE9"
+  - "Arr\xEAt coupure valeur de consigne"
+  values:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8

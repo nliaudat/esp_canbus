@@ -1,0 +1,197 @@
+sensor:
+- platform: toptronic
+  name: AF1 - outdoor sensor 1
+  function_group: 0
+  function_number: 0
+  datapoint: 0
+  id: WEZ_0_0_0
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Normal room temp. heating oper.
+  function_group: 1
+  function_number: 0
+  datapoint: 3051
+  id: WEZ_1_0_3051
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Conservation room temp. heating oper.
+  function_group: 1
+  function_number: 0
+  datapoint: 3053
+  id: WEZ_1_0_3053
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Normal room temp. heating oper.
+  function_group: 1
+  function_number: 1
+  datapoint: 3051
+  id: WEZ_1_1_3051
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Conservation room temp. heating oper.
+  function_group: 1
+  function_number: 1
+  datapoint: 3053
+  id: WEZ_1_1_3053
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Normal room temp. heating oper.
+  function_group: 1
+  function_number: 2
+  datapoint: 3051
+  id: WEZ_1_2_3051
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Conservation room temp. heating oper.
+  function_group: 1
+  function_number: 2
+  datapoint: 3053
+  id: WEZ_1_2_3053
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Hot water actual SF
+  function_group: 2
+  function_number: 0
+  datapoint: 4
+  id: WEZ_2_0_4
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Supply actual
+  function_group: 1
+  function_number: 0
+  datapoint: 2
+  id: WEZ_1_0_2
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Supply actual
+  function_group: 1
+  function_number: 1
+  datapoint: 2
+  id: WEZ_1_1_2
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Supply actual
+  function_group: 1
+  function_number: 2
+  datapoint: 2
+  id: WEZ_1_2_2
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: WEZ output
+  function_group: 60
+  function_number: 254
+  datapoint: 30
+  id: WEZ_60_254_30
+  type: U8
+  unit_of_measurement: '%'
+text_sensor:
+- platform: toptronic
+  name: Heating operation choice
+  function_group: 1
+  function_number: 0
+  datapoint: 3050
+  id: WEZ_1_0_3050
+  options:
+  - Standby
+  - week 1
+  - week 2
+  - constant
+  - Eco mode
+  - Manual operating mode heating
+  - Manual operating mode cooling
+  values:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 5
+  - 7
+  - 8
+- platform: toptronic
+  name: Heating operation choice
+  function_group: 1
+  function_number: 1
+  datapoint: 3050
+  id: WEZ_1_1_3050
+  options:
+  - Standby
+  - week 1
+  - week 2
+  - constant
+  - Eco mode
+  - Manual operating mode heating
+  - Manual operating mode cooling
+  values:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 5
+  - 7
+  - 8
+- platform: toptronic
+  name: Heating operation choice
+  function_group: 1
+  function_number: 2
+  datapoint: 3050
+  id: WEZ_1_2_3050
+  options:
+  - Standby
+  - week 1
+  - week 2
+  - constant
+  - Eco mode
+  - Manual operating mode heating
+  - Manual operating mode cooling
+  values:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 5
+  - 7
+  - 8

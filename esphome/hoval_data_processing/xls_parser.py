@@ -1,4 +1,5 @@
 import openpyxl
+from openpyxl import Workbook
 from openpyxl.cell import Cell
 from openpyxl.worksheet.worksheet import Worksheet
 from typing import List
@@ -76,6 +77,7 @@ class Datapoint:
             'min_value': self.min,
             'max_value': self.max,
             'step': self.steps,
+            'decimal': self.decimal
         }
 
 
@@ -107,7 +109,15 @@ def parse_text(row: List[Cell]) -> dict[int, str]:
             res[i] = text.value
     return res
 
-def translate(datapoints: List[Datapoint], ws: Worksheet) -> None:
+def translate(wb: Workbook, datapoints: List[Datapoint], locale: str = 'en') -> None:
+    worksheets = {
+        'de': wb.worksheets[1],
+        'en': wb.worksheets[2],
+        'fr': wb.worksheets[3],
+        'it': wb.worksheets[4],
+    }
+    ws = worksheets[locale] or wb.worksheets[2]
+
     dpMap = {dp.row: dp for dp in datapoints}
 
     for row in ws.iter_rows(min_row=2):
@@ -124,17 +134,8 @@ def translate(datapoints: List[Datapoint], ws: Worksheet) -> None:
         if dp.type_name == 'LIST':
             dp.text = parse_text(row)
 
-def parse_datapoints(path: str, filter: Filter, locale: str = 'en') -> List[Datapoint]:
-    wb = openpyxl.load_workbook(filename=path, read_only=True)
+def parse_datapoints(wb: Workbook, filter: Filter) -> List[Datapoint]:
     ws = wb.worksheets[1]
-
-    worksheets = {
-        'de': wb.worksheets[1],
-        'en': wb.worksheets[2],
-        'fr': wb.worksheets[3],
-        'it': wb.worksheets[4],
-    }
-
     datapoints: List[Datapoint] = []
     
     for row in ws.iter_rows(min_row=2):
@@ -168,19 +169,9 @@ def parse_datapoints(path: str, filter: Filter, locale: str = 'en') -> List[Data
         )
         datapoints.append(datapoint)
 
-    translate(datapoints, worksheets[locale] or wb.worksheets[2])
-
     return datapoints
 
-if __name__ == "__main__":
-    path = 'TTE-GW-Modbus-datapoints.xlsx'
-    # filter = Filter(unit_names=['WEZ'], unit_ids=[1])
-    # filter = Filter(unit_names=['HV'], unit_ids=[513])
-    filter = Filter(rows=[1382, 3506, 1379])
-
-    datapoints = parse_datapoints(path, filter, locale='de')
-
-    # write sensors.yaml
+def dump_sensors(datapoints: List[Datapoint], path: str):
     sensors = [dp.into_sensor() for dp in datapoints if dp.type_name != 'LIST']
     text_sensors = [dp.into_text_sensor() for dp in datapoints if dp.type_name == 'LIST']
     
@@ -189,10 +180,10 @@ if __name__ == "__main__":
         **({'text_sensor': text_sensors} if len(text_sensors) > 0 else {}),
     }
 
-    with open('sensors.yaml', 'w', encoding='utf-8') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(all_sensors, f, encoding="utf-8", sort_keys=False)
 
-    # write inputs.yaml
+def dump_inputs(datapoints: List[Datapoint], path: str):
     numbers = [dp.into_number() for dp in datapoints if dp.writable and dp.type_name != 'LIST']
     selects = [dp.into_select() for dp in datapoints if dp.writable and dp.type_name == 'LIST']
 
@@ -201,5 +192,20 @@ if __name__ == "__main__":
         **({'select': selects} if len(selects) > 0 else {}),
     }
 
-    with open('inputs.yaml', 'w', encoding='utf-8') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(all_inputs, f, encoding="utf-8", sort_keys=False)
+
+if __name__ == "__main__":
+    path = 'TTE-GW-Modbus-datapoints.xlsx'
+    # filter = Filter(unit_names=['WEZ'], unit_ids=[1])
+    # filter = Filter(unit_names=['HV'], unit_ids=[513])
+    filter = Filter(rows=[1382, 3506, 1379])
+
+    wb = openpyxl.load_workbook(filename=path, read_only=True)
+
+    datapoints = parse_datapoints(wb, filter)
+    translate(wb, datapoints, 'de')
+
+    dump_sensors(datapoints, 'sensors.yaml')
+    dump_inputs(datapoints, 'inputs.yaml')
+    

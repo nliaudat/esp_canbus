@@ -39,8 +39,8 @@ CONF_VALUES = "values"
 
 CONFIG_SCHEMA_BASE = cv.Schema(
     {
-        cv.Required(CONF_DEVICE_TYPE): cv.uint8_t,
-        cv.Required(CONF_DEVICE_ADDR): cv.uint8_t,
+        cv.Optional(CONF_DEVICE_TYPE, 0): cv.uint8_t,
+        cv.Optional(CONF_DEVICE_ADDR, 0): cv.uint8_t,
 
         cv.Required(CONF_FUNCTION_GROUP): cv.uint8_t,
         cv.Required(CONF_FUNCTION_NUMBER): cv.uint8_t,
