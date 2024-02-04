@@ -5,6 +5,7 @@
 #include "esphome/components/number/number.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/canbus/canbus.h"
+#include "esphome/core/helpers.h"
 
 #include <map>
 
@@ -30,7 +31,7 @@ uint32_t build_can_id(uint8_t message_id, uint8_t priority, uint8_t device_type,
 std::vector<uint8_t> build_get_request(uint8_t function_group, uint8_t function_number, uint32_t datapoint);
 std::vector<uint8_t> build_set_request(uint8_t function_group, uint8_t function_number, uint32_t datapoint, std::vector<uint8_t> value);
 
-class TopTronicBase {
+class TopTronicBase: public PollingComponent {
    public:
     void set_device_type(uint8_t device_type) { device_type_ = device_type; }
     void set_device_addr(uint8_t device_addr) { device_addr_ = device_addr; }
@@ -44,7 +45,10 @@ class TopTronicBase {
     std::vector<uint8_t> get_request_data();
     uint8_t get_function_group() { return function_group_; }
 
-    virtual SensorType type();
+    virtual SensorType type() = 0;
+
+    void update() override;
+    void add_on_update_callback(std::function<void()> &&callback);
 
    protected:
     uint8_t device_type_;
@@ -53,6 +57,8 @@ class TopTronicBase {
     uint8_t function_group_;
     uint8_t function_number_;
     uint16_t datapoint_;
+
+    CallbackManager<void()> update_callback_; 
 };
 
 class TopTronicSensor: public sensor::Sensor, public TopTronicBase {
@@ -129,7 +135,7 @@ class TopTronic : public Component {
     void add_sensor(TopTronicBase *sensor);
     void add_input(TopTronicBase *input);
     void parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool remote_transmission_request);
-    void get_sensors();
+    void register_sensor_callbacks();
 
     void setup() override;
     void loop() override;

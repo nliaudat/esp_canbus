@@ -46,9 +46,3 @@ button:
             uint32_t can_id = (device_type << 8) | device_addr;
 
             id(tt).parse_frame(x, can_id, false);
-
-  - platform: template
-    name: tt.get_sensors()
-    on_press:
-      - lambda: !lambda |-
-            id(tt).get_sensors();

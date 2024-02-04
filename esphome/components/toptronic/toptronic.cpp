@@ -73,6 +73,14 @@ std::vector<uint8_t> TopTronicBase::get_request_data() {
     return build_get_request(function_group_, function_number_, datapoint_);
 }
 
+void TopTronicBase::add_on_update_callback(std::function<void()> &&callback) {
+    this->update_callback_.add(std::move(callback));
+}
+
+void TopTronicBase::update() {
+    this->update_callback_.call();
+}
+
 template <typename T> 
 T bytesToNumber(std::vector<uint8_t> value) {
     T a = 0;
@@ -207,18 +215,22 @@ void TopTronic::add_input(TopTronicBase *input) {
     device->inputs[input->get_id()] = input;
 }
 
-void TopTronic::get_sensors() {
+void TopTronic::register_sensor_callbacks() {
     for (const auto &d : devices_) {
         auto device = d.second;
         for (const auto &s : device->sensors) {
             auto sensor = s.second;
-            // TODO: resolve dirty hack to get room temperature from control module
-            // It looks like the can_id has to end with 0x412 = can_id & 0x7FF
-            uint32_t can_id = sensor->get_function_group() == 83 ? 0x1FE00C12 : 0xF1E40801;
-            auto data = sensor->get_request_data();
-            canbus_->send_data(can_id, true, data);
+            auto canbus = canbus_;
+            
+            sensor->add_on_update_callback([canbus, sensor]() -> void {
+                // TODO: resolve dirty hack to get room temperature from control module
+                // It looks like the can_id has to end with 0x412 = can_id & 0x7FF
+                uint32_t can_id = sensor->get_function_group() == 83 ? 0x1FE00C12 : 0xF1E40801;
+                auto data = sensor->get_request_data();
+                canbus->send_data(can_id, true, data);
 
-            ESP_LOGI(TAG, "[GET] Data: 0x%s", hex_str(&data[0], data.size()).c_str());
+                ESP_LOGI(TAG, "[GET] Data: 0x%s", hex_str(&data[0], data.size()).c_str());
+            });
         }
     }
 }
@@ -264,6 +276,7 @@ void TopTronic::link_inputs() {
 
 void TopTronic::setup() {
     link_inputs();
+    register_sensor_callbacks();
 }
 
 void TopTronic::loop() {

@@ -21,7 +21,7 @@ from . import (
 )
 
 TopTronicSensor = toptronic.class_(
-    "TopTronicSensor", sensor.Sensor
+    "TopTronicSensor", sensor.Sensor, cg.PollingComponent,
 )
 
 CONFIG_SCHEMA = cv.Schema({
@@ -34,6 +34,7 @@ CONFIG_SCHEMA = cv.Schema({
 async def to_code(config):
     tt = await cg.get_variable(config[CONF_TT_ID])
     sens = await sensor.new_sensor(config)
+    await cg.register_component(sens, config)
    
     cg.add(sens.set_device_type(config[CONF_DEVICE_TYPE]))
     cg.add(sens.set_device_addr(config[CONF_DEVICE_ADDR]))

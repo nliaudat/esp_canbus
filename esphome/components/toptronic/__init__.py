@@ -13,6 +13,10 @@ TopTronicComponent = toptronic.class_(
     "TopTronic", cg.Component
 )
 
+TopTronicBase = toptronic.class_(
+    "TopTronicBase", cg.PollingComponent
+)
+
 TT_TYPE = toptronic.enum("TypeName")
 TT_TYPE_OPTIONS = {
     "U8": TT_TYPE.U8,
@@ -42,7 +46,7 @@ CONFIG_SCHEMA_BASE = cv.Schema(
         cv.Required(CONF_FUNCTION_NUMBER): cv.uint8_t,
         cv.Required(CONF_DATAPOINT): cv.uint16_t,
     }
-)
+).extend(cv.polling_component_schema("30s"))
 
 CONFIG_SCHEMA = (
     cv.Schema(
