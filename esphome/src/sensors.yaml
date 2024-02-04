@@ -61,7 +61,7 @@ sensor:
     device_addr: 0
     function_group: 83
     function_number: 0
-    datapoint: 10
+    datapoint: 0
     type: S16
     unit_of_measurement: "\xB0C"
     accuracy_decimals: 1

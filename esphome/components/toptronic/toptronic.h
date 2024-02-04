@@ -42,6 +42,7 @@ class TopTronicBase {
     uint32_t get_id();
     uint32_t get_device_id();
     std::vector<uint8_t> get_request_data();
+    uint8_t get_function_group() { return function_group_; }
 
     virtual SensorType type();
 

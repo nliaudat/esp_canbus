@@ -212,7 +212,9 @@ void TopTronic::get_sensors() {
         auto device = d.second;
         for (const auto &s : device->sensors) {
             auto sensor = s.second;
-            uint32_t can_id = 0xF1E40801;
+            // TODO: resolve dirty hack to get room temperature from control module
+            // It looks like the can_id has to end with 0x412 = can_id & 0x7FF
+            uint32_t can_id = sensor->get_function_group() == 83 ? 0x1FE00C12 : 0xF1E40801;
             auto data = sensor->get_request_data();
             canbus_->send_data(can_id, true, data);
 
@@ -261,7 +263,6 @@ void TopTronic::link_inputs() {
 }
 
 void TopTronic::setup() {
-    // get_sensors();
     link_inputs();
 }
 
