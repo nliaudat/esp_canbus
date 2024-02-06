@@ -29,15 +29,16 @@ packages:
   toptronic: !include src/toptronic.yaml
   sensors: !include src/sensors.yaml
   inputs: !include src/inputs.yaml
-  # sensors: !include src/preset/HV/sensors_en.yaml
-  # inputs: !include src/preset/HV/inputs_en.yaml
-  # sensors: !include src/preset/WEZ/sensors_en.yaml
-  # inputs: !include src/preset/WEZ/inputs_en.yaml
   sensors_others: !include src/sensors_others.yaml
   switch: !include src/switch.yaml
   # debug: !include debug.yaml
-
   
+  hv_sensors: !include src/preset/HV/sensors_en.yaml
+  hv_inputs: !include src/preset/HV/inputs_en.yaml
+  # wez_sensors: !include src/preset/WEZ/sensors_en.yaml
+  # wez_inputs: !include src/preset/WEZ/inputs_en.yaml
+  # bd_sensors: !include src/preset/BD/sensors_en.yaml
+
   
 web_server:
   port: 80
