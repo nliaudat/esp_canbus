@@ -27,8 +27,6 @@ packages:
   time: !include src/time.yaml
   canbus: !include src/canbus.yaml
   toptronic: !include src/toptronic.yaml
-  sensors: !include src/sensors.yaml
-  inputs: !include src/inputs.yaml
   sensors_others: !include src/sensors_others.yaml
   switch: !include src/switch.yaml
   # debug: !include debug.yaml
