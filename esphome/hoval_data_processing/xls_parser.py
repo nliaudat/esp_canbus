@@ -175,6 +175,9 @@ def dump_sensors(datapoints: List[Datapoint], path: str):
     sensors = [dp.into_sensor() for dp in datapoints if dp.type_name != 'LIST']
     text_sensors = [dp.into_text_sensor() for dp in datapoints if dp.type_name == 'LIST']
     
+    if len(sensors) == 0 and len(text_sensors) == 0:
+        return
+
     all_sensors = {
         **({'sensor': sensors} if len(sensors) > 0 else {}),
         **({'text_sensor': text_sensors} if len(text_sensors) > 0 else {}),
@@ -186,6 +189,9 @@ def dump_sensors(datapoints: List[Datapoint], path: str):
 def dump_inputs(datapoints: List[Datapoint], path: str):
     numbers = [dp.into_number() for dp in datapoints if dp.writable and dp.type_name != 'LIST']
     selects = [dp.into_select() for dp in datapoints if dp.writable and dp.type_name == 'LIST']
+
+    if len(numbers) == 0 and len(selects) == 0:
+        return
 
     all_inputs = {
         **({'number': numbers} if len(numbers) > 0 else {}),

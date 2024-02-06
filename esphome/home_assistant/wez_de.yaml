@@ -6,7 +6,7 @@ views:
       - type: entities
         entities:
           - entity: sensor.raum_ist
-          - entity: sensor.aussenfuhler_1
+          - entity: sensor.af1_aussenfuhler_1
           - entity: sensor.wez_leistung
         title: Allgemein
       - type: entities
@@ -28,5 +28,5 @@ views:
           - entity: select.betriebswahl_warmwasser
           - entity: number.normal_warmwassertemperatur
           - entity: sensor.normal_warmwassertemperatur
-          - entity: sensor.warmwasser_ist
+          - entity: sensor.warmwasser_ist_sf
         title: Warmwasser

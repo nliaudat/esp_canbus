@@ -1,6 +1,6 @@
 number:
 - platform: toptronic
-  name: "temp\xE9rature local normale mode chauffage"
+  name: "temp\xE9rature local normale mode chauffage (1)"
   function_group: 1
   function_number: 0
   datapoint: 3051
@@ -12,7 +12,7 @@ number:
   step: 5
   decimal: 1
 - platform: toptronic
-  name: "temp\xE9rature local \xE9co mode chauffage"
+  name: "temp\xE9rature local \xE9co mode chauffage (1)"
   function_group: 1
   function_number: 0
   datapoint: 3053
@@ -24,7 +24,7 @@ number:
   step: 5
   decimal: 1
 - platform: toptronic
-  name: "temp\xE9rature local normale mode chauffage"
+  name: "temp\xE9rature local normale mode chauffage (2)"
   function_group: 1
   function_number: 1
   datapoint: 3051
@@ -36,7 +36,7 @@ number:
   step: 5
   decimal: 1
 - platform: toptronic
-  name: "temp\xE9rature local \xE9co mode chauffage"
+  name: "temp\xE9rature local \xE9co mode chauffage (2)"
   function_group: 1
   function_number: 1
   datapoint: 3053
@@ -48,7 +48,7 @@ number:
   step: 5
   decimal: 1
 - platform: toptronic
-  name: "temp\xE9rature local normale mode chauffage"
+  name: "temp\xE9rature local normale mode chauffage (3)"
   function_group: 1
   function_number: 2
   datapoint: 3051
@@ -60,7 +60,7 @@ number:
   step: 5
   decimal: 1
 - platform: toptronic
-  name: "temp\xE9rature local \xE9co mode chauffage"
+  name: "temp\xE9rature local \xE9co mode chauffage (3)"
   function_group: 1
   function_number: 2
   datapoint: 3053
@@ -71,9 +71,33 @@ number:
   max_value: 200
   step: 5
   decimal: 1
+- platform: toptronic
+  name: "temp\xE9rature d'eau chaude normale"
+  function_group: 2
+  function_number: 0
+  datapoint: 5051
+  id: WEZ_2_0_5051_set
+  type: S16
+  unit_of_measurement: "\xB0C"
+  min_value: 100
+  max_value: 700
+  step: 10
+  decimal: 1
+- platform: toptronic
+  name: "temp\xE9rature eau chaude \xE9co"
+  function_group: 2
+  function_number: 0
+  datapoint: 5086
+  id: WEZ_2_0_5086_set
+  type: U8
+  unit_of_measurement: "\xB0C"
+  min_value: 10
+  max_value: 70
+  step: 1
+  decimal: 0
 select:
 - platform: toptronic
-  name: "S\xE9lection fonctionnement chauffage"
+  name: "S\xE9lection fonctionnement chauffage (1)"
   function_group: 1
   function_number: 0
   datapoint: 3050
@@ -95,7 +119,7 @@ select:
   - 7
   - 8
 - platform: toptronic
-  name: "S\xE9lection fonctionnement chauffage"
+  name: "S\xE9lection fonctionnement chauffage (2)"
   function_group: 1
   function_number: 1
   datapoint: 3050
@@ -117,7 +141,7 @@ select:
   - 7
   - 8
 - platform: toptronic
-  name: "S\xE9lection fonctionnement chauffage"
+  name: "S\xE9lection fonctionnement chauffage (3)"
   function_group: 1
   function_number: 2
   datapoint: 3050
@@ -138,3 +162,21 @@ select:
   - 5
   - 7
   - 8
+- platform: toptronic
+  name: "S\xE9lection fonct. eau chaude"
+  function_group: 2
+  function_number: 0
+  datapoint: 5050
+  id: WEZ_2_0_5050_set
+  options:
+  - Stand-by
+  - Semaine 1
+  - Semaine 2
+  - Constant
+  - "Mode \xE9co"
+  values:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 6
