@@ -1,0 +1,132 @@
+sensor:
+- platform: toptronic
+  name: Normal ventilation modulation
+  function_group: 50
+  function_number: 0
+  datapoint: 40651
+  id: HV_50_0_40651
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: Eco ventilation modulation
+  function_group: 50
+  function_number: 0
+  datapoint: 40686
+  id: HV_50_0_40686
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: Ventilation modulation
+  function_group: 50
+  function_number: 0
+  datapoint: 38606
+  id: HV_50_0_38606
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: Humidity set value
+  function_group: 50
+  function_number: 0
+  datapoint: 40687
+  id: HV_50_0_40687
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: Humidity extract air
+  function_group: 50
+  function_number: 0
+  datapoint: 37600
+  id: HV_50_0_37600
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: VOC extract air
+  function_group: 50
+  function_number: 0
+  datapoint: 37608
+  id: HV_50_0_37608
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: VOC outdoor air
+  function_group: 50
+  function_number: 0
+  datapoint: 37611
+  id: HV_50_0_37611
+  type: U8
+  unit_of_measurement: '%'
+- platform: toptronic
+  name: Outside air temp.
+  function_group: 50
+  function_number: 0
+  datapoint: 0
+  id: HV_50_0_0
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Extract air temp.
+  function_group: 50
+  function_number: 0
+  datapoint: 37602
+  id: HV_50_0_37602
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Fan exhaust air set
+  function_group: 50
+  function_number: 0
+  datapoint: 38600
+  id: HV_50_0_38600
+  type: U8
+  unit_of_measurement: '%'
+text_sensor:
+- platform: toptronic
+  name: Op. choice ventilation
+  function_group: 50
+  function_number: 0
+  datapoint: 40650
+  id: HV_50_0_40650
+  options:
+  - Standby
+  - Week 1
+  - Week 2
+  - Constant operation, setpoint 40651
+  - Eco mode, setpoint DAP40686
+  values:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 5
+- platform: toptronic
+  name: Status vent. regulation
+  function_group: 50
+  function_number: 0
+  datapoint: 39652
+  id: HV_50_0_39652
+  options:
+  - Unit off, e.g. standby mode
+  - Normal ventilation mode
+  - VOC mode active
+  - Humidity mode active
+  - Frost protection active
+  - CoolVet active
+  - Fault status
+  - Summer humidity
+  - Switch-off stop set value
+  values:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8

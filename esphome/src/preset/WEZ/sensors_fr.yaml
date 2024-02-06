@@ -1,0 +1,245 @@
+sensor:
+- platform: toptronic
+  name: "AF 1 - sonde ext\xE9rieure 1"
+  function_group: 0
+  function_number: 0
+  datapoint: 0
+  id: WEZ_0_0_0
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "temp\xE9rature local normale mode chauffage (1)"
+  function_group: 1
+  function_number: 0
+  datapoint: 3051
+  id: WEZ_1_0_3051
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "temp\xE9rature local \xE9co mode chauffage (1)"
+  function_group: 1
+  function_number: 0
+  datapoint: 3053
+  id: WEZ_1_0_3053
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "temp\xE9rature local normale mode chauffage (2)"
+  function_group: 1
+  function_number: 1
+  datapoint: 3051
+  id: WEZ_1_1_3051
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "temp\xE9rature local \xE9co mode chauffage (2)"
+  function_group: 1
+  function_number: 1
+  datapoint: 3053
+  id: WEZ_1_1_3053
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "temp\xE9rature local normale mode chauffage (3)"
+  function_group: 1
+  function_number: 2
+  datapoint: 3051
+  id: WEZ_1_2_3051
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "temp\xE9rature local \xE9co mode chauffage (3)"
+  function_group: 1
+  function_number: 2
+  datapoint: 3053
+  id: WEZ_1_2_3053
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "temp\xE9rature d'eau chaude normale"
+  function_group: 2
+  function_number: 0
+  datapoint: 5051
+  id: WEZ_2_0_5051
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "temp\xE9rature eau chaude \xE9co"
+  function_group: 2
+  function_number: 0
+  datapoint: 5086
+  id: WEZ_2_0_5086
+  type: U8
+  unit_of_measurement: "\xB0C"
+- platform: toptronic
+  name: Eau chaude consigne
+  function_group: 2
+  function_number: 0
+  datapoint: 1004
+  id: WEZ_2_0_1004
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "Eau chaude r\xE9elle SF"
+  function_group: 2
+  function_number: 0
+  datapoint: 4
+  id: WEZ_2_0_4
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "Aller r\xE9el (1)"
+  function_group: 1
+  function_number: 0
+  datapoint: 2
+  id: WEZ_1_0_2
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "Aller r\xE9el (2)"
+  function_group: 1
+  function_number: 1
+  datapoint: 2
+  id: WEZ_1_1_2
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: "Aller r\xE9el (3)"
+  function_group: 1
+  function_number: 2
+  datapoint: 2
+  id: WEZ_1_2_2
+  type: S16
+  unit_of_measurement: "\xB0C"
+  accuracy_decimals: 1
+  filters:
+  - multiply: 0.1
+- platform: toptronic
+  name: Puissance GDC
+  function_group: 60
+  function_number: 254
+  datapoint: 30
+  id: WEZ_60_254_30
+  type: U8
+  unit_of_measurement: '%'
+text_sensor:
+- platform: toptronic
+  name: "S\xE9lection fonctionnement chauffage (1)"
+  function_group: 1
+  function_number: 0
+  datapoint: 3050
+  id: WEZ_1_0_3050
+  options:
+  - Stand-by
+  - Semaine 1
+  - Semaine 2
+  - Constant
+  - "Mode \xE9co"
+  - Commande manuelle chauffage
+  - Commande manuelle refroid
+  values:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 5
+  - 7
+  - 8
+- platform: toptronic
+  name: "S\xE9lection fonctionnement chauffage (2)"
+  function_group: 1
+  function_number: 1
+  datapoint: 3050
+  id: WEZ_1_1_3050
+  options:
+  - Stand-by
+  - Semaine 1
+  - Semaine 2
+  - Constant
+  - "Mode \xE9co"
+  - Commande manuelle chauffage
+  - Commande manuelle refroid
+  values:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 5
+  - 7
+  - 8
+- platform: toptronic
+  name: "S\xE9lection fonctionnement chauffage (3)"
+  function_group: 1
+  function_number: 2
+  datapoint: 3050
+  id: WEZ_1_2_3050
+  options:
+  - Stand-by
+  - Semaine 1
+  - Semaine 2
+  - Constant
+  - "Mode \xE9co"
+  - Commande manuelle chauffage
+  - Commande manuelle refroid
+  values:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 5
+  - 7
+  - 8
+- platform: toptronic
+  name: "S\xE9lection fonct. eau chaude"
+  function_group: 2
+  function_number: 0
+  datapoint: 5050
+  id: WEZ_2_0_5050
+  options:
+  - Stand-by
+  - Semaine 1
+  - Semaine 2
+  - Constant
+  - "Mode \xE9co"
+  values:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 6

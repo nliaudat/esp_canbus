@@ -1,0 +1,13 @@
+time:
+- platform: sntp
+  timezone : ${TZ}
+  #timezone: UTC+1
+  servers:  [0.pool.ntp.org, 1.pool.ntp.org , 2.pool.ntp.org]
+  on_time:
+  - seconds: 0
+    minutes: 0
+    hours: 6
+    days_of_week: MON #-SUN
+    then:
+      - switch.toggle: canbus_controller_reboot
+  id: canbus_controller_time

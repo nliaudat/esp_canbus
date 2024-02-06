@@ -1,0 +1,27 @@
+wifi:
+#hidden make use of fast_connect. The downside is that this option connects to the first network the ESP sees
+#highest priority is chosen
+  networks:
+  - ssid: !secret wifi_ssid_1
+    # hidden: true 
+    password: !secret wifi_password_1
+    priority : 2
+  - ssid: !secret wifi_ssid_2
+    #hidden: true
+    password: !secret wifi_password_2
+    priority : 1
+  - ssid: !secret wifi_ssid_3
+    password: !secret wifi_password_3
+    priority : 0
+  
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "${name} Fallback"
+    password: !secret fallback_hotspot_password
+    
+    ## low wifi signal = increase power transmission and no sleep
+  power_save_mode : NONE 
+  output_power : 20.5dB
+
+captive_portal:

@@ -1,0 +1,56 @@
+number:
+- platform: toptronic
+  name: Normal ventilation modulation
+  function_group: 50
+  function_number: 0
+  datapoint: 40651
+  id: HV_50_0_40651_set
+  type: U8
+  unit_of_measurement: '%'
+  min_value: 15
+  max_value: 100
+  step: 1
+  decimal: 0
+- platform: toptronic
+  name: Eco ventilation modulation
+  function_group: 50
+  function_number: 0
+  datapoint: 40686
+  id: HV_50_0_40686_set
+  type: U8
+  unit_of_measurement: '%'
+  min_value: 15
+  max_value: 100
+  step: 1
+  decimal: 0
+- platform: toptronic
+  name: Humidity set value
+  function_group: 50
+  function_number: 0
+  datapoint: 40687
+  id: HV_50_0_40687_set
+  type: U8
+  unit_of_measurement: '%'
+  min_value: 30
+  max_value: 65
+  step: 1
+  decimal: 0
+select:
+- platform: toptronic
+  name: Op. choice ventilation
+  function_group: 50
+  function_number: 0
+  datapoint: 40650
+  id: HV_50_0_40650_set
+  options:
+  - Standby
+  - Week 1
+  - Week 2
+  - Constant operation, setpoint 40651
+  - Eco mode, setpoint DAP40686
+  values:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 5

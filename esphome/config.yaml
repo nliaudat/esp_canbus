@@ -16,28 +16,30 @@ substitutions:
   hoval_homevent_can_Addr: "0x1FD047FF" # to get sensors values | 0x1f ## works, but must process all frames and cpu is heating
   hoval_toptronic_can_Addr: "0x1FE04208" #to send sensors requests
   
-  
+external_components:
+  - source:
+      type: local
+      path: components
 
 packages:
-  wifi: !include wifi.yaml
-  board: !include board.yaml
-  time: !include time.yaml
-  ## translations / substitutions
-  substitutions_EN: !include substitutions_EN.yaml
-  #substitutions_DE: !include substitutions_DE.yaml
-  #substitutions_FR: !include substitutions_FR.yaml
-  #substitutions_IT: !include substitutions_IT.yaml
-  canbus: !include canbus.yaml
-  canbus_scripts: !include canbus_scripts.yaml
-  sensor_canbus: !include sensor_canbus.yaml
-  sensor_others: !include sensor_others.yaml
-  number: !include inputs_number.yaml
-  select: !include inputs_select.yaml
-  switch: !include switch.yaml
-
+  wifi: !include src/wifi.yaml
+  board: !include src/board.yaml
+  time: !include src/time.yaml
+  canbus: !include src/canbus.yaml
+  toptronic: !include src/toptronic.yaml
+  sensors: !include src/sensors.yaml
+  inputs: !include src/inputs.yaml
+  sensors_others: !include src/sensors_others.yaml
+  switch: !include src/switch.yaml
+  # debug: !include debug.yaml
   
+  hv_sensors: !include src/preset/HV/sensors_en.yaml
+  hv_inputs: !include src/preset/HV/inputs_en.yaml
+  # wez_sensors: !include src/preset/WEZ/sensors_en.yaml
+  # wez_inputs: !include src/preset/WEZ/inputs_en.yaml
+  # bd_sensors: !include src/preset/BD/sensors_en.yaml
+
   
 web_server:
   port: 80
   #log: false
-

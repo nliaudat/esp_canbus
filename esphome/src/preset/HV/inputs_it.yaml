@@ -1,0 +1,56 @@
+number:
+- platform: toptronic
+  name: Modulazione ventilazione normale
+  function_group: 50
+  function_number: 0
+  datapoint: 40651
+  id: HV_50_0_40651_set
+  type: U8
+  unit_of_measurement: '%'
+  min_value: 15
+  max_value: 100
+  step: 1
+  decimal: 0
+- platform: toptronic
+  name: Modulazione ventilazione risparmio
+  function_group: 50
+  function_number: 0
+  datapoint: 40686
+  id: HV_50_0_40686_set
+  type: U8
+  unit_of_measurement: '%'
+  min_value: 15
+  max_value: 100
+  step: 1
+  decimal: 0
+- platform: toptronic
+  name: "Valore nominale umidit\xE0"
+  function_group: 50
+  function_number: 0
+  datapoint: 40687
+  id: HV_50_0_40687_set
+  type: U8
+  unit_of_measurement: '%'
+  min_value: 30
+  max_value: 65
+  step: 1
+  decimal: 0
+select:
+- platform: toptronic
+  name: Selezione modo funzion.to ventilazione
+  function_group: 50
+  function_number: 0
+  datapoint: 40650
+  id: HV_50_0_40650_set
+  options:
+  - Stand-by
+  - Settimana 1
+  - Settimana 2
+  - Modo costante, valore nominale 40651
+  - Modo risparmio, valore nominale DAP40686
+  values:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 5
