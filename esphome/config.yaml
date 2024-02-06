@@ -29,7 +29,7 @@ packages:
   toptronic: !include src/toptronic.yaml
   sensors_others: !include src/sensors_others.yaml
   switch: !include src/switch.yaml
-  # debug: !include debug.yaml
+  # debug: !include src/debug.yaml
   
   hv_sensors: !include src/preset/HV/sensors_en.yaml
   hv_inputs: !include src/preset/HV/inputs_en.yaml
