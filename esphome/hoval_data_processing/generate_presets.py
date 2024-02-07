@@ -69,16 +69,16 @@ def wez_before_dump(datapoints: list[Datapoint], locale: str):
 def bd_before_dump(datapoints: list[Datapoint], locale: str):
     translations = {
         'en': {
-            'BD_83_0_0': 'Room actual'
+            'BM_83_0_0': 'Room actual'
         },
         'de': {
-            'BD_83_0_0': 'Raum-Ist'
+            'BM_83_0_0': 'Raum-Ist'
         },
         'fr': {
-            'BD_83_0_0': 'Valeur réelle pièce'
+            'BM_83_0_0': 'Valeur réelle pièce'
         },
         'it': {
-            'BD_83_0_0': 'Ambiente-effettivo'
+            'BM_83_0_0': 'Ambiente-effettivo'
         }
     }
     _translate(datapoints, locale, translations)
@@ -113,7 +113,7 @@ if __name__ == "__main__":
             22697, # Eco ventilation modulation
             22699, # Humidity set value
         ]), hv_before_translate),
-        Preset('BD', [
+        Preset('BM', [
             Datapoint(
                 row=0,
                 name='Room actual',

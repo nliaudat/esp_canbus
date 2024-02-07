@@ -8,13 +8,12 @@ substitutions:
   TZ: "Europe/Zurich" #timezone
   
   ### canbus 
-  can_tx_pin: "GPIO22" #GPIO5
-  can_rx_pin: "GPIO21" #GPIO4
-  TTE_HV_can_id: "8" #hoval homevent can_id (you can find it in room control unit (toptronic) under maintenance
-  TTE_BM_can_id: "8" #hoval toptronic can_id (used for password reveal)
-  ## you can get the next values by activating the code under the section "Find can_id " in canbus.yaml
-  hoval_homevent_can_Addr: "0x1FD047FF" # to get sensors values | 0x1f ## works, but must process all frames and cpu is heating
-  hoval_toptronic_can_Addr: "0x1FE04208" #to send sensors requests
+  can_tx_pin: "GPIO2"
+  can_rx_pin: "GPIO15"
+  TT_HV_addr: "8" #hoval homevent can_id (you can find it in room control unit (toptronic) under maintenance
+  TT_BD_addr: "18"
+  TT_WEZ_addr: "1"
+  
   
 external_components:
   - source:
@@ -33,9 +32,9 @@ packages:
   
   # hv_sensors: !include src/preset/HV/sensors_en.yaml
   # hv_inputs: !include src/preset/HV/inputs_en.yaml
-  wez_sensors: !include src/preset/WEZ/sensors_en.yaml
-  wez_inputs: !include src/preset/WEZ/inputs_en.yaml
-  bd_sensors: !include src/preset/BD/sensors_en.yaml
+  wez_sensors: !include src/preset/WEZ/sensors_de.yaml
+  wez_inputs: !include src/preset/WEZ/inputs_de.yaml
+  bd_sensors: !include src/preset/BD/sensors_de.yaml
   
   
 web_server:

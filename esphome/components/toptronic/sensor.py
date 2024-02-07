@@ -17,7 +17,8 @@ from . import (
     CONF_FUNCTION_GROUP,
     CONF_FUNCTION_NUMBER,
     CONF_DATAPOINT,
-    TT_TYPE_OPTIONS
+    TT_TYPE_OPTIONS,
+    get_device_type
 )
 
 TopTronicSensor = toptronic.class_(
@@ -36,7 +37,8 @@ async def to_code(config):
     sens = await sensor.new_sensor(config)
     await cg.register_component(sens, config)
    
-    cg.add(sens.set_device_type(config[CONF_DEVICE_TYPE]))
+    device_type = get_device_type(config[CONF_DEVICE_TYPE])
+    cg.add(sens.set_device_type(device_type))
     cg.add(sens.set_device_addr(config[CONF_DEVICE_ADDR]))
     cg.add(sens.set_function_group(config[CONF_FUNCTION_GROUP]))
     cg.add(sens.set_function_number(config[CONF_FUNCTION_NUMBER]))

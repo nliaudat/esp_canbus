@@ -32,6 +32,8 @@ class Datapoint:
         return {
             'platform': 'toptronic',
             'name': self.name,
+            'device_type': self.unit_name,
+            'device_addr': '${TT_' + self.unit_name + '_addr}',
             'function_group': self.function_group,
             'function_number': self.function_number,
             'datapoint': self.datapoint,

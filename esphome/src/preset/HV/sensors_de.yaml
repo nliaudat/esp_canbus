@@ -1,6 +1,8 @@
 sensor:
 - platform: toptronic
   name: "Normal-L\xFCftungsmodulation "
+  device_type: HV
+  device_addr: ${TT_HV_addr}
   function_group: 50
   function_number: 0
   datapoint: 40651
@@ -9,6 +11,8 @@ sensor:
   unit_of_measurement: '%'
 - platform: toptronic
   name: "Spar-L\xFCftungsmodulation "
+  device_type: HV
+  device_addr: ${TT_HV_addr}
   function_group: 50
   function_number: 0
   datapoint: 40686
@@ -17,6 +21,8 @@ sensor:
   unit_of_measurement: '%'
 - platform: toptronic
   name: "L\xFCftungsmodulation"
+  device_type: HV
+  device_addr: ${TT_HV_addr}
   function_group: 50
   function_number: 0
   datapoint: 38606
@@ -25,6 +31,8 @@ sensor:
   unit_of_measurement: '%'
 - platform: toptronic
   name: Feuchte Sollwert
+  device_type: HV
+  device_addr: ${TT_HV_addr}
   function_group: 50
   function_number: 0
   datapoint: 40687
@@ -33,6 +41,8 @@ sensor:
   unit_of_measurement: '%'
 - platform: toptronic
   name: Feuchtigkeit Abluft
+  device_type: HV
+  device_addr: ${TT_HV_addr}
   function_group: 50
   function_number: 0
   datapoint: 37600
@@ -41,6 +51,8 @@ sensor:
   unit_of_measurement: '%'
 - platform: toptronic
   name: VOC Abluft
+  device_type: HV
+  device_addr: ${TT_HV_addr}
   function_group: 50
   function_number: 0
   datapoint: 37608
@@ -49,6 +61,8 @@ sensor:
   unit_of_measurement: '%'
 - platform: toptronic
   name: VOC Aussenluft
+  device_type: HV
+  device_addr: ${TT_HV_addr}
   function_group: 50
   function_number: 0
   datapoint: 37611
@@ -57,6 +71,8 @@ sensor:
   unit_of_measurement: '%'
 - platform: toptronic
   name: Temperatur Aussenluft
+  device_type: HV
+  device_addr: ${TT_HV_addr}
   function_group: 50
   function_number: 0
   datapoint: 0
@@ -68,6 +84,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Temperatur Abluft
+  device_type: HV
+  device_addr: ${TT_HV_addr}
   function_group: 50
   function_number: 0
   datapoint: 37602
@@ -79,6 +97,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Ventilator Fortluft soll
+  device_type: HV
+  device_addr: ${TT_HV_addr}
   function_group: 50
   function_number: 0
   datapoint: 38600
@@ -88,6 +108,8 @@ sensor:
 text_sensor:
 - platform: toptronic
   name: "Betriebswahl L\xFCftung"
+  device_type: HV
+  device_addr: ${TT_HV_addr}
   function_group: 50
   function_number: 0
   datapoint: 40650
@@ -106,6 +128,8 @@ text_sensor:
   - 5
 - platform: toptronic
   name: "Status L\xFCftungsregelung"
+  device_type: HV
+  device_addr: ${TT_HV_addr}
   function_group: 50
   function_number: 0
   datapoint: 39652

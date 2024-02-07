@@ -27,13 +27,13 @@ enum SensorType {
     TEXTSENSOR,
 };
 
-uint32_t build_can_id(uint8_t message_id, uint8_t priority, uint8_t device_type, uint8_t device_id);
+uint32_t build_can_id(uint16_t sender_id, uint16_t receiver_mask);
 std::vector<uint8_t> build_get_request(uint8_t function_group, uint8_t function_number, uint32_t datapoint);
 std::vector<uint8_t> build_set_request(uint8_t function_group, uint8_t function_number, uint32_t datapoint, std::vector<uint8_t> value);
 
 class TopTronicBase: public PollingComponent {
    public:
-    void set_device_type(uint8_t device_type) { device_type_ = device_type; }
+    void set_device_type(uint16_t device_type) { device_type_ = device_type; }
     void set_device_addr(uint8_t device_addr) { device_addr_ = device_addr; }
 
     void set_function_group(uint8_t function_group) { function_group_ = function_group; }
@@ -43,22 +43,23 @@ class TopTronicBase: public PollingComponent {
     uint32_t get_id();
     uint32_t get_device_id();
     std::vector<uint8_t> get_request_data();
-    uint8_t get_function_group() { return function_group_; }
 
     virtual SensorType type() = 0;
 
     void update() override;
     void add_on_update_callback(std::function<void()> &&callback);
+    void add_on_set_callback(std::function<void(std::vector<uint8_t>)> &&callback);
 
    protected:
-    uint8_t device_type_;
+    uint16_t device_type_;
     uint8_t device_addr_;
 
     uint8_t function_group_;
     uint8_t function_number_;
     uint16_t datapoint_;
 
-    CallbackManager<void()> update_callback_; 
+    CallbackManager<void()> update_callback_;
+    CallbackManager<void(std::vector<uint8_t>)> set_callback_; 
 };
 
 class TopTronicSensor: public sensor::Sensor, public TopTronicBase {
@@ -73,9 +74,7 @@ class TopTronicSensor: public sensor::Sensor, public TopTronicBase {
 };
 
 class TopTronicNumber: public number::Number, public TopTronicBase {
-   public:
-    explicit TopTronicNumber(canbus::Canbus *canbus): canbus_(canbus){};
-    
+   public:    
     void set_type(TypeName type) { type_ = type; }
     void set_multiplier(float multiplier) { multiplier_ = multiplier; }
     float get_multiplier() { return multiplier_; }
@@ -83,7 +82,6 @@ class TopTronicNumber: public number::Number, public TopTronicBase {
     void control(float value) override;
 
    protected:
-    canbus::Canbus *canbus_;
     TypeName type_;
     float multiplier_ = 1;
 };
@@ -105,8 +103,6 @@ class TopTronicTextSensor: public text_sensor::TextSensor, public TopTronicBase 
 
 class TopTronicSelect: public select::Select, public TopTronicBase {
    public:
-    explicit TopTronicSelect(canbus::Canbus *canbus): canbus_(canbus){};
-
     SensorType type() override { return TEXTSENSOR; };
 
     void add_option(uint8_t value, std::string text) {
@@ -115,7 +111,6 @@ class TopTronicSelect: public select::Select, public TopTronicBase {
     }
 
    protected:
-    canbus::Canbus *canbus_;
     std::map<uint8_t, std::string> toText_;
     std::map<std::string, uint8_t> toValue_;
 
@@ -136,6 +131,9 @@ class TopTronic : public Component {
     void add_input(TopTronicBase *input);
     void parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool remote_transmission_request);
     void register_sensor_callbacks();
+    void register_input_callbacks();
+    void set_device_type(uint16_t device_type) { device_type_ = device_type; }
+    void set_device_addr(uint8_t device_addr) { device_addr_ = device_addr; }
 
     void setup() override;
     void loop() override;
@@ -148,6 +146,9 @@ class TopTronic : public Component {
 
     canbus::Canbus *canbus_;
     std::map<uint32_t, TopTronicDevice*> devices_;
+
+    uint16_t device_type_;
+    uint8_t device_addr_;
 };
 
 }  // namespace toptronic
