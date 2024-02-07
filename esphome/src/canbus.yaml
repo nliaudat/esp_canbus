@@ -3,7 +3,7 @@ canbus:
     id: cbus
     tx_pin: ${can_tx_pin} # GPIO22 #GPIO5
     rx_pin: ${can_rx_pin} # GPIO21 #GPIO4
-    can_id: ${TTE_HV_can_id} # 8
+    can_id: 0 # unused
     bit_rate: 50kbps # real rate of hoval canbus = min 300 to max 2400 baud.( 2400 x 8bits = 19200 bps)  Esphome with Esp32 cannot run under 50kbps
     on_frame:
     - can_id: 0 
