@@ -25,6 +25,7 @@ from . import (
     CONF_DATAPOINT,
     TT_TYPE_OPTIONS,
     CONF_DECIMAL,
+    get_device_type,
 )
 
 TopTronicNumber = toptronic.class_(
@@ -33,7 +34,6 @@ TopTronicNumber = toptronic.class_(
 
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(CONF_TT_ID): cv.use_id(TopTronicComponent),
-    cv.GenerateID(CONF_CANBUS_ID): cv.use_id(CanbusComponent),
     cv.Required(CONF_TYPE): cv.enum(TT_TYPE_OPTIONS),
     cv.Required(CONF_MAX_VALUE): cv.float_,
     cv.Required(CONF_MIN_VALUE): cv.float_,
@@ -44,8 +44,7 @@ CONFIG_SCHEMA = cv.Schema({
 )).extend(CONFIG_SCHEMA_BASE)
 
 async def new_number(config, *, min_value: float, max_value: float, step: float):
-    cbus = await cg.get_variable(config[CONF_CANBUS_ID])
-    var = cg.new_Pvariable(config[CONF_ID], cbus)
+    var = cg.new_Pvariable(config[CONF_ID])
     await number.register_number(
         var, config, min_value=min_value, max_value=max_value, step=step
     )
@@ -61,7 +60,8 @@ async def to_code(config):
         step=config[CONF_STEP] / divider,
     )
    
-    cg.add(var.set_device_type(config[CONF_DEVICE_TYPE]))
+    device_type = get_device_type(config[CONF_DEVICE_TYPE])
+    cg.add(var.set_device_type(device_type))
     cg.add(var.set_device_addr(config[CONF_DEVICE_ADDR]))
     cg.add(var.set_function_group(config[CONF_FUNCTION_GROUP]))
     cg.add(var.set_function_number(config[CONF_FUNCTION_NUMBER]))

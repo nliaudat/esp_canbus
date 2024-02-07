@@ -1,6 +1,8 @@
 sensor:
 - platform: toptronic
   name: AF1 - outdoor sensor 1
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 0
   function_number: 0
   datapoint: 0
@@ -12,6 +14,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Normal room temp. heating oper. (1)
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 1
   function_number: 0
   datapoint: 3051
@@ -23,6 +27,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Conservation room temp. heating oper. (1)
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 1
   function_number: 0
   datapoint: 3053
@@ -34,6 +40,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Normal room temp. heating oper. (2)
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 1
   function_number: 1
   datapoint: 3051
@@ -45,6 +53,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Conservation room temp. heating oper. (2)
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 1
   function_number: 1
   datapoint: 3053
@@ -56,6 +66,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Normal room temp. heating oper. (3)
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 1
   function_number: 2
   datapoint: 3051
@@ -67,6 +79,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Conservation room temp. heating oper. (3)
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 1
   function_number: 2
   datapoint: 3053
@@ -78,6 +92,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Normal hot water temp.
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 2
   function_number: 0
   datapoint: 5051
@@ -89,6 +105,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Conservation hot water temp.
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 2
   function_number: 0
   datapoint: 5086
@@ -97,6 +115,8 @@ sensor:
   unit_of_measurement: "\xB0C"
 - platform: toptronic
   name: Hot water setpoint
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 2
   function_number: 0
   datapoint: 1004
@@ -108,6 +128,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Hot water actual SF
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 2
   function_number: 0
   datapoint: 4
@@ -119,6 +141,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Supply actual (1)
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 1
   function_number: 0
   datapoint: 2
@@ -130,6 +154,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Supply actual (2)
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 1
   function_number: 1
   datapoint: 2
@@ -141,6 +167,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: Supply actual (3)
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 1
   function_number: 2
   datapoint: 2
@@ -152,6 +180,8 @@ sensor:
   - multiply: 0.1
 - platform: toptronic
   name: WEZ output
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 60
   function_number: 254
   datapoint: 30
@@ -161,6 +191,8 @@ sensor:
 text_sensor:
 - platform: toptronic
   name: Heating operation choice (1)
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 1
   function_number: 0
   datapoint: 3050
@@ -183,6 +215,8 @@ text_sensor:
   - 8
 - platform: toptronic
   name: Heating operation choice (2)
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 1
   function_number: 1
   datapoint: 3050
@@ -205,6 +239,8 @@ text_sensor:
   - 8
 - platform: toptronic
   name: Heating operation choice (3)
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 1
   function_number: 2
   datapoint: 3050
@@ -227,6 +263,8 @@ text_sensor:
   - 8
 - platform: toptronic
   name: Hot water operation choice
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
   function_group: 2
   function_number: 0
   datapoint: 5050

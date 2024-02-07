@@ -20,6 +20,7 @@ from . import (
     CONF_FUNCTION_NUMBER,
     CONF_DATAPOINT,
     CONF_VALUES,
+    get_device_type,
 )
 
 TopTronicSelect = toptronic.class_(
@@ -28,7 +29,6 @@ TopTronicSelect = toptronic.class_(
 
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(CONF_TT_ID): cv.use_id(TopTronicComponent),
-    cv.GenerateID(CONF_CANBUS_ID): cv.use_id(CanbusComponent),
     cv.Required(CONF_OPTIONS): cv.All(
         cv.ensure_list(cv.string_strict), cv.Length(min=1)
     ),
@@ -40,8 +40,7 @@ CONFIG_SCHEMA = cv.Schema({
 )).extend(CONFIG_SCHEMA_BASE)
 
 async def new_select(config, *, options: list[str]):
-    cbus = await cg.get_variable(config[CONF_CANBUS_ID])
-    var = cg.new_Pvariable(config[CONF_ID], cbus)
+    var = cg.new_Pvariable(config[CONF_ID])
     await select.register_select(var, config, options=options)
     return var
 
@@ -49,7 +48,8 @@ async def to_code(config):
     tt = await cg.get_variable(config[CONF_TT_ID])
     var = await new_select(config, options=config[CONF_OPTIONS])
    
-    cg.add(var.set_device_type(config[CONF_DEVICE_TYPE]))
+    device_type = get_device_type(config[CONF_DEVICE_TYPE])
+    cg.add(var.set_device_type(device_type))
     cg.add(var.set_device_addr(config[CONF_DEVICE_ADDR]))
     cg.add(var.set_function_group(config[CONF_FUNCTION_GROUP]))
     cg.add(var.set_function_number(config[CONF_FUNCTION_NUMBER]))

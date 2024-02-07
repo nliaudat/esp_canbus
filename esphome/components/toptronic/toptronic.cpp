@@ -26,13 +26,11 @@ std::string hex_str(const uint8_t *data, int len)
 }
 
 uint32_t TopTronicBase::get_device_id() {
-    // ignore device id
-    return 0;
-    // return (device_type_ << 8) | device_addr_;
+    return device_type_ | device_addr_;
 }
 
-uint32_t build_can_id(uint8_t message_id, uint8_t priority, uint8_t device_type, uint8_t device_id) {
-    return (message_id << 24) | (priority << 16) | (device_type << 8) | device_id;
+uint32_t build_can_id(uint16_t sender_id, uint16_t receiver_mask) {
+    return (0x7F << 22) | (sender_id << 11) | receiver_mask;
 }
 
 std::vector<uint8_t> build_get_request(uint8_t function_group, uint8_t function_number, uint32_t datapoint) {
@@ -71,6 +69,10 @@ uint32_t TopTronicBase::get_id() {
 
 std::vector<uint8_t> TopTronicBase::get_request_data() {
     return build_get_request(function_group_, function_number_, datapoint_);
+}
+
+void TopTronicBase::add_on_set_callback(std::function<void(std::vector<uint8_t>)> &&callback) {
+    this->set_callback_.add(std::move(callback));
 }
 
 void TopTronicBase::add_on_update_callback(std::function<void()> &&callback) {
@@ -176,9 +178,8 @@ void TopTronicNumber::control(float value) {
     float v = multiplier_ * value;
     std::vector<uint8_t> bytes = floatToBytes(v, type_);
 
-    uint32_t can_id = 0xF1E40801;
     std::vector<uint8_t> data = build_set_request(function_group_, function_number_, datapoint_, bytes);
-    canbus_->send_data(can_id, true, data);
+    set_callback_.call(data);
 
     ESP_LOGI(TAG, "[SET] %s: %f, Data: 0x%s", get_name().c_str(), v, hex_str(&data[0], data.size()).c_str());
 }
@@ -191,9 +192,8 @@ std::string TopTronicTextSensor::parse_value(std::vector<uint8_t> value) {
 void TopTronicSelect::control(const std::string &text) {
     uint8_t value = toValue_[text];
     
-    uint32_t can_id = 0xF1E40801;
     std::vector<uint8_t> data = build_set_request(function_group_, function_number_, datapoint_, {value});
-    canbus_->send_data(can_id, true, data);
+    set_callback_.call(data);
 
     ESP_LOGI(TAG, "[SET] %s: %s, Data: 0x%s", get_name().c_str(), text.c_str(), hex_str(&data[0], data.size()).c_str());
 }
@@ -221,15 +221,28 @@ void TopTronic::register_sensor_callbacks() {
         for (const auto &s : device->sensors) {
             auto sensor = s.second;
             auto canbus = canbus_;
+            uint32_t can_id = build_can_id(device_type_ | device_addr_, sensor->get_device_id());
             
-            sensor->add_on_update_callback([canbus, sensor]() -> void {
-                // TODO: resolve dirty hack to get room temperature from control module
-                // It looks like the can_id has to end with 0x412 = can_id & 0x7FF
-                uint32_t can_id = sensor->get_function_group() == 83 ? 0x1FE00C12 : 0xF1E40801;
+            sensor->add_on_update_callback([canbus, sensor, can_id]() -> void {
                 auto data = sensor->get_request_data();
                 canbus->send_data(can_id, true, data);
 
                 ESP_LOGI(TAG, "[GET] Data: 0x%s", hex_str(&data[0], data.size()).c_str());
+            });
+        }
+    }
+}
+
+void TopTronic::register_input_callbacks() {
+    for (const auto &d : devices_) {
+        auto device = d.second;
+        for (const auto &i : device->inputs) {
+            auto input = i.second;
+            auto canbus = canbus_;
+            uint32_t can_id = build_can_id(device_type_ | device_addr_, input->get_device_id());
+            
+            input->add_on_set_callback([canbus, input, can_id](std::vector<uint8_t> data) -> void {               
+                canbus->send_data(can_id, true, data);
             });
         }
     }
@@ -277,6 +290,7 @@ void TopTronic::link_inputs() {
 void TopTronic::setup() {
     link_inputs();
     register_sensor_callbacks();
+    register_input_callbacks();
 }
 
 void TopTronic::loop() {
@@ -308,8 +322,7 @@ void TopTronic::parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool rem
         return;
     }
 
-    // uint32_t device_id = can_id & 0xFFFF;
-    uint32_t device_id = 0;
+    uint32_t device_id = (can_id >> 11) & 0x7FF;
 
     if (devices_.count(device_id) <= 0) {
         return;
