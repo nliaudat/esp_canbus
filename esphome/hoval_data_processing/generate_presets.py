@@ -117,7 +117,7 @@ if __name__ == "__main__":
             Datapoint(
                 row=0,
                 name='Room actual',
-                unit_name='BD',
+                unit_name='BM',
                 unit_id=1,
                 function_group=83,
                 function_number=0,

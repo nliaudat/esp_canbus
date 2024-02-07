@@ -11,7 +11,7 @@ substitutions:
   can_tx_pin: "GPIO2"
   can_rx_pin: "GPIO15"
   TT_HV_addr: "8" #hoval homevent can_id (you can find it in room control unit (toptronic) under maintenance
-  TT_BD_addr: "18"
+  TT_BM_addr: "18"
   TT_WEZ_addr: "1"
   
   
@@ -34,7 +34,7 @@ packages:
   # hv_inputs: !include src/preset/HV/inputs_en.yaml
   wez_sensors: !include src/preset/WEZ/sensors_de.yaml
   wez_inputs: !include src/preset/WEZ/inputs_de.yaml
-  bd_sensors: !include src/preset/BD/sensors_de.yaml
+  bd_sensors: !include src/preset/BM/sensors_de.yaml
   
   
 web_server:

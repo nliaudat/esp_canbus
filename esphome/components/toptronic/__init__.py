@@ -38,7 +38,7 @@ class DeviceType(Enum):
     MWA = 384
     GLT = 448
     HV = 512
-    BD = 1024
+    BM = 1024
     GW = 1153
 
 _device_types = {t.name: t.value for t in DeviceType}
