@@ -10,7 +10,10 @@ substitutions:
   ### canbus 
   can_tx_pin: "GPIO22" #GPIO5
   can_rx_pin: "GPIO21" #GPIO4
-  TT_HV_addr: "8" #hoval homevent can_id (you can find it in room control unit (toptronic) under maintenance
+
+  ### Device list
+  ### You can find it in room control unit (toptronic) under maintenance
+  TT_HV_addr: "8"
   TT_BM_addr: "8"
   TT_WEZ_addr: "1"
   
@@ -30,6 +33,7 @@ packages:
   switch: !include src/switch.yaml
   # debug: !include src/debug.yaml
   
+  ### Presets
   hv_sensors: !include src/preset/HV/sensors_en.yaml
   hv_inputs: !include src/preset/HV/inputs_en.yaml
   # wez_sensors: !include src/preset/WEZ/sensors_en.yaml
