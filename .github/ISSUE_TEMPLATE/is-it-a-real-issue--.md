@@ -1,5 +1,5 @@
 ---
-name: Custom issue template
+name: Is it a real issue ?
 about: Describe this issue template's purpose here.
 title: ''
 labels: ''
