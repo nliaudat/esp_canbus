@@ -5,7 +5,6 @@
 secrets.yaml
 *.pyc
 .vscode
-.venv
 
 notes.md 
 can.log

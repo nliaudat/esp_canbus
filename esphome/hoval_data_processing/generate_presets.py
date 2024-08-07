@@ -5,7 +5,6 @@ import os
 import openpyxl
 from openpyxl import Workbook
 from typing import Callable, Optional
-import re
 
 PatchFunc = Callable[[list[Datapoint], str], None]
 
@@ -66,7 +65,6 @@ def wez_before_dump(datapoints: list[Datapoint], locale: str):
     for dp in datapoints:
         if dp.row in rows:
             dp.name = f'{dp.name} ({dp.function_number+1})'
-    u32_before_dump(datapoints, locale)
 
 def bd_before_dump(datapoints: list[Datapoint], locale: str):
     translations = {
@@ -84,12 +82,6 @@ def bd_before_dump(datapoints: list[Datapoint], locale: str):
         }
     }
     _translate(datapoints, locale, translations)
-    u32_before_dump(datapoints, locale)
-
-def u32_before_dump(datapoints: list[Datapoint], locale: str):
-    for dp in datapoints:
-        if dp.type_name in ["U32", "S32"]:
-            dp.name = re.sub(r'(_low|_high)$', "", dp.name)
     
 if __name__ == "__main__":
     presets = [
@@ -105,14 +97,6 @@ if __name__ == "__main__":
             1400, # Hot water setpoint
             1401, # hot water temp.
             1437, # WEZ output
-            24775, # Electrical power WEZ
-            24776, # Heating power WEZ
-            24778, # Electrical energy WEZ MWh
-            26631, # Total energy efficiency H-Gen
-            26649, # Heat quantity heating
-            26653, # Heat quantity DHW
-            26654, # Coefficient of Performance
-            26699, # Current sunlight expos. (global rad.)
         ]), before_dump=wez_before_dump),
         Preset('HV', Filter(rows=[
             22705, # Outside air temp.
@@ -128,7 +112,7 @@ if __name__ == "__main__":
             22696, # Normal ventilation modulation
             22697, # Eco ventilation modulation
             22699, # Humidity set value
-        ]), hv_before_translate, u32_before_dump),
+        ]), hv_before_translate),
         Preset('BM', [
             Datapoint(
                 row=0,
