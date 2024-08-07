@@ -306,19 +306,57 @@ void log_response_frame(std::vector<uint8_t> data, uint32_t can_id, std::string 
 }
 
 void TopTronic::parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool remote_transmission_request) {
+    uint8_t msg_id = can_id >> 24;
+    uint8_t device_type = (can_id >> 8) & 0xFF;
+    uint8_t device_id = can_id & 0xFF;
+
+    if (msg_id == 0x1f) {
+        // Start of a message
+        uint8_t msg_len = data[0] >> 3;
+        if (msg_len == 0) {
+            // Full message, remove size
+            interpret_message(std::vector<uint8_t>(data.begin() + 1, data.end()), can_id, remote_transmission_request);
+        } else {
+            // We expect further messages
+            u_int8_t msg_header = data[1];
+            ESP_LOGI(TAG, "Start of message with id: %d with length %d", msg_header, msg_len);
+            pending_messages_[msg_header] = std::make_pair(std::vector<uint8_t>(data.begin() + 2, data.end()), msg_len -1);
+        }
+    } else {
+        u_int8_t msg_header = data[0];
+        auto it = pending_messages_.find(msg_header);
+        if (it != pending_messages_.end()) {
+            auto pending_msg = it->second;
+            auto msg_len = pending_msg.second - 1;
+            ESP_LOGI(TAG, "Part of message with id: %d with remaining length %d", msg_header, msg_len);
+            pending_msg.first.insert(pending_msg.first.end(), data.begin() + 1, data.end());
+            if (msg_len == 0) {
+                pending_messages_.erase(msg_header);
+                // Delete the last two bytes (CRC?) 
+                auto real_msg = std::vector<uint8_t>(pending_msg.first.begin(), pending_msg.first.end() - 2);
+                interpret_message(real_msg, can_id, remote_transmission_request);
+            } else {
+                pending_messages_[msg_header] = std::make_pair(pending_msg.first, msg_len);
+            }
+        }
+    }
+}
+
+void TopTronic::interpret_message(std::vector<uint8_t> data, uint32_t can_id, bool remote_transmission_request) {
     // check if operation is of type RESPONSE
     
-    if (data[1] == GET_REQ) {
-        // ESP_LOGI(TAG, "[GET] Can-ID: 0x%08X, Data: 0x%s", can_id, hex_str(&data[0], data.size()).c_str());
+    if (data[0] == GET_REQ) {
+        ESP_LOGI(TAG, "[GET] Can-ID: 0x%08X, Data: 0x%s", can_id, hex_str(&data[0], data.size()).c_str());
         return;
     }
 
-    if (data[1] == SET_REQ) {
+    if (data[0] == SET_REQ) {
         ESP_LOGI(TAG, "[SET] Can-ID: 0x%08X, Data: 0x%s", can_id, hex_str(&data[0], data.size()).c_str());
         return;
     }
 
-    if (data[1] != RESPONSE) {
+    if (data[0] != RESPONSE) {
+        ESP_LOGI(TAG, "[UNK] Can-ID: 0x%08X, Data: 0x%s", can_id, hex_str(&data[0], data.size()).c_str());
         return;
     }
 
@@ -330,9 +368,9 @@ void TopTronic::parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool rem
     TopTronicDevice *device = devices_[device_id];   
 
     // check if sensor exists for the received value
-    uint32_t datapoint = data[5] + (data[4] << 8);
-    uint32_t id = data[2] // function_group
-        + (data[3] << 8)  // function_number
+    uint32_t datapoint = data[4] + (data[3] << 8);
+    uint32_t id = data[1] // function_group
+        + (data[2] << 8)  // function_number
         + (datapoint << 16);
 
     if (device->sensors.count(id) <= 0) {
@@ -342,18 +380,15 @@ void TopTronic::parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool rem
 
     if (sensorBase->type() == SENSOR) {
         TopTronicSensor *sensor = (TopTronicSensor*)sensorBase;
-        float value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 6, data.end()));
+        float value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 5, data.end()));
         sensor->publish_state(value);
         log_response_frame(data, can_id, sensor->get_name());
     } else if (sensorBase->type() == TEXTSENSOR) {
         TopTronicTextSensor *sensor = (TopTronicTextSensor*)sensorBase;
-        std::string value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 6, data.end()));
+        std::string value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 5, data.end()));
         sensor->publish_state(value);
         log_response_frame(data, can_id, sensor->get_name());
     }
-
-    
-
 }
 
 }  // namespace toptronic
