@@ -9,6 +9,7 @@ sensor:
   id: HV_50_0_40651
   type: U8
   unit_of_measurement: '%'
+  internal: true
 - platform: toptronic
   name: "Modulation de la ventilation \xE9conomique"
   device_type: HV
@@ -19,6 +20,7 @@ sensor:
   id: HV_50_0_40686
   type: U8
   unit_of_measurement: '%'
+  internal: true
 - platform: toptronic
   name: Modulation de la ventilation
   device_type: HV
@@ -39,6 +41,7 @@ sensor:
   id: HV_50_0_40687
   type: U8
   unit_of_measurement: '%'
+  internal: true
 - platform: toptronic
   name: "Humidit\xE9 de l'air extrait"
   device_type: HV
@@ -47,26 +50,6 @@ sensor:
   function_number: 0
   datapoint: 37600
   id: HV_50_0_37600
-  type: U8
-  unit_of_measurement: '%'
-- platform: toptronic
-  name: VOC air extrait
-  device_type: HV
-  device_addr: ${TT_HV_addr}
-  function_group: 50
-  function_number: 0
-  datapoint: 37608
-  id: HV_50_0_37608
-  type: U8
-  unit_of_measurement: '%'
-- platform: toptronic
-  name: "VOC air ext\xE9rieur"
-  device_type: HV
-  device_addr: ${TT_HV_addr}
-  function_group: 50
-  function_number: 0
-  datapoint: 37611
-  id: HV_50_0_37611
   type: U8
   unit_of_measurement: '%'
 - platform: toptronic
@@ -105,6 +88,86 @@ sensor:
   id: HV_50_0_38600
   type: U8
   unit_of_measurement: '%'
+- platform: toptronic
+  name: Erreur active 1_appearance_time
+  device_type: HV
+  device_addr: ${TT_HV_addr}
+  function_group: 0
+  function_number: 0
+  datapoint: 29042
+  id: HV_0_0_29042
+  type: U16
+  unit_of_measurement: ''
+- platform: toptronic
+  name: Erreur active 2_appearance_time
+  device_type: HV
+  device_addr: ${TT_HV_addr}
+  function_group: 0
+  function_number: 0
+  datapoint: 29043
+  id: HV_0_0_29043
+  type: U16
+  unit_of_measurement: ''
+- platform: toptronic
+  name: Erreur active 3_appearance_time
+  device_type: HV
+  device_addr: ${TT_HV_addr}
+  function_group: 0
+  function_number: 0
+  datapoint: 29044
+  id: HV_0_0_29044
+  type: U16
+  unit_of_measurement: ''
+- platform: toptronic
+  name: Erreur active 4_appearance_time
+  device_type: HV
+  device_addr: ${TT_HV_addr}
+  function_group: 0
+  function_number: 0
+  datapoint: 29045
+  id: HV_0_0_29045
+  type: U16
+  unit_of_measurement: ''
+- platform: toptronic
+  name: Erreur active 5_appearance_time
+  device_type: HV
+  device_addr: ${TT_HV_addr}
+  function_group: 0
+  function_number: 0
+  datapoint: 29046
+  id: HV_0_0_29046
+  type: U16
+  unit_of_measurement: ''
+- platform: toptronic
+  name: Val compt maint message maint (sem expl)
+  device_type: HV
+  device_addr: ${TT_HV_addr}
+  function_group: 0
+  function_number: 0
+  datapoint: 20037
+  id: HV_0_0_20037
+  type: U32
+  unit_of_measurement: ''
+- platform: toptronic
+  name: Tps restant compt maint (semaines expl.)
+  device_type: HV
+  device_addr: ${TT_HV_addr}
+  function_group: 0
+  function_number: 0
+  datapoint: 21058
+  id: HV_0_0_21058
+  type: S32
+  unit_of_measurement: ' '
+- platform: toptronic
+  name: Valeur compteur nettoyage message nett. (sem expl.)
+  device_type: HV
+  device_addr: ${TT_HV_addr}
+  function_group: 0
+  function_number: 0
+  datapoint: 41613
+  id: HV_0_0_41613
+  type: U32
+  unit_of_measurement: ''
 text_sensor:
 - platform: toptronic
   name: "S\xE9lection de fonctionnement ventilation"
@@ -126,6 +189,7 @@ text_sensor:
   - 2
   - 4
   - 5
+  internal: true
 - platform: toptronic
   name: "\xC9tat r\xE9gulation de la ventilation"
   device_type: HV
