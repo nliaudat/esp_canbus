@@ -30,7 +30,8 @@ class Preset():
             
             for dp in datapoints:
                 if dp.type_name in ["U32", "S32"]:
-                    dp.name = re.sub(r'(_low|_high)$', "", dp.name)
+                    dp.name = re.sub(r'( low| high)$', "", dp.name) # for HV
+                    dp.name = re.sub(r'(_low|_high)$', "", dp.name) # for WEZ
 
             os.makedirs(out_dir.joinpath(self.id), exist_ok=True)
 
@@ -103,20 +104,24 @@ if __name__ == "__main__":
             1401, # hot water temp.
             1437, # WEZ output
         ]), before_dump=wez_before_dump),
-        Preset('HV', Filter(rows=[
-            22705, # Outside air temp.
-            22700, # Humidity extract air
-            22706, # Extract air temp.
-            22701, # VOC extract air
-            22702, # VOC outdoor air
-            22707, # Fan exhaust air set
-            22698, # Ventilation modulation
-            # 22703, # Air quality control
-            22704, # Status vent regulation
-            22695, # Op. choice ventilation
-            22696, # Normal ventilation modulation
-            22697, # Eco ventilation modulation
-            22699, # Humidity set value
+        ## filter the row number, not the datapoint :  based on UniName=HV, UnitId=520
+        Preset('HV', Filter(rows=[ 
+            22786, # Op. choice ventilation
+            22787, # Normal ventilation modulation
+            22788, # Eco ventilation modulation
+            22789, # Ventilation modulation
+            22790, # Humidity set value
+            22791, # Humidity extract air
+            # 22792, # VOC extract air
+            # 22793, # VOC outdoor air
+            # 22794, # Air quality control
+            22795, # Status vent regulation
+            22796, # Outside air temp.            
+            22797, # Extract air temp.
+            22798, # Fan exhaust air set         
+            28099, # Maint.ctr.value message maint. (op. wks)
+            28101, # Rem. run time maint. counter (op. weeks)
+            28110, # Cleaning count value message cleaning (operating weeks)
         ]), hv_before_translate),
         Preset('BM', [
             Datapoint(
@@ -141,7 +146,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         prog='Generate Presets',
-        description='Genertes sensors and inputs for Hoval devices',
+        description='Generates sensors and inputs for Hoval devices',
     )
 
     parser.add_argument('out_dir')
