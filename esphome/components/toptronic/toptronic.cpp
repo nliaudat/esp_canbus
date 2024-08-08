@@ -227,7 +227,7 @@ void TopTronic::register_sensor_callbacks() {
                 auto data = sensor->get_request_data();
                 canbus->send_data(can_id, true, data);
 
-                ESP_LOGI(TAG, "[GET] Data: 0x%s", hex_str(&data[0], data.size()).c_str());
+                ESP_LOGD(TAG, "[GET] Data: 0x%s", hex_str(&data[0], data.size()).c_str());
             });
         }
     }
@@ -319,7 +319,7 @@ void TopTronic::parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool rem
         } else {
             // We expect further messages
             u_int8_t msg_header = data[1];
-            ESP_LOGI(TAG, "Start of message with id: %d with length %d", msg_header, msg_len);
+            ESP_LOGD(TAG, "     - Start of message with id: %d with length %d", msg_header, msg_len);
             pending_messages_[msg_header] = std::make_pair(std::vector<uint8_t>(data.begin() + 2, data.end()), msg_len -1);
         }
     } else {
@@ -328,7 +328,7 @@ void TopTronic::parse_frame(std::vector<uint8_t> data, uint32_t can_id, bool rem
         if (it != pending_messages_.end()) {
             auto pending_msg = it->second;
             auto msg_len = pending_msg.second - 1;
-            ESP_LOGI(TAG, "Part of message with id: %d with remaining length %d", msg_header, msg_len);
+            ESP_LOGD(TAG, "     - Part of message with id: %d with remaining length %d", msg_header, msg_len);
             pending_msg.first.insert(pending_msg.first.end(), data.begin() + 1, data.end());
             if (msg_len == 0) {
                 pending_messages_.erase(msg_header);
@@ -346,7 +346,7 @@ void TopTronic::interpret_message(std::vector<uint8_t> data, uint32_t can_id, bo
     // check if operation is of type RESPONSE
     
     if (data[0] == GET_REQ) {
-        ESP_LOGI(TAG, "[GET] Can-ID: 0x%08X, Data: 0x%s", can_id, hex_str(&data[0], data.size()).c_str());
+        ESP_LOGD(TAG, "[GET] Can-ID: 0x%08X, Data: 0x%s", can_id, hex_str(&data[0], data.size()).c_str());
         return;
     }
 
@@ -356,7 +356,7 @@ void TopTronic::interpret_message(std::vector<uint8_t> data, uint32_t can_id, bo
     }
 
     if (data[0] != RESPONSE) {
-        ESP_LOGI(TAG, "[UNK] Can-ID: 0x%08X, Data: 0x%s", can_id, hex_str(&data[0], data.size()).c_str());
+        ESP_LOGD(TAG, "[UNK] Can-ID: 0x%08X, Data: 0x%s", can_id, hex_str(&data[0], data.size()).c_str());
         return;
     }
 
