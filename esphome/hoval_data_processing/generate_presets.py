@@ -118,7 +118,12 @@ if __name__ == "__main__":
             22795, # Status vent regulation
             22796, # Outside air temp.            
             22797, # Extract air temp.
-            22798, # Fan exhaust air set         
+            22798, # Fan exhaust air set   
+            # 23314, # Active error 1
+            # 23323, # Active error 2
+            # 23332, # Active error 3
+            # 23341, # Active error 4
+            # 23350, # Active error 5
             28099, # Maint.ctr.value message maint. (op. wks)
             28101, # Rem. run time maint. counter (op. weeks)
             28110, # Cleaning count value message cleaning (operating weeks)
