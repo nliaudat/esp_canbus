@@ -25,6 +25,7 @@ sensor:
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  internal: true
 - platform: toptronic
   name: Spar-Raumtemperatur Heizbetrieb (1)
   device_type: WEZ
@@ -38,6 +39,7 @@ sensor:
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  internal: true
 - platform: toptronic
   name: Normal-Raumtemperatur Heizbetrieb (2)
   device_type: WEZ
@@ -51,6 +53,7 @@ sensor:
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  internal: true
 - platform: toptronic
   name: Spar-Raumtemperatur Heizbetrieb (2)
   device_type: WEZ
@@ -64,6 +67,7 @@ sensor:
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  internal: true
 - platform: toptronic
   name: Normal-Raumtemperatur Heizbetrieb (3)
   device_type: WEZ
@@ -77,6 +81,7 @@ sensor:
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  internal: true
 - platform: toptronic
   name: Spar-Raumtemperatur Heizbetrieb (3)
   device_type: WEZ
@@ -90,6 +95,7 @@ sensor:
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  internal: true
 - platform: toptronic
   name: Normal-Warmwassertemperatur
   device_type: WEZ
@@ -103,6 +109,7 @@ sensor:
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  internal: true
 - platform: toptronic
   name: Spar-Warmwassertemperatur
   device_type: WEZ
@@ -113,6 +120,7 @@ sensor:
   id: WEZ_2_0_5086
   type: U8
   unit_of_measurement: "\xB0C"
+  internal: true
 - platform: toptronic
   name: Warmwasser-Soll
   device_type: WEZ
@@ -213,6 +221,7 @@ text_sensor:
   - 5
   - 7
   - 8
+  internal: true
 - platform: toptronic
   name: Betriebswahl Heizung (2)
   device_type: WEZ
@@ -237,6 +246,7 @@ text_sensor:
   - 5
   - 7
   - 8
+  internal: true
 - platform: toptronic
   name: Betriebswahl Heizung (3)
   device_type: WEZ
@@ -261,6 +271,7 @@ text_sensor:
   - 5
   - 7
   - 8
+  internal: true
 - platform: toptronic
   name: Betriebswahl Warmwasser
   device_type: WEZ
@@ -281,3 +292,4 @@ text_sensor:
   - 2
   - 4
   - 6
+  internal: true
