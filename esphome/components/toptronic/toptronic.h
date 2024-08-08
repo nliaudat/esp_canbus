@@ -143,9 +143,12 @@ class TopTronic : public Component {
     TopTronicDevice* get_or_create_device(uint32_t can_id);
     void link_inputs();
     TopTronicBase* get_sensor(uint32_t device_id, uint32_t sensor_id);
+    void interpret_message(std::vector<uint8_t> data, uint32_t can_id, bool remote_transmission_request);
 
     canbus::Canbus *canbus_;
     std::map<uint32_t, TopTronicDevice*> devices_;
+    // msg_header -> (data, number of pending messages)
+    std::map<uint8_t, std::pair<std::vector<uint8_t>, uint8_t>> pending_messages_;
 
     uint16_t device_type_;
     uint8_t device_addr_;

@@ -5,6 +5,7 @@ import os
 import openpyxl
 from openpyxl import Workbook
 from typing import Callable, Optional
+import re
 
 PatchFunc = Callable[[list[Datapoint], str], None]
 
@@ -26,6 +27,10 @@ class Preset():
 
             if self.before_dump:
                 self.before_dump(datapoints, locale)
+            
+            for dp in datapoints:
+                if dp.type_name in ["U32", "S32"]:
+                    dp.name = re.sub(r'(_low|_high)$', "", dp.name)
 
             os.makedirs(out_dir.joinpath(self.id), exist_ok=True)
 
