@@ -92,7 +92,7 @@ def bd_before_dump(datapoints: list[Datapoint], locale: str):
 if __name__ == "__main__":
     presets = [
         Preset('WEZ', Filter(rows=[
-            1378, # outdoor sensor 1
+            1378, # AF1 - outdoor sensor 1
             1379, 1380, 1381, # Heating operation choice
             1382, 1384, 1386, # normal room temp.
             1383, 1385, 1387, # conservation romm temp.
@@ -112,20 +112,20 @@ if __name__ == "__main__":
             22789, # Ventilation modulation
             22790, # Humidity set value
             22791, # Humidity extract air
-            # 22792, # VOC extract air
-            # 22793, # VOC outdoor air
-            # 22794, # Air quality control
+            # 22792, # VOC extract air # not relevant
+            # 22793, # VOC outdoor air # not relevant
+            # 22794, # Air quality control # not relevant
             22795, # Status vent regulation
             22796, # Outside air temp.            
             22797, # Extract air temp.
             22798, # Fan exhaust air set   
-            # 23314, # Active error 1
+            # 23314, # Active error 1 # testing
             # 23323, # Active error 2
             # 23332, # Active error 3
             # 23341, # Active error 4
             # 23350, # Active error 5
             28099, # Maint.ctr.value message maint. (op. wks)
-            28101, # Rem. run time maint. counter (op. weeks)
+            # 28101, # Rem. run time maint. counter (op. weeks) # not relevant
             28110, # Cleaning count value message cleaning (operating weeks)
         ]), hv_before_translate),
         Preset('BM', [
