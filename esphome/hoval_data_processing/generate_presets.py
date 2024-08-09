@@ -103,6 +103,9 @@ if __name__ == "__main__":
             1400, # Hot water setpoint
             1401, # hot water temp.
             1437, # WEZ output
+            24778, # Electrical energy WEZ MWh
+            26649, # Heat quantity heating
+            26653, # Heat quantity DHW
         ]), before_dump=wez_before_dump),
         ## filter the row number, not the datapoint :  based on UniName=HV, UnitId=520
         Preset('HV', Filter(rows=[ 

@@ -196,6 +196,45 @@ sensor:
   id: WEZ_60_254_30
   type: U8
   unit_of_measurement: '%'
+- platform: toptronic
+  name: Eletrical energy WEZ MWh
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
+  function_group: 10
+  function_number: 1
+  datapoint: 23009
+  id: WEZ_10_1_23009
+  type: U32
+  unit_of_measurement: MWh
+  accuracy_decimals: 3
+  filters:
+  - multiply: 0.001
+- platform: toptronic
+  name: Heat quantity heating
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
+  function_group: 60
+  function_number: 254
+  datapoint: 47
+  id: WEZ_60_254_47
+  type: U32
+  unit_of_measurement: MWh
+  accuracy_decimals: 3
+  filters:
+  - multiply: 0.001
+- platform: toptronic
+  name: Heat quantity DHW
+  device_type: WEZ
+  device_addr: ${TT_WEZ_addr}
+  function_group: 60
+  function_number: 254
+  datapoint: 55
+  id: WEZ_60_254_55
+  type: U32
+  unit_of_measurement: MWh
+  accuracy_decimals: 3
+  filters:
+  - multiply: 0.001
 text_sensor:
 - platform: toptronic
   name: Heating operation choice (1)
