@@ -9,6 +9,9 @@ sensor:
   id: HV_50_0_40651
   type: U8
   unit_of_measurement: '%'
+  icon: mdi:percent
+  device_class: power_factor
+  state_class: measurement
   internal: true
 - platform: toptronic
   name: Eco ventilation modulation
@@ -20,6 +23,9 @@ sensor:
   id: HV_50_0_40686
   type: U8
   unit_of_measurement: '%'
+  icon: mdi:percent
+  device_class: power_factor
+  state_class: measurement
   internal: true
 - platform: toptronic
   name: Ventilation modulation
@@ -31,6 +37,9 @@ sensor:
   id: HV_50_0_38606
   type: U8
   unit_of_measurement: '%'
+  icon: mdi:percent
+  device_class: power_factor
+  state_class: measurement
 - platform: toptronic
   name: Humidity set value
   device_type: HV
@@ -41,6 +50,9 @@ sensor:
   id: HV_50_0_40687
   type: U8
   unit_of_measurement: '%'
+  icon: mdi:water-percent
+  device_class: humidity
+  state_class: measurement
   internal: true
 - platform: toptronic
   name: Humidity extract air
@@ -52,6 +64,9 @@ sensor:
   id: HV_50_0_37600
   type: U8
   unit_of_measurement: '%'
+  icon: mdi:water-percent
+  device_class: humidity
+  state_class: measurement
 - platform: toptronic
   name: Outside air temp.
   device_type: HV
@@ -61,10 +76,13 @@ sensor:
   datapoint: 0
   id: HV_50_0_0
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
 - platform: toptronic
   name: Extract air temp.
   device_type: HV
@@ -74,10 +92,13 @@ sensor:
   datapoint: 37602
   id: HV_50_0_37602
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
 - platform: toptronic
   name: Fan exhaust air set
   device_type: HV
@@ -88,56 +109,9 @@ sensor:
   id: HV_50_0_38600
   type: U8
   unit_of_measurement: '%'
-# - platform: toptronic
-  # name: Active error 1
-  # device_type: HV
-  # device_addr: ${TT_HV_addr}
-  # function_group: 0
-  # function_number: 0
-  # datapoint: 29042
-  # id: HV_0_0_29042
-  # type: U16
-  # unit_of_measurement: ''
-# - platform: toptronic
-  # name: Active error 2
-  # device_type: HV
-  # device_addr: ${TT_HV_addr}
-  # function_group: 0
-  # function_number: 0
-  # datapoint: 29043
-  # id: HV_0_0_29043
-  # type: U16
-  # unit_of_measurement: ''
-# - platform: toptronic
-  # name: Active error 3
-  # device_type: HV
-  # device_addr: ${TT_HV_addr}
-  # function_group: 0
-  # function_number: 0
-  # datapoint: 29044
-  # id: HV_0_0_29044
-  # type: U16
-  # unit_of_measurement: ''
-# - platform: toptronic
-  # name: Active error 4
-  # device_type: HV
-  # device_addr: ${TT_HV_addr}
-  # function_group: 0
-  # function_number: 0
-  # datapoint: 29045
-  # id: HV_0_0_29045
-  # type: U16
-  # unit_of_measurement: ''
-# - platform: toptronic
-  # name: Active error 5
-  # device_type: HV
-  # device_addr: ${TT_HV_addr}
-  # function_group: 0
-  # function_number: 0
-  # datapoint: 29046
-  # id: HV_0_0_29046
-  # type: U16
-  # unit_of_measurement: ''
+  icon: mdi:percent
+  device_class: power_factor
+  state_class: measurement
 - platform: toptronic
   name: Maint.ctr.value message maint. (op. wks)
   device_type: HV
@@ -147,17 +121,6 @@ sensor:
   datapoint: 20037
   id: HV_0_0_20037
   type: U32
-  unit_of_measurement: ''
-- platform: toptronic
-  name: Rem. run time maint. counter (op. weeks)
-  device_type: HV
-  device_addr: ${TT_HV_addr}
-  function_group: 0
-  function_number: 0
-  datapoint: 21058
-  id: HV_0_0_21058
-  type: S32
-  unit_of_measurement: ' '
 - platform: toptronic
   name: Cleaning count value message cleaning (operating weeks)
   device_type: HV
@@ -167,7 +130,6 @@ sensor:
   datapoint: 41613
   id: HV_0_0_41613
   type: U32
-  unit_of_measurement: ''
 text_sensor:
 - platform: toptronic
   name: Op. choice ventilation
@@ -189,7 +151,6 @@ text_sensor:
   - 2
   - 4
   - 5
-  internal: true
 - platform: toptronic
   name: Status vent. regulation
   device_type: HV
