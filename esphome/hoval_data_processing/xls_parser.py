@@ -53,6 +53,11 @@ class Datapoint:
                 'multiply': pow(10, -decimal_value)
             }]
         } if decimal_value > 0  else {} 
+        
+        # Set sensor internal if writable (inputs)
+        internal = { 
+            'internal': True,
+        } if self.writable else {} 
 
         return {
             **self.__toptronic_base(),
@@ -60,6 +65,7 @@ class Datapoint:
             'type': self.type_name,
             'unit_of_measurement': self.unit if self.unit is not None else '',
             **decimals,
+            **internal,
         }
     
     def into_text_sensor(self) -> dict:
@@ -211,14 +217,14 @@ def dump_inputs(datapoints: List[Datapoint], path: str):
 if __name__ == "__main__":
     path = 'TTE-GW-Modbus-datapoints.xlsx'
     # filter = Filter(unit_names=['WEZ'], unit_ids=[1])
-    # filter = Filter(unit_names=['HV'], unit_ids=[513])
-    filter = Filter(rows=[1382, 3506, 1379])
+    # filter = Filter(unit_names=['HV'], unit_ids=[520])
+    # filter = Filter(rows=[1382, 3506, 1379])
 
-    wb = openpyxl.load_workbook(filename=path, read_only=True)
+    # wb = openpyxl.load_workbook(filename=path, read_only=True)
 
-    datapoints = parse_datapoints(wb, filter)
-    translate(wb, datapoints, 'de')
+    # datapoints = parse_datapoints(wb, filter)
+    # translate(wb, datapoints, 'en')
 
-    dump_sensors(datapoints, 'sensors.yaml')
-    dump_inputs(datapoints, 'inputs.yaml')
+    # dump_sensors(datapoints, 'sensors.yaml')
+    # dump_inputs(datapoints, 'inputs.yaml')
     
