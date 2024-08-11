@@ -8,10 +8,13 @@ sensor:
   datapoint: 0
   id: WEZ_0_0_0
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
 - platform: toptronic
   name: "temp\xE9rature local normale mode chauffage (1)"
   device_type: WEZ
@@ -21,10 +24,13 @@ sensor:
   datapoint: 3051
   id: WEZ_1_0_3051
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
   internal: true
 - platform: toptronic
   name: "temp\xE9rature local \xE9co mode chauffage (1)"
@@ -35,10 +41,13 @@ sensor:
   datapoint: 3053
   id: WEZ_1_0_3053
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
   internal: true
 - platform: toptronic
   name: "temp\xE9rature local normale mode chauffage (2)"
@@ -49,10 +58,13 @@ sensor:
   datapoint: 3051
   id: WEZ_1_1_3051
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
   internal: true
 - platform: toptronic
   name: "temp\xE9rature local \xE9co mode chauffage (2)"
@@ -63,10 +75,13 @@ sensor:
   datapoint: 3053
   id: WEZ_1_1_3053
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
   internal: true
 - platform: toptronic
   name: "temp\xE9rature local normale mode chauffage (3)"
@@ -77,10 +92,13 @@ sensor:
   datapoint: 3051
   id: WEZ_1_2_3051
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
   internal: true
 - platform: toptronic
   name: "temp\xE9rature local \xE9co mode chauffage (3)"
@@ -91,10 +109,13 @@ sensor:
   datapoint: 3053
   id: WEZ_1_2_3053
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
   internal: true
 - platform: toptronic
   name: "temp\xE9rature d'eau chaude normale"
@@ -105,10 +126,13 @@ sensor:
   datapoint: 5051
   id: WEZ_2_0_5051
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
   internal: true
 - platform: toptronic
   name: "temp\xE9rature eau chaude \xE9co"
@@ -120,6 +144,9 @@ sensor:
   id: WEZ_2_0_5086
   type: U8
   unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
   internal: true
 - platform: toptronic
   name: Eau chaude consigne
@@ -130,10 +157,13 @@ sensor:
   datapoint: 1004
   id: WEZ_2_0_1004
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
 - platform: toptronic
   name: "Eau chaude r\xE9elle SF"
   device_type: WEZ
@@ -143,10 +173,13 @@ sensor:
   datapoint: 4
   id: WEZ_2_0_4
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
 - platform: toptronic
   name: "Aller r\xE9el (1)"
   device_type: WEZ
@@ -156,10 +189,13 @@ sensor:
   datapoint: 2
   id: WEZ_1_0_2
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
 - platform: toptronic
   name: "Aller r\xE9el (2)"
   device_type: WEZ
@@ -169,10 +205,13 @@ sensor:
   datapoint: 2
   id: WEZ_1_1_2
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
 - platform: toptronic
   name: "Aller r\xE9el (3)"
   device_type: WEZ
@@ -182,10 +221,13 @@ sensor:
   datapoint: 2
   id: WEZ_1_2_2
   type: S16
-  unit_of_measurement: "\xB0C"
   accuracy_decimals: 1
   filters:
   - multiply: 0.1
+  unit_of_measurement: "\xB0C"
+  icon: mdi:temperature-celsius
+  device_class: temperature
+  state_class: measurement
 - platform: toptronic
   name: Puissance GDC
   device_type: WEZ
@@ -196,6 +238,9 @@ sensor:
   id: WEZ_60_254_30
   type: U8
   unit_of_measurement: '%'
+  icon: mdi:percent
+  device_class: power_factor
+  state_class: measurement
 - platform: toptronic
   name: "\xC9nergie \xE9lectrique GdC MWh"
   device_type: WEZ
@@ -205,10 +250,13 @@ sensor:
   datapoint: 23009
   id: WEZ_10_1_23009
   type: U32
-  unit_of_measurement: MWh
   accuracy_decimals: 3
   filters:
   - multiply: 0.001
+  unit_of_measurement: MWh
+  icon: mdi:flash
+  device_class: energy
+  state_class: measurement
 - platform: toptronic
   name: "Quantit\xE9 de chaleur chauffage"
   device_type: WEZ
@@ -218,10 +266,13 @@ sensor:
   datapoint: 47
   id: WEZ_60_254_47
   type: U32
-  unit_of_measurement: MWh
   accuracy_decimals: 3
   filters:
   - multiply: 0.001
+  unit_of_measurement: MWh
+  icon: mdi:flash
+  device_class: energy
+  state_class: measurement
 - platform: toptronic
   name: "Quantit\xE9 chaleur EC"
   device_type: WEZ
@@ -231,10 +282,13 @@ sensor:
   datapoint: 55
   id: WEZ_60_254_55
   type: U32
-  unit_of_measurement: MWh
   accuracy_decimals: 3
   filters:
   - multiply: 0.001
+  unit_of_measurement: MWh
+  icon: mdi:flash
+  device_class: energy
+  state_class: measurement
 text_sensor:
 - platform: toptronic
   name: "S\xE9lection fonctionnement chauffage (1)"
@@ -260,7 +314,6 @@ text_sensor:
   - 5
   - 7
   - 8
-  internal: true
 - platform: toptronic
   name: "S\xE9lection fonctionnement chauffage (2)"
   device_type: WEZ
@@ -285,7 +338,6 @@ text_sensor:
   - 5
   - 7
   - 8
-  internal: true
 - platform: toptronic
   name: "S\xE9lection fonctionnement chauffage (3)"
   device_type: WEZ
@@ -310,7 +362,6 @@ text_sensor:
   - 5
   - 7
   - 8
-  internal: true
 - platform: toptronic
   name: "S\xE9lection fonct. eau chaude"
   device_type: WEZ
@@ -331,4 +382,3 @@ text_sensor:
   - 2
   - 4
   - 6
-  internal: true
