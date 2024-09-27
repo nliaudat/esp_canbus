@@ -11,7 +11,7 @@ esphome:
   #     - script.execute: canbus_on_boot_requests # 1 time request is enough to get values until hoval reboot
   
 esp32:
-  board: nodemcu-32s
+  board: az-delivery-devkit-v4 #nodemcu-32s #esp-wrover-kit 
   framework:
     type: esp-idf #arduino #esp-idf  not ready missing json and async_tcp
     version: recommended #latest
