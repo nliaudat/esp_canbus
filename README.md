@@ -72,6 +72,14 @@ If you want to create your own preset or need other datapoints have a look at [`
 Connect your ESP32 via USB to your computer. (Only required for the first time, subsequent installations can be done over WiFi) <br />
 Then run `esphome run config.yaml`
 
+## Note: 
+For HomeVent : 
+* Canbus Normal ventilation modulation works only in "Constant operation mode" 
+* Canbus Eco ventilation modulation works only in "Eco operation mode" 
+* Week 1 and Week 2 must be setup in homevent
+
+
+
 ## Licence: 
 * Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC-BY-NC-SA)
 * No commercial use
