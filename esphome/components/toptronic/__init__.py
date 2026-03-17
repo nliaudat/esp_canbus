@@ -45,7 +45,7 @@ _device_types = {t.name: t.value for t in DeviceType}
 
 def get_device_type(t: str) -> int:
     if t not in _device_types:
-        raise f'device type "{t}" not found'
+        raise ValueError(f'device type "{t}" not found')
     return _device_types.get(t)
 
 CONF_DEVICE_TYPE = "device_type"
