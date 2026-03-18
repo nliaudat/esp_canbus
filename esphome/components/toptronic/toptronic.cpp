@@ -402,9 +402,10 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       uint8_t msg_header = data[1];  // reassembly key shared across all frames of this message
       ESP_LOGD(TAG, "     - Start of message with id: %d with length %d", msg_header, msg_len);
       if (this->pending_messages_.size() >= 16) {
-        // A large backlog usually means some start frames were lost on the bus.
-        ESP_LOGW(TAG, "Pending message buffer full (%zu entries), stale fragments may exist",
+        // A large backlog means start frames from other devices (or lost fragments) accumulated.
+        ESP_LOGW(TAG, "Pending message buffer full (%zu entries), clearing stale fragments",
                  this->pending_messages_.size());
+        this->pending_messages_.clear();
       }
       auto initial_data = std::vector<uint8_t>(data.begin() + 2, data.end());
       // Pre-allocate: each continuation frame carries at most 7 payload bytes (8 - header byte).
@@ -421,16 +422,21 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       ESP_LOGD(TAG, "     - Part of message with id: %d with remaining length %d", msg_header, msg_len);
       pending_msg.first.insert(pending_msg.first.end(), data.begin() + 1, data.end());
       if (msg_len == 0) {
-        // All frames received. Log raw CRC bytes before stripping — useful for CRC reverse engineering.
-        // Feed the output of these log lines into RevEng (https://reveng.sourceforge.io/) to identify
-        // the CRC polynomial. Format: payload (hex) → crc_hi crc_lo.
-        if (pending_msg.first.size() >= 2) {
-          uint8_t crc_hi = *(pending_msg.first.end() - 2);
-          uint8_t crc_lo = *(pending_msg.first.end() - 1);
-          ESP_LOGD(TAG, "[CRC] len=%zu crc=0x%02X%02X payload=0x%s",
-                   pending_msg.first.size() - 2, crc_hi, crc_lo,
-                   hex_str(pending_msg.first.data(), pending_msg.first.size() - 2).c_str());
+        if (pending_msg.first.size() < 2) {
+          ESP_LOGW(TAG, "Reassembled message too short for CRC (%zu bytes)", pending_msg.first.size());
+          this->pending_messages_.erase(msg_header);
+          return;
         }
+
+        uint16_t received_crc = (pending_msg.first[pending_msg.first.size() - 2] << 8) | pending_msg.first[pending_msg.first.size() - 1];
+        uint16_t computed_crc = compute_crc16(pending_msg.first.data(), pending_msg.first.size() - 2);
+
+        if (received_crc != computed_crc) {
+          ESP_LOGW(TAG, "CRC check failed! Recv: 0x%04X, Comp: 0x%04X", received_crc, computed_crc);
+          this->pending_messages_.erase(msg_header);
+          return;
+        }
+
         auto real_msg = std::vector<uint8_t>(pending_msg.first.begin(), pending_msg.first.end() - 2);
         this->pending_messages_.erase(msg_header);  // free reassembly buffer
         this->interpret_message(real_msg, can_id, remote_transmission_request);
