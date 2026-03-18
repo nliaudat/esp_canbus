@@ -225,20 +225,20 @@ void TopTronic::register_sensor_callbacks() {
   }
 }
 
+static uint32_t reflect(uint32_t val, uint8_t width) {
+  uint32_t out = 0;
+  for (uint8_t i = 0; i < width; ++i) {
+    out = (out << 1) | (val & 1);
+    val >>= 1;
+  }
+  return out;
+}
+
 // CRC-16 used by the TopTronic multi-frame protocol.
 // Parameters identified by brute-force search against captured bus traffic:
 //   poly=0x1021  init=0xB006  refin=true  refout=true  xorout=0x0000
 // This matches the CRC-16/ARC family with a non-standard init value.
 static uint16_t compute_crc16(const uint8_t *data, size_t len) {
-  auto reflect = [](uint32_t val, uint8_t width) -> uint32_t {
-    uint32_t out = 0;
-    for (uint8_t i = 0; i < width; ++i) {
-      out = (out << 1) | (val & 1);
-      val >>= 1;
-    }
-    return out;
-  };
-
   uint16_t crc = 0xB006;  // init
   for (size_t i = 0; i < len; ++i) {
     uint8_t byte = static_cast<uint8_t>(reflect(data[i], 8));
@@ -291,9 +291,11 @@ static void send_can_frames(canbus::Canbus *canbus, uint32_t can_id, const std::
 
   // Continuation frames use a lower-priority CAN ID (bits 28-22 cleared → msg_id ≠ 0x1F).
   uint32_t cont_id = can_id & 0x003FFFFF;
+  std::vector<uint8_t> cont_frame;
+  cont_frame.reserve(8);
   for (size_t offset = first_chunk; offset < msg.size();) {
     size_t chunk = std::min<size_t>(7, msg.size() - offset);
-    std::vector<uint8_t> cont_frame;
+    cont_frame.clear();
     cont_frame.push_back(msg_header);
     cont_frame.insert(cont_frame.end(), msg.begin() + offset, msg.begin() + offset + chunk);
     offset += chunk;
