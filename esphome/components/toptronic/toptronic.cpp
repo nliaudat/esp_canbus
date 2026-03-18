@@ -47,10 +47,13 @@ std::vector<uint8_t> build_get_request(uint8_t function_group, uint8_t function_
   };
 }
 
+// Build a SET request payload. The result may exceed 8 bytes for large value types
+// (U32/S32 = 10 bytes, S64 = 14 bytes). The caller is responsible for splitting
+// the payload into multiple CAN frames via send_can_frames() if needed.
 std::vector<uint8_t> build_set_request(uint8_t function_group, uint8_t function_number, uint32_t datapoint,
                                        const std::vector<uint8_t> &value) {
   std::vector<uint8_t> data = {
-    0x01,            // message length
+    0x01,            // message length / frame flags (upper 5 bits = 0 → single frame signal)
     SET_REQ,         // SET_REQUEST = 0x46
     function_group,
     function_number,
@@ -92,13 +95,17 @@ void TopTronicBase::update() {
 }
 
 // Decode a big-endian byte sequence into an integer of type T.
+// Accumulates into uint64_t to avoid signed-shift UB when T is int64_t
+// (left-shifting into the sign bit is undefined for signed types in C++).
+// static_cast<T> of an out-of-range uint64_t is implementation-defined but
+// produces the expected two's-complement result on all ESPHome targets.
 template<typename T>
 T bytes_to_number(const std::vector<uint8_t> &value) {
-  T a = 0;
+  uint64_t u = 0;
   for (size_t i = 0; i < value.size(); i++) {
-    a = (a << 8) + value[i];
+    u = (u << 8) | value[i];
   }
-  return a;
+  return static_cast<T>(u);
 }
 
 // Convert raw CAN bytes to a float, interpreting them as the configured integer type.
@@ -218,6 +225,85 @@ void TopTronic::register_sensor_callbacks() {
   }
 }
 
+// CRC-16 used by the TopTronic multi-frame protocol.
+// Parameters identified by brute-force search against captured bus traffic:
+//   poly=0x1021  init=0xB006  refin=true  refout=true  xorout=0x0000
+// This matches the CRC-16/ARC family with a non-standard init value.
+static uint16_t compute_crc16(const uint8_t *data, size_t len) {
+  auto reflect = [](uint32_t val, uint8_t width) -> uint32_t {
+    uint32_t out = 0;
+    for (uint8_t i = 0; i < width; ++i) {
+      out = (out << 1) | (val & 1);
+      val >>= 1;
+    }
+    return out;
+  };
+
+  uint16_t crc = 0xB006;  // init
+  for (size_t i = 0; i < len; ++i) {
+    uint8_t byte = static_cast<uint8_t>(reflect(data[i], 8));
+    for (int b = 7; b >= 0; --b) {
+      uint8_t bit = (byte >> b) & 1;
+      uint8_t top = (crc >> 15) & 1;
+      crc = static_cast<uint16_t>((crc << 1) ^ (top ^ bit ? 0x1021 : 0));
+    }
+  }
+  return static_cast<uint16_t>(reflect(crc, 16));  // refout=true, xorout=0x0000
+}
+
+// Send a SET request over CAN, transparently splitting into multiple frames when needed.
+//
+// A standard CAN frame holds at most 8 bytes. The TopTronic multi-frame protocol works as:
+//   First frame  (msg_id = 0x1F): [frame_count<<3|flags, msg_header, payload[0..5]]
+//   Cont. frames (msg_id ≠ 0x1F): [msg_header, payload[6..12], ...]
+//   Last 2 bytes of the reassembled payload are the CRC-16 checksum (poly=0x1021, init=0xB006).
+//
+// The continuation CAN ID clears bits 28-22 (sets the top-priority field to 0) so that
+// parse_frame() on the receiver treats those frames as continuations, not new messages.
+static void send_can_frames(canbus::Canbus *canbus, uint32_t can_id, const std::vector<uint8_t> &data) {
+  if (data.size() <= 8) {
+    // Single-frame: payload fits in one CAN frame — send as-is.
+    canbus->send_data(can_id, true, data);
+    return;
+  }
+
+  // Multi-frame: strip the first byte (0x01 single-frame flag) and reframe.
+  // A static counter provides a unique msg_header key for each outgoing multi-frame message.
+  static uint8_t msg_counter = 0;
+  uint8_t msg_header = (++msg_counter == 0) ? ++msg_counter : msg_counter;  // skip 0
+
+  // Build the full message payload, then append the 2-byte CRC (big-endian).
+  std::vector<uint8_t> msg(data.begin() + 1, data.end());
+  uint16_t crc = compute_crc16(msg.data(), msg.size());
+  msg.push_back(static_cast<uint8_t>(crc >> 8));    // CRC high byte
+  msg.push_back(static_cast<uint8_t>(crc & 0xFF));  // CRC low byte
+
+  // First frame carries up to 6 message bytes (2 header bytes consume slots 0 and 1).
+  size_t first_chunk = std::min<size_t>(6, msg.size());
+  size_t after_first = msg.size() - first_chunk;
+  auto num_cont = static_cast<uint8_t>((after_first + 6) / 7);  // ceil(remaining / 7)
+
+  std::vector<uint8_t> first_frame;
+  first_frame.push_back(static_cast<uint8_t>((num_cont << 3) | 0x01));  // frame count in upper 5 bits
+  first_frame.push_back(msg_header);                                      // reassembly key
+  first_frame.insert(first_frame.end(), msg.begin(), msg.begin() + first_chunk);
+  canbus->send_data(can_id, true, first_frame);
+
+  // Continuation frames use a lower-priority CAN ID (bits 28-22 cleared → msg_id ≠ 0x1F).
+  uint32_t cont_id = can_id & 0x003FFFFF;
+  for (size_t offset = first_chunk; offset < msg.size();) {
+    size_t chunk = std::min<size_t>(7, msg.size() - offset);
+    std::vector<uint8_t> cont_frame;
+    cont_frame.push_back(msg_header);
+    cont_frame.insert(cont_frame.end(), msg.begin() + offset, msg.begin() + offset + chunk);
+    offset += chunk;
+    canbus->send_data(cont_id, true, cont_frame);
+  }
+
+  ESP_LOGD(TAG, "[SET] Sent %u CAN frames (msg_header=0x%02X, payload=%zu bytes)",
+           1 + num_cont, msg_header, data.size());
+}
+
 void TopTronic::register_input_callbacks() {
   for (const auto &d : this->devices_) {
     auto *device = d.second.get();
@@ -227,7 +313,8 @@ void TopTronic::register_input_callbacks() {
       uint32_t can_id = build_can_id(this->device_type_ | this->device_addr_, input->get_device_id());
 
       input->add_on_set_callback([canbus, input, can_id](std::vector<uint8_t> data) -> void {
-        canbus->send_data(can_id, true, data);
+        // send_can_frames handles single-frame (≤8 bytes) and multi-frame (>8 bytes) automatically.
+        send_can_frames(canbus, can_id, data);
       });
     }
   }
@@ -315,9 +402,10 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       uint8_t msg_header = data[1];  // reassembly key shared across all frames of this message
       ESP_LOGD(TAG, "     - Start of message with id: %d with length %d", msg_header, msg_len);
       if (this->pending_messages_.size() >= 16) {
-        // A large backlog usually means some start frames were lost on the bus.
-        ESP_LOGW(TAG, "Pending message buffer full (%zu entries), stale fragments may exist",
+        // A large backlog means start frames from other devices (or lost fragments) accumulated.
+        ESP_LOGW(TAG, "Pending message buffer full (%zu entries), clearing stale fragments",
                  this->pending_messages_.size());
+        this->pending_messages_.clear();
       }
       auto initial_data = std::vector<uint8_t>(data.begin() + 2, data.end());
       // Pre-allocate: each continuation frame carries at most 7 payload bytes (8 - header byte).
@@ -334,7 +422,21 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       ESP_LOGD(TAG, "     - Part of message with id: %d with remaining length %d", msg_header, msg_len);
       pending_msg.first.insert(pending_msg.first.end(), data.begin() + 1, data.end());
       if (msg_len == 0) {
-        // All frames received. The last 2 bytes are a CRC — strip them before dispatching.
+        if (pending_msg.first.size() < 2) {
+          ESP_LOGW(TAG, "Reassembled message too short for CRC (%zu bytes)", pending_msg.first.size());
+          this->pending_messages_.erase(msg_header);
+          return;
+        }
+
+        uint16_t received_crc = (pending_msg.first[pending_msg.first.size() - 2] << 8) | pending_msg.first[pending_msg.first.size() - 1];
+        uint16_t computed_crc = compute_crc16(pending_msg.first.data(), pending_msg.first.size() - 2);
+
+        if (received_crc != computed_crc) {
+          ESP_LOGW(TAG, "CRC check failed! Recv: 0x%04X, Comp: 0x%04X", received_crc, computed_crc);
+          this->pending_messages_.erase(msg_header);
+          return;
+        }
+
         auto real_msg = std::vector<uint8_t>(pending_msg.first.begin(), pending_msg.first.end() - 2);
         this->pending_messages_.erase(msg_header);  // free reassembly buffer
         this->interpret_message(real_msg, can_id, remote_transmission_request);

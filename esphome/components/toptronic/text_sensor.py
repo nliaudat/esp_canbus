@@ -49,6 +49,7 @@ async def to_code(config):
     cg.add(sens.set_function_group(config[CONF_FUNCTION_GROUP]))
     cg.add(sens.set_function_number(config[CONF_FUNCTION_NUMBER]))
     cg.add(sens.set_datapoint(config[CONF_DATAPOINT]))
+    # cg.add(sens.set_type(config[CONF_TYPE])) #fix ?
     
     for i in range(len(config[CONF_OPTIONS])):
         value = config[CONF_VALUES][i]
