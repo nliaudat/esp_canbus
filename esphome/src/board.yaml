@@ -14,7 +14,6 @@ esp32:
     type: esp-idf  # arduino / esp-idf — not ready missing json and async_tcp
     version: recommended  # latest
     sdkconfig_options:
-      CONFIG_ESP32_SPIRAM_SUPPORT: y
       CONFIG_COMPILER_OPTIMIZATION_PERF: y
       CONFIG_ESP32_DEFAULT_CPU_FREQ_240: y
       CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY: "y"
@@ -24,11 +23,10 @@ esp32:
       CONFIG_TASK_WDT: "y"  # prevents watchdog timeouts
       CONFIG_TASK_WDT_TIMEOUT_S: "30"  # prevents watchdog timeouts
       CONFIG_TASK_WDT_CHECK_IDLE_TASK_CPU0: "n"  # prevents watchdog timeouts
-      CONFIG_SPIRAM_SUPPORT: y
-      CONFIG_SPIRAM_USE_CAPS_ALLOC: y
-      CONFIG_SPIRAM_USE_MALLOC: y
       CONFIG_LOG_DEFAULT_LEVEL: "0"  # prevents "ESP-IDF" Guru Meditation Error
+      CONFIG_FREERTOS_HZ: "1000"
 
+psram:
 
 preferences:
   flash_write_interval: 60min
