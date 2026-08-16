@@ -1,17 +1,17 @@
 esphome:
   name: $name
-  # on_boot:
-  #   priority: 200  
-  #   then:
-  #     - wait_until:  
-  #         condition:
-  #           wifi.connected: 
-  #         timeout: 15s
-  #     - delay: 30s
-  #     - script.execute: canbus_on_boot_requests # 1 time request is enough to get values until hoval reboot
+  on_boot:
+    priority: 200  
+    then:
+      - wait_until:  
+          condition:
+            wifi.connected: 
+          timeout: 15s
+      - delay: 30s
+      - script.execute: canbus_on_boot_requests # 1 time request is enough to get values until hoval reboot
   
 esp32:
-  board: az-delivery-devkit-v4 #nodemcu-32s #esp-wrover-kit 
+  board: az-delivery-devkit-v4 #nodemcu-32s #esp-wrover-kit
   framework:
     type: esp-idf #arduino #esp-idf  not ready missing json and async_tcp
     version: recommended #latest
@@ -24,7 +24,7 @@ preferences:
 # Enable logging
 logger:
   level: DEBUG #NONE# ERROR #INFO #DEBUG  #VERBOSE
-  baud_rate: 0 #to disable logging via UART
+  #baud_rate: 0 #to disable logging via UART
   logs:
     text_sensor: ERROR
     homeassistant.sensor: ERROR
@@ -39,7 +39,7 @@ logger:
     select: ERROR
     number: ERROR
     sensor: INFO
-    tt: INFO
+    tt: INFO #DEBUG for crc reverse engineering
 
 
 # Enable Home Assistant API
@@ -52,3 +52,9 @@ ota:
 
 safe_mode:
 
+script:
+  - id: canbus_on_boot_requests
+    then:
+      - component.update: HV_0_0_20037
+      - delay: 1s
+      - component.update: HV_0_0_41613
