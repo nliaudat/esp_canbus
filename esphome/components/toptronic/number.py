@@ -1,5 +1,3 @@
-# https://github.com/esphome/esphome/blob/dev/esphome/components/template/number/__init__.py
-
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import number
@@ -10,19 +8,17 @@ from esphome.const import (
     CONF_STEP,
     CONF_TYPE,
 )
+
 from . import (
     toptronic,
     CONF_TT_ID,
     TopTronicComponent,
     CONFIG_SCHEMA_BASE,
-    CONF_DEVICE_TYPE,
-    CONF_DEVICE_ADDR,
     CONF_FUNCTION_GROUP,
     CONF_FUNCTION_NUMBER,
     CONF_DATAPOINT,
     TT_TYPE_OPTIONS,
     CONF_DECIMAL,
-    get_device_type,
 )
 
 TopTronicNumber = toptronic.class_(
@@ -59,9 +55,6 @@ async def to_code(config):
         step=config[CONF_STEP] / divider,
     )
 
-    device_type = get_device_type(config[CONF_DEVICE_TYPE])
-    cg.add(var.set_device_type(device_type))
-    cg.add(var.set_device_addr(config[CONF_DEVICE_ADDR]))
     cg.add(var.set_function_group(config[CONF_FUNCTION_GROUP]))
     cg.add(var.set_function_number(config[CONF_FUNCTION_NUMBER]))
     cg.add(var.set_datapoint(config[CONF_DATAPOINT]))

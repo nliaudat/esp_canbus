@@ -1,19 +1,27 @@
 #pragma once
 
 #include "esphome/core/component.h"
-#include "esphome/components/sensor/sensor.h"
-#include "esphome/components/select/select.h"
-#include "esphome/components/number/number.h"
-#include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/canbus/canbus.h"
 #include "esphome/core/helpers.h"
 
-#include <map>
-#include <unordered_map>
-#include <memory>
+#ifdef USE_SENSOR
+#include "esphome/components/sensor/sensor.h"
+#endif
+#ifdef USE_TEXT_SENSOR
+#include "esphome/components/text_sensor/text_sensor.h"
+#endif
+#ifdef USE_NUMBER
+#include "esphome/components/number/number.h"
+#endif
+#ifdef USE_SELECT
+#include "esphome/components/select/select.h"
+#endif
 
-namespace esphome {
-namespace toptronic {
+#include <map>
+#include <memory>
+#include <unordered_map>
+
+namespace esphome::toptronic {
 
 // Byte width / signedness of a TopTronic datapoint value.
 // Determines how raw CAN bytes are interpreted as a numeric type.
@@ -45,21 +53,18 @@ std::vector<uint8_t> build_set_request(uint8_t function_group, uint8_t function_
 // Base class shared by all TopTronic entity types (sensor, number, text sensor, select).
 // Extends PollingComponent so ESPHome calls update() on a configurable interval,
 // which triggers a GET request to read the latest value from the boiler.
+//
+// Device addressing (device_type_/device_addr_) is owned by the TopTronic hub and
+// inherited by every entity registered on it.
 class TopTronicBase : public PollingComponent {
  public:
-  // Called from generated code (YAML → C++) to set protocol addressing fields.
-  void set_device_type(uint16_t device_type) { this->device_type_ = device_type; }
-  void set_device_addr(uint8_t device_addr) { this->device_addr_ = device_addr; }
-
   void set_function_group(uint8_t function_group) { this->function_group_ = function_group; }
   void set_function_number(uint8_t function_number) { this->function_number_ = function_number; }
   void set_datapoint(uint16_t datapoint) { this->datapoint_ = datapoint; }
 
-  // Unique sensor ID: encodes function_group | function_number | datapoint into a single uint32.
+  // Unique entity ID: encodes function_group | function_number | datapoint into a single uint32.
   // Used as the key in the per-device sensor/input hash maps.
   uint32_t get_id();
-  // Combined device ID: device_type | device_addr, used as the top-level map key in TopTronic.
-  uint32_t get_device_id();
 
   // Returns the pre-built GET request payload. Must call cache_request_data() first (done at setup).
   const std::vector<uint8_t> &get_request_data();
@@ -74,9 +79,6 @@ class TopTronicBase : public PollingComponent {
   void add_on_set_callback(std::function<void(std::vector<uint8_t>)> &&callback);
 
  protected:
-  uint16_t device_type_;
-  uint8_t device_addr_;
-
   uint8_t function_group_;
   uint8_t function_number_;
   uint16_t datapoint_;
@@ -88,6 +90,7 @@ class TopTronicBase : public PollingComponent {
   CallbackManager<void(std::vector<uint8_t>)> set_callback_;
 };
 
+#ifdef USE_SENSOR
 // Read-only numeric sensor: receives CAN responses and publishes a float state.
 class TopTronicSensor : public sensor::Sensor, public TopTronicBase {
  public:
@@ -100,7 +103,9 @@ class TopTronicSensor : public sensor::Sensor, public TopTronicBase {
  protected:
   TypeName type_;
 };
+#endif
 
+#ifdef USE_NUMBER
 // Writable numeric entity: sends a SET request on the CAN bus when the user changes the value.
 // The multiplier converts between the HA-facing value (e.g. °C) and the raw boiler integer.
 class TopTronicNumber : public number::Number, public TopTronicBase {
@@ -116,7 +121,9 @@ class TopTronicNumber : public number::Number, public TopTronicBase {
   TypeName type_;
   float multiplier_{1.0f};  // set from YAML decimal: field (e.g. decimal: 1 → multiplier 10)
 };
+#endif
 
+#ifdef USE_TEXT_SENSOR
 // Read-only text sensor: maps raw boiler integer codes to human-readable strings.
 // Both directions are stored (int→text for reading, text→int for the paired select).
 class TopTronicTextSensor : public text_sensor::TextSensor, public TopTronicBase {
@@ -137,7 +144,9 @@ class TopTronicTextSensor : public text_sensor::TextSensor, public TopTronicBase
   std::map<uint8_t, std::string> to_text_;   // raw boiler code → label string
   std::map<std::string, uint8_t> to_value_;  // label string → raw boiler code
 };
+#endif
 
+#ifdef USE_SELECT
 // Writable select entity: sends a SET request when the user picks a new option.
 // Mirrors TopTronicTextSensor but exposes a dropdown in Home Assistant.
 class TopTronicSelect : public select::Select, public TopTronicBase {
@@ -157,6 +166,7 @@ class TopTronicSelect : public select::Select, public TopTronicBase {
   // Called by ESPHome when the user picks a new option from Home Assistant.
   void control(const std::string &value) override;
 };
+#endif
 
 // Groups all sensors and writable inputs that belong to a single CAN device (device_type | device_addr).
 // Lifetime of sensors/inputs is managed by the ESPHome component registry — these are non-owning pointers.
@@ -188,6 +198,7 @@ class TopTronic : public Component {
 
   void set_device_type(uint16_t device_type) { this->device_type_ = device_type; }
   void set_device_addr(uint8_t device_addr) { this->device_addr_ = device_addr; }
+  uint16_t get_device_id() { return this->device_type_ | this->device_addr_; }
 
   void setup() override;
   void loop() override;
@@ -220,5 +231,4 @@ class TopTronic : public Component {
   uint8_t device_addr_;
 };
 
-}  // namespace toptronic
-}  // namespace esphome
+}  // namespace esphome::toptronic

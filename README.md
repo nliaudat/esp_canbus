@@ -47,7 +47,7 @@ You can validate your installation by running
 
 ```bash
 > esphome version
-Version: 2023.11.6
+Version: 2026.7.0
 ```
 
 #### Firmware configuration
@@ -55,17 +55,31 @@ Version: 2023.11.6
 Enter your Wifi SSID and password in `secrets.yaml`.<br />
 Then open `config.yaml` and make the following changes:
 1. Set `can_tx_pin` and `can_rx_pin`
-2. Update the device list. You can find the list of your hoval devices in your room control unit under maintenance. (e.g. `HV(8)` is written as `TT_HV_addr: "8"`)
-3. Select your desired presets. All presets are located at [`esphome/src/preset`](https://github.com/nliaudat/esp_canbus/tree/main/esphome/src/preset). <br /> e.g. to select the HV preset in French:
+2. Configure one `toptronic:` block **per device** (device type + address). You can find the address of each hoval device in your room control unit under maintenance (e.g. `HV(8)`, `BM(8)`, `WEZ(1)`). All presets are located at [`esphome/components/toptronic/presets`](https://github.com/nliaudat/esp_canbus/tree/main/esphome/components/toptronic/presets). <br /> e.g. to expose both an HV and a WEZ device:
 
 ```yaml
-packages:
-  # ...
-  hv_sensors: !include src/preset/HV/sensors_fr.yaml
-  hv_inputs: !include src/preset/HV/inputs_fr.yaml
+toptronic:
+  - id: tt_HV # HomeVent
+    canbus_id: cbus # the canbus bit_rate must be 50kbps
+    device_type: HV # WEZ, HV, BM (BD is an alias for BM and BM must be used), 
+    device_addr: 8 # defaults are : HV=8, BM=8, WEZ=1
+    language: en # fr, de, en, fr, it
+    
+  - id: tt_BM # display
+    canbus_id: cbus # same canbus
+    device_type: BM 
+    device_addr: 8
+    language: en
 ```
 
-If you want to create your own preset or need other datapoints have a look at [`esphome/hoval_data_processing`](https://github.com/nliaudat/esp_canbus/tree/main/esphome/hoval_data_processing)
+Each `toptronic:` list entry is an independent hub on the same CAN bus and automatically generates all of its preset's sensors (and writable numbers/selects) — no per-entity YAML is required.<br />
+Default addresses: `HV=8`, `BM=8`, `WEZ=1`.
+
+Available device types: `WEZ` (heat generator), `HV` (HomeVent ventilation), `BM` (control module/display).<br />
+Available languages: `de`, `en`, `fr`, `it`.
+
+If you want to create your own preset or need other datapoints have a look at [`hoval_data_processing`](https://github.com/nliaudat/esp_canbus/tree/main/hoval_data_processing)
+
 
 #### Flash the firmware
 

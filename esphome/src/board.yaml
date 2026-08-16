@@ -1,34 +1,46 @@
 esphome:
   name: $name
   on_boot:
-    priority: 200  
+    priority: 200
     then:
-      - wait_until:  
+      - wait_until:
           condition:
-            wifi.connected: 
+            wifi.connected:
           timeout: 15s
-      - delay: 30s
-      - script.execute: canbus_on_boot_requests # 1 time request is enough to get values until hoval reboot
-  
+
 esp32:
-  board: az-delivery-devkit-v4 #nodemcu-32s #esp-wrover-kit
+  board: ${board_type} #az-delivery-devkit-v4  # nodemcu-32s / esp-wrover-kit
   framework:
-    type: esp-idf #arduino #esp-idf  not ready missing json and async_tcp
-    version: recommended #latest
+    type: esp-idf  # arduino / esp-idf — not ready missing json and async_tcp
+    version: recommended  # latest
     sdkconfig_options:
-      CONFIG_COMPILER_OPTIMIZATION_SIZE: y
+      CONFIG_ESP32_SPIRAM_SUPPORT: y
+      CONFIG_COMPILER_OPTIMIZATION_PERF: y
+      CONFIG_ESP32_DEFAULT_CPU_FREQ_240: y
+      CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY: "y"
+      CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP: "y"
+      CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
+      CONFIG_MBEDTLS_SSL_PROTO_TLS1_3: "y"
+      CONFIG_TASK_WDT: "y"  # prevents watchdog timeouts
+      CONFIG_TASK_WDT_TIMEOUT_S: "30"  # prevents watchdog timeouts
+      CONFIG_TASK_WDT_CHECK_IDLE_TASK_CPU0: "n"  # prevents watchdog timeouts
+      CONFIG_SPIRAM_SUPPORT: y
+      CONFIG_SPIRAM_USE_CAPS_ALLOC: y
+      CONFIG_SPIRAM_USE_MALLOC: y
+      CONFIG_LOG_DEFAULT_LEVEL: "0"  # prevents "ESP-IDF" Guru Meditation Error
+
 
 preferences:
   flash_write_interval: 60min
-  
+
 # Enable logging
 logger:
-  level: DEBUG #NONE# ERROR #INFO #DEBUG  #VERBOSE
-  #baud_rate: 0 #to disable logging via UART
+  level: DEBUG  # NONE / ERROR / INFO / DEBUG / VERBOSE
+  # baud_rate: 0  # to disable logging via UART
   logs:
     text_sensor: ERROR
     homeassistant.sensor: ERROR
-    canbus: ERROR # setting log level for canbus lower than INFO may crash  : esphome/issues#4051
+    canbus: ERROR  # setting log level for canbus lower than INFO may crash  : esphome/issues#4051
     uptime: ERROR
     uptime.sensor: ERROR
     wifi_signal: ERROR
@@ -39,22 +51,13 @@ logger:
     select: ERROR
     number: ERROR
     sensor: INFO
-    tt: INFO #DEBUG for crc reverse engineering
-
+    tt: INFO  # DEBUG for crc reverse engineering
 
 # Enable Home Assistant API
 api:
   reboot_timeout: 30min
-      
 
 ota:
   - platform: esphome
 
 safe_mode:
-
-script:
-  - id: canbus_on_boot_requests
-    then:
-      - component.update: HV_0_0_20037
-      - delay: 1s
-      - component.update: HV_0_0_41613

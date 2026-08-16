@@ -5,8 +5,7 @@
 #include <string>
 #include <iomanip>
 
-namespace esphome {
-namespace toptronic {
+namespace esphome::toptronic {
 
 static const char *const TAG = "tt";
 
@@ -24,7 +23,10 @@ std::string hex_str(const uint8_t *data, int len) {
   return ss.str();
 }
 
-uint32_t TopTronicBase::get_device_id() { return this->device_type_ | this->device_addr_; }
+// The ESP32 CAN gateway presents itself on the bus as a TopTronic gateway (GW)
+// device. This constant is the device-type portion of the sender CAN ID for all
+// outgoing requests.
+static constexpr uint16_t GATEWAY_DEVICE_TYPE = 1153;  // GW
 
 // Build a 29-bit extended CAN ID using the TopTronic addressing scheme:
 //   bits 28-22 : fixed 0x7F priority/type marker
@@ -144,8 +146,11 @@ std::vector<uint8_t> float_to_bytes(float value, TypeName type) {
   return {};
 }
 
+#ifdef USE_SENSOR
 float TopTronicSensor::parse_value(const std::vector<uint8_t> &value) { return bytes_to_float(value, this->type_); }
+#endif
 
+#ifdef USE_NUMBER
 void TopTronicNumber::control(float value) {
   float v = this->multiplier_ * value;
   std::vector<uint8_t> bytes = float_to_bytes(v, this->type_);
@@ -155,7 +160,9 @@ void TopTronicNumber::control(float value) {
 
   ESP_LOGI(TAG, "[SET] %s: %f, Data: 0x%s", this->get_name().c_str(), v, hex_str(&data[0], data.size()).c_str());
 }
+#endif
 
+#ifdef USE_TEXT_SENSOR
 std::string TopTronicTextSensor::parse_value(const std::vector<uint8_t> &value) {
   uint8_t int_value = bytes_to_number<uint8_t>(value);
   auto it = this->to_text_.find(int_value);
@@ -165,7 +172,9 @@ std::string TopTronicTextSensor::parse_value(const std::vector<uint8_t> &value) 
   }
   return it->second;
 }
+#endif
 
+#ifdef USE_SELECT
 void TopTronicSelect::control(const std::string &text) {
   auto it = this->to_value_.find(text);
   if (it == this->to_value_.end()) {
@@ -181,6 +190,7 @@ void TopTronicSelect::control(const std::string &text) {
   ESP_LOGI(TAG, "[SET] %s: %s, Data: 0x%s", this->get_name().c_str(), text.c_str(),
            hex_str(&data[0], data.size()).c_str());
 }
+#endif
 
 // Return the TopTronicDevice for this ID, creating it on first access.
 // operator[] performs a single map lookup rather than count() + operator[] (two lookups).
@@ -193,12 +203,12 @@ TopTronicDevice *TopTronic::get_or_create_device(uint32_t device_id) {
 }
 
 void TopTronic::add_sensor(TopTronicBase *sensor) {
-  TopTronicDevice *device = this->get_or_create_device(sensor->get_device_id());
+  TopTronicDevice *device = this->get_or_create_device(this->get_device_id());
   device->sensors[sensor->get_id()] = sensor;
 }
 
 void TopTronic::add_input(TopTronicBase *input) {
-  TopTronicDevice *device = this->get_or_create_device(input->get_device_id());
+  TopTronicDevice *device = this->get_or_create_device(this->get_device_id());
   device->inputs[input->get_id()] = input;
 }
 
@@ -209,7 +219,7 @@ void TopTronic::register_sensor_callbacks() {
       auto *sensor = s.second;
       sensor->cache_request_data();  // build once, avoid per-poll heap alloc
       auto *canbus = this->canbus_;
-      uint32_t can_id = build_can_id(this->device_type_ | this->device_addr_, sensor->get_device_id());
+      uint32_t can_id = build_can_id(GATEWAY_DEVICE_TYPE | this->device_addr_, this->get_device_id());
 
       sensor->add_on_update_callback([canbus, sensor, can_id]() -> void {
         const auto &data = sensor->get_request_data();
@@ -307,7 +317,7 @@ void TopTronic::register_input_callbacks() {
     for (const auto &i : device->inputs) {
       auto *input = i.second;
       auto *canbus = this->canbus_;
-      uint32_t can_id = build_can_id(this->device_type_ | this->device_addr_, input->get_device_id());
+      uint32_t can_id = build_can_id(GATEWAY_DEVICE_TYPE | this->device_addr_, this->get_device_id());
 
       input->add_on_set_callback([canbus, input, can_id](std::vector<uint8_t> data) -> void {
         // send_can_frames handles single-frame (≤8 bytes) and multi-frame (>8 bytes) automatically.
@@ -338,21 +348,25 @@ void TopTronic::link_inputs() {
     auto *device = d.second.get();
     for (const auto &i : device->inputs) {
       auto *input_base = i.second;
-      auto *sensor_base = this->get_sensor(input_base->get_device_id(), input_base->get_id());
+      auto *sensor_base = this->get_sensor(this->get_device_id(), input_base->get_id());
       if (sensor_base == nullptr) {
         continue;
       }
       if (sensor_base->type() == SENSOR) {
+#if defined(USE_SENSOR) && defined(USE_NUMBER)
         auto *sensor = (TopTronicSensor *) sensor_base;
         auto *input = (TopTronicNumber *) input_base;
         sensor->add_on_raw_state_callback([input](float state) -> void {
           float divider = input->get_multiplier();
           input->publish_state(state / divider);
         });
+#endif  // USE_SENSOR && USE_NUMBER
       } else if (sensor_base->type() == TEXTSENSOR) {
+#if defined(USE_TEXT_SENSOR) && defined(USE_SELECT)
         auto *sensor = (TopTronicTextSensor *) sensor_base;
         auto *input = (TopTronicSelect *) input_base;
         sensor->add_on_raw_state_callback([input](std::string state) -> void { input->publish_state(state); });
+#endif  // USE_TEXT_SENSOR && USE_SELECT
       }
     }
   }
@@ -362,6 +376,11 @@ void TopTronic::setup() {
   this->link_inputs();
   this->register_sensor_callbacks();
   this->register_input_callbacks();
+
+  // Register with the CAN bus so all received frames are routed to parse_frame().
+  this->canbus_->add_callback([this](uint32_t can_id, bool, bool rtr, const std::vector<uint8_t> &data) {
+    this->parse_frame(data, can_id, rtr);
+  });
 }
 
 void TopTronic::loop() {}
@@ -491,18 +510,22 @@ void TopTronic::interpret_message(const std::vector<uint8_t> &data, uint32_t can
 
   // Downcast to the concrete type and publish the decoded value.
   // data[5..] contains the raw value bytes.
+#ifdef USE_SENSOR
   if (sensor_base->type() == SENSOR) {
     auto *sensor = (TopTronicSensor *) sensor_base;
     float value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 5, data.end()));
     sensor->publish_state(value);
     log_response_frame(data, can_id, sensor->get_name());
-  } else if (sensor_base->type() == TEXTSENSOR) {
+  }
+#endif
+#ifdef USE_TEXT_SENSOR
+  if (sensor_base->type() == TEXTSENSOR) {
     auto *sensor = (TopTronicTextSensor *) sensor_base;
     std::string value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 5, data.end()));
     sensor->publish_state(value);
     log_response_frame(data, can_id, sensor->get_name());
   }
+#endif
 }
 
-}  // namespace toptronic
-}  // namespace esphome
+}  // namespace esphome::toptronic

@@ -1,13 +1,12 @@
-
 sensor:
   - platform: wifi_signal
     name: "${friendly_name} WiFi Signal"
     update_interval: 60s
     entity_category: "diagnostic"
     id: wifi_signal_db
-    
+
   - platform: uptime
-    name: "${friendly_name} Uptime"    
+    name: "${friendly_name} Uptime"
     id: uptime_sensor
     update_interval: 60s
     internal: true
@@ -21,22 +20,20 @@ sensor:
               seconds = seconds % (24 * 3600);
               int hours = seconds / 3600;
               seconds = seconds % 3600;
-              int minutes = seconds /  60;
+              int minutes = seconds / 60;
               seconds = seconds % 60;
               return (
                 (days ? to_string(days) + "d " : "") +
                 (hours ? to_string(hours) + "h " : "") +
                 (minutes ? to_string(minutes) + "m " : "") +
                 (to_string(seconds) + "s")
-              ).c_str();      
-              
-              
+              ).c_str();
 
   - platform: internal_temperature
     name: "${friendly_name} Internal Temperature"
 
-text_sensor:  
+text_sensor:
   - platform: template
     name: "${friendly_name} uptime"
     id: uptime_human
-    icon: mdi:clock-start  
+    icon: mdi:clock-start
