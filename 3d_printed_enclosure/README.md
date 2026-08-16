@@ -12,9 +12,9 @@ Optimized for easy printing, only mounting screws required, minimal supports req
 
 ## Download
 
-- STL — Base: [download](<ESP32 CanBus shield Eclosure Base mk1.stl>)
-- STL — Lid: [download](<ESP32 CanBus shield Eclosure Lid mk1.stl>)
-- STEP (CAD): [download](<ESP32 CanBus shield Eclosure mk1.step>)
+- STL Base: [ESP32 CanBus shield Eclosure Base mk1.stl](<ESP32 CanBus shield Eclosure Base mk1.stl>)
+- STL Lid: [ESP32 CanBus shield Eclosure Lid mk1.stl](<ESP32 CanBus shield Eclosure Lid mk1.stl>)
+- STEP (CAD): [ESP32 CanBus shield Eclosure mk1.step](<ESP32 CanBus shield Eclosure mk1.step>)
 
 ## Recommended print settings
 
