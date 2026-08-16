@@ -21,4 +21,5 @@ repos:
     rev: v1.37.1
     hooks:
       - id: yamllint
-        files: ^esphome/components/
+        types: [yaml]
+        files: ^esphome/
