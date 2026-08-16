@@ -3,7 +3,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import number
-from esphome.components.canbus import CanbusComponent
 from esphome.const import (
     CONF_ID,
     CONF_MAX_VALUE,
@@ -12,11 +11,9 @@ from esphome.const import (
     CONF_TYPE,
 )
 from . import (
-    toptronic, 
-    CONF_TT_ID, 
-    CONF_CANBUS_ID,
+    toptronic,
+    CONF_TT_ID,
     TopTronicComponent,
-
     CONFIG_SCHEMA_BASE,
     CONF_DEVICE_TYPE,
     CONF_DEVICE_ADDR,
@@ -43,6 +40,7 @@ CONFIG_SCHEMA = cv.Schema({
     TopTronicNumber
 )).extend(CONFIG_SCHEMA_BASE)
 
+
 async def new_number(config, *, min_value: float, max_value: float, step: float):
     var = cg.new_Pvariable(config[CONF_ID])
     await number.register_number(
@@ -50,16 +48,17 @@ async def new_number(config, *, min_value: float, max_value: float, step: float)
     )
     return var
 
+
 async def to_code(config):
     divider = pow(10, config[CONF_DECIMAL])
     tt = await cg.get_variable(config[CONF_TT_ID])
     var = await new_number(
-        config, 
+        config,
         min_value=config[CONF_MIN_VALUE] / divider,
         max_value=config[CONF_MAX_VALUE] / divider,
         step=config[CONF_STEP] / divider,
     )
-   
+
     device_type = get_device_type(config[CONF_DEVICE_TYPE])
     cg.add(var.set_device_type(device_type))
     cg.add(var.set_device_addr(config[CONF_DEVICE_ADDR]))
@@ -68,5 +67,5 @@ async def to_code(config):
     cg.add(var.set_datapoint(config[CONF_DATAPOINT]))
     cg.add(var.set_type(config[CONF_TYPE]))
     cg.add(var.set_multiplier(divider))
-    
+
     cg.add(tt.add_input(var))

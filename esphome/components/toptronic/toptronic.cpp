@@ -24,9 +24,7 @@ std::string hex_str(const uint8_t *data, int len) {
   return ss.str();
 }
 
-uint32_t TopTronicBase::get_device_id() {
-  return this->device_type_ | this->device_addr_;
-}
+uint32_t TopTronicBase::get_device_id() { return this->device_type_ | this->device_addr_; }
 
 // Build a 29-bit extended CAN ID using the TopTronic addressing scheme:
 //   bits 28-22 : fixed 0x7F priority/type marker
@@ -38,12 +36,9 @@ uint32_t build_can_id(uint16_t sender_id, uint16_t receiver_mask) {
 
 std::vector<uint8_t> build_get_request(uint8_t function_group, uint8_t function_number, uint32_t datapoint) {
   return {
-    0x01,            // message length
-    GET_REQ,         // GET_REQUEST = 0x40
-    function_group,
-    function_number,
-    (uint8_t)(datapoint >> 8),
-    (uint8_t)(datapoint),
+      0x01,     // message length
+      GET_REQ,  // GET_REQUEST = 0x40
+      function_group, function_number, (uint8_t) (datapoint >> 8), (uint8_t) (datapoint),
   };
 }
 
@@ -53,12 +48,9 @@ std::vector<uint8_t> build_get_request(uint8_t function_group, uint8_t function_
 std::vector<uint8_t> build_set_request(uint8_t function_group, uint8_t function_number, uint32_t datapoint,
                                        const std::vector<uint8_t> &value) {
   std::vector<uint8_t> data = {
-    0x01,            // message length / frame flags (upper 5 bits = 0 → single frame signal)
-    SET_REQ,         // SET_REQUEST = 0x46
-    function_group,
-    function_number,
-    (uint8_t)(datapoint >> 8),
-    (uint8_t)(datapoint),
+      0x01,     // message length / frame flags (upper 5 bits = 0 → single frame signal)
+      SET_REQ,  // SET_REQUEST = 0x46
+      function_group, function_number, (uint8_t) (datapoint >> 8), (uint8_t) (datapoint),
   };
   data.insert(data.end(), value.begin(), value.end());
   return data;
@@ -67,15 +59,11 @@ std::vector<uint8_t> build_set_request(uint8_t function_group, uint8_t function_
 // Pack the three protocol fields into a single uint32 used as a lookup key.
 // Layout: [datapoint(16) | function_number(8) | function_group(8)]
 uint32_t TopTronicBase::get_id() {
-  return this->function_group_
-      + (this->function_number_ << 8)
-      + (this->datapoint_ << 16);
+  return this->function_group_ + (this->function_number_ << 8) + (this->datapoint_ << 16);
 }
 
 // Returns a const reference to avoid copying the vector on every polling cycle.
-const std::vector<uint8_t> &TopTronicBase::get_request_data() {
-  return this->request_data_;
-}
+const std::vector<uint8_t> &TopTronicBase::get_request_data() { return this->request_data_; }
 
 // Called once at setup time so subsequent poll callbacks read from a cached buffer.
 void TopTronicBase::cache_request_data() {
@@ -90,17 +78,14 @@ void TopTronicBase::add_on_update_callback(std::function<void()> &&callback) {
   this->update_callback_.add(std::move(callback));
 }
 
-void TopTronicBase::update() {
-  this->update_callback_.call();
-}
+void TopTronicBase::update() { this->update_callback_.call(); }
 
 // Decode a big-endian byte sequence into an integer of type T.
 // Accumulates into uint64_t to avoid signed-shift UB when T is int64_t
 // (left-shifting into the sign bit is undefined for signed types in C++).
 // static_cast<T> of an out-of-range uint64_t is implementation-defined but
 // produces the expected two's-complement result on all ESPHome targets.
-template<typename T>
-T bytes_to_number(const std::vector<uint8_t> &value) {
+template<typename T> T bytes_to_number(const std::vector<uint8_t> &value) {
   uint64_t u = 0;
   for (size_t i = 0; i < value.size(); i++) {
     u = (u << 8) | value[i];
@@ -111,51 +96,61 @@ T bytes_to_number(const std::vector<uint8_t> &value) {
 // Convert raw CAN bytes to a float, interpreting them as the configured integer type.
 float bytes_to_float(const std::vector<uint8_t> &value, TypeName type) {
   switch (type) {
-    case U8:  return (float) bytes_to_number<uint8_t>(value);
-    case U16: return (float) bytes_to_number<uint16_t>(value);
-    case U32: return (float) bytes_to_number<uint32_t>(value);
-    case S8:  return (float) bytes_to_number<int8_t>(value);
-    case S16: return (float) bytes_to_number<int16_t>(value);
-    case S32: return (float) bytes_to_number<int32_t>(value);
-    case S64: return (float) bytes_to_number<int64_t>(value);
+    case U8:
+      return (float) bytes_to_number<uint8_t>(value);
+    case U16:
+      return (float) bytes_to_number<uint16_t>(value);
+    case U32:
+      return (float) bytes_to_number<uint32_t>(value);
+    case S8:
+      return (float) bytes_to_number<int8_t>(value);
+    case S16:
+      return (float) bytes_to_number<int16_t>(value);
+    case S32:
+      return (float) bytes_to_number<int32_t>(value);
+    case S64:
+      return (float) bytes_to_number<int64_t>(value);
   }
   return 0.0f;
 }
 
 // Encode a numeric value as a big-endian byte sequence for a SET request payload.
-template<typename T>
-std::vector<uint8_t> number_to_bytes(T value) {
+template<typename T> std::vector<uint8_t> number_to_bytes(T value) {
   std::vector<uint8_t> a;
   constexpr size_t size = sizeof(T);
   for (size_t i = 0; i < size; i++) {
-    a.push_back((uint8_t)(value >> (8 * (size - i - 1))));
+    a.push_back((uint8_t) (value >> (8 * (size - i - 1))));
   }
   return a;
 }
 
 std::vector<uint8_t> float_to_bytes(float value, TypeName type) {
   switch (type) {
-    case U8:  return number_to_bytes((uint8_t) value);
-    case U16: return number_to_bytes((uint16_t) value);
-    case U32: return number_to_bytes((uint32_t) value);
-    case S8:  return number_to_bytes((int8_t) value);
-    case S16: return number_to_bytes((int16_t) value);
-    case S32: return number_to_bytes((int32_t) value);
-    case S64: return number_to_bytes((int64_t) value);
+    case U8:
+      return number_to_bytes((uint8_t) value);
+    case U16:
+      return number_to_bytes((uint16_t) value);
+    case U32:
+      return number_to_bytes((uint32_t) value);
+    case S8:
+      return number_to_bytes((int8_t) value);
+    case S16:
+      return number_to_bytes((int16_t) value);
+    case S32:
+      return number_to_bytes((int32_t) value);
+    case S64:
+      return number_to_bytes((int64_t) value);
   }
   return {};
 }
 
-float TopTronicSensor::parse_value(const std::vector<uint8_t> &value) {
-  return bytes_to_float(value, this->type_);
-}
+float TopTronicSensor::parse_value(const std::vector<uint8_t> &value) { return bytes_to_float(value, this->type_); }
 
 void TopTronicNumber::control(float value) {
   float v = this->multiplier_ * value;
   std::vector<uint8_t> bytes = float_to_bytes(v, this->type_);
 
-  std::vector<uint8_t> data =
-      build_set_request(this->function_group_, this->function_number_, this->datapoint_, bytes);
+  std::vector<uint8_t> data = build_set_request(this->function_group_, this->function_number_, this->datapoint_, bytes);
   this->set_callback_.call(data);
 
   ESP_LOGI(TAG, "[SET] %s: %f, Data: 0x%s", this->get_name().c_str(), v, hex_str(&data[0], data.size()).c_str());
@@ -285,7 +280,7 @@ static void send_can_frames(canbus::Canbus *canbus, uint32_t can_id, const std::
 
   std::vector<uint8_t> first_frame;
   first_frame.push_back(static_cast<uint8_t>((num_cont << 3) | 0x01));  // frame count in upper 5 bits
-  first_frame.push_back(msg_header);                                      // reassembly key
+  first_frame.push_back(msg_header);                                    // reassembly key
   first_frame.insert(first_frame.end(), msg.begin(), msg.begin() + first_chunk);
   canbus->send_data(can_id, true, first_frame);
 
@@ -302,8 +297,8 @@ static void send_can_frames(canbus::Canbus *canbus, uint32_t can_id, const std::
     canbus->send_data(cont_id, true, cont_frame);
   }
 
-  ESP_LOGD(TAG, "[SET] Sent %u CAN frames (msg_header=0x%02X, payload=%zu bytes)",
-           1 + num_cont, msg_header, data.size());
+  ESP_LOGD(TAG, "[SET] Sent %u CAN frames (msg_header=0x%02X, payload=%zu bytes)", 1 + num_cont, msg_header,
+           data.size());
 }
 
 void TopTronic::register_input_callbacks() {
@@ -357,9 +352,7 @@ void TopTronic::link_inputs() {
       } else if (sensor_base->type() == TEXTSENSOR) {
         auto *sensor = (TopTronicTextSensor *) sensor_base;
         auto *input = (TopTronicSelect *) input_base;
-        sensor->add_on_raw_state_callback([input](std::string state) -> void {
-          input->publish_state(state);
-        });
+        sensor->add_on_raw_state_callback([input](std::string state) -> void { input->publish_state(state); });
       }
     }
   }
@@ -397,8 +390,7 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
     uint8_t msg_len = data[0] >> 3;
     if (msg_len == 0) {
       // Single-frame message: strip the length byte and dispatch directly.
-      this->interpret_message(std::vector<uint8_t>(data.begin() + 1, data.end()), can_id,
-                              remote_transmission_request);
+      this->interpret_message(std::vector<uint8_t>(data.begin() + 1, data.end()), can_id, remote_transmission_request);
     } else {
       // Multi-frame message: save the first fragment and wait for the rest.
       uint8_t msg_header = data[1];  // reassembly key shared across all frames of this message
@@ -430,7 +422,8 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
           return;
         }
 
-        uint16_t received_crc = (pending_msg.first[pending_msg.first.size() - 2] << 8) | pending_msg.first[pending_msg.first.size() - 1];
+        uint16_t received_crc =
+            (pending_msg.first[pending_msg.first.size() - 2] << 8) | pending_msg.first[pending_msg.first.size() - 1];
         uint16_t computed_crc = compute_crc16(pending_msg.first.data(), pending_msg.first.size() - 2);
 
         if (received_crc != computed_crc) {
@@ -458,8 +451,7 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
 //   [3]   datapoint high byte
 //   [4]   datapoint low byte
 //   [5..] value payload
-void TopTronic::interpret_message(const std::vector<uint8_t> &data, uint32_t can_id,
-                                  bool remote_transmission_request) {
+void TopTronic::interpret_message(const std::vector<uint8_t> &data, uint32_t can_id, bool remote_transmission_request) {
   // Ignore outgoing GET/SET requests that we echoed ourselves — nothing to update.
   if (data[0] == GET_REQ) {
     ESP_LOGD(TAG, "[GET] Can-ID: 0x%08X, Data: 0x%s", (unsigned int) can_id, hex_str(&data[0], data.size()).c_str());
@@ -487,9 +479,9 @@ void TopTronic::interpret_message(const std::vector<uint8_t> &data, uint32_t can
 
   // Reconstruct the sensor lookup key from the protocol fields in the response.
   uint32_t datapoint = data[4] + (data[3] << 8);
-  uint32_t id = data[1]        // function_group
-      + (data[2] << 8)         // function_number
-      + (datapoint << 16);
+  uint32_t id = data[1]           // function_group
+                + (data[2] << 8)  // function_number
+                + (datapoint << 16);
 
   auto sensor_it = device->sensors.find(id);
   if (sensor_it == device->sensors.end()) {

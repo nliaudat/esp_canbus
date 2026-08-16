@@ -4,14 +4,12 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import text_sensor
 from esphome.const import (
-    CONF_VALUE,
     CONF_OPTIONS,
 )
 from . import (
-    toptronic, 
-    CONF_TT_ID, 
+    toptronic,
+    CONF_TT_ID,
     TopTronicComponent,
-
     CONFIG_SCHEMA_BASE,
     CONF_DEVICE_TYPE,
     CONF_DEVICE_ADDR,
@@ -38,21 +36,22 @@ CONFIG_SCHEMA = cv.Schema({
     TopTronicTextSensor
 )).extend(CONFIG_SCHEMA_BASE)
 
+
 async def to_code(config):
     tt = await cg.get_variable(config[CONF_TT_ID])
     sens = await text_sensor.new_text_sensor(config)
     await cg.register_component(sens, config)
-   
+
     device_type = get_device_type(config[CONF_DEVICE_TYPE])
     cg.add(sens.set_device_type(device_type))
     cg.add(sens.set_device_addr(config[CONF_DEVICE_ADDR]))
     cg.add(sens.set_function_group(config[CONF_FUNCTION_GROUP]))
     cg.add(sens.set_function_number(config[CONF_FUNCTION_NUMBER]))
     cg.add(sens.set_datapoint(config[CONF_DATAPOINT]))
-    
+
     for i in range(len(config[CONF_OPTIONS])):
         value = config[CONF_VALUES][i]
         text = config[CONF_OPTIONS][i]
         cg.add(sens.add_option(value, text))
-    
+
     cg.add(tt.add_sensor(sens))
