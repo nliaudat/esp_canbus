@@ -18,7 +18,7 @@ from . import (
 )
 
 TopTronicSelect = toptronic.class_(
-    "TopTronicSelect", select.Select
+    "TopTronicSelect", select.Select, cg.PollingComponent
 )
 
 CONFIG_SCHEMA = cv.Schema({
@@ -43,6 +43,7 @@ async def new_select(config, *, options: list[str]):
 async def to_code(config):
     tt = await cg.get_variable(config[CONF_TT_ID])
     var = await new_select(config, options=config[CONF_OPTIONS])
+    await cg.register_component(var, config)
 
     cg.add(var.set_function_group(config[CONF_FUNCTION_GROUP]))
     cg.add(var.set_function_number(config[CONF_FUNCTION_NUMBER]))
