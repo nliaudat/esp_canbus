@@ -29,6 +29,7 @@ TT_TYPE_OPTIONS = {
     "S64": TT_TYPE.S64,
 }
 
+
 class DeviceType(Enum):
     WEZ = 0
     SOL = 64
@@ -41,12 +42,15 @@ class DeviceType(Enum):
     BM = 1024
     GW = 1153
 
+
 _device_types = {t.name: t.value for t in DeviceType}
+
 
 def get_device_type(t: str) -> int:
     if t not in _device_types:
         raise ValueError(f'device type "{t}" not found')
     return _device_types.get(t)
+
 
 CONF_DEVICE_TYPE = "device_type"
 CONF_DEVICE_ADDR = "device_addr"
@@ -60,7 +64,6 @@ CONFIG_SCHEMA_BASE = cv.Schema(
     {
         cv.Required(CONF_DEVICE_TYPE): cv.string,
         cv.Required(CONF_DEVICE_ADDR): cv.uint8_t,
-
         cv.Required(CONF_FUNCTION_GROUP): cv.uint8_t,
         cv.Required(CONF_FUNCTION_NUMBER): cv.uint8_t,
         cv.Required(CONF_DATAPOINT): cv.uint16_t,
@@ -79,6 +82,7 @@ CONFIG_SCHEMA = (
     .extend(cv.COMPONENT_SCHEMA)
 )
 
+
 async def to_code(config):
     cbus = await cg.get_variable(config[CONF_CANBUS_ID])
     var = cg.new_Pvariable(config[CONF_ID], cbus)
@@ -87,4 +91,3 @@ async def to_code(config):
     device_type = get_device_type(config[CONF_DEVICE_TYPE])
     cg.add(var.set_device_type(device_type))
     cg.add(var.set_device_addr(config[CONF_DEVICE_ADDR]))
-

@@ -7,10 +7,9 @@ from esphome.const import (
     CONF_TYPE
 )
 from . import (
-    toptronic, 
-    CONF_TT_ID, 
+    toptronic,
+    CONF_TT_ID,
     TopTronicComponent,
-
     CONFIG_SCHEMA_BASE,
     CONF_DEVICE_TYPE,
     CONF_DEVICE_ADDR,
@@ -18,7 +17,7 @@ from . import (
     CONF_FUNCTION_NUMBER,
     CONF_DATAPOINT,
     TT_TYPE_OPTIONS,
-    get_device_type
+    get_device_type,
 )
 
 TopTronicSensor = toptronic.class_(
@@ -32,11 +31,12 @@ CONFIG_SCHEMA = cv.Schema({
     TopTronicSensor
 )).extend(CONFIG_SCHEMA_BASE)
 
+
 async def to_code(config):
     tt = await cg.get_variable(config[CONF_TT_ID])
     sens = await sensor.new_sensor(config)
     await cg.register_component(sens, config)
-   
+
     device_type = get_device_type(config[CONF_DEVICE_TYPE])
     cg.add(sens.set_device_type(device_type))
     cg.add(sens.set_device_addr(config[CONF_DEVICE_ADDR]))
@@ -44,5 +44,5 @@ async def to_code(config):
     cg.add(sens.set_function_number(config[CONF_FUNCTION_NUMBER]))
     cg.add(sens.set_datapoint(config[CONF_DATAPOINT]))
     cg.add(sens.set_type(config[CONF_TYPE]))
-    
+
     cg.add(tt.add_sensor(sens))
