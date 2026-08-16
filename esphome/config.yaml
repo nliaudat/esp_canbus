@@ -16,6 +16,7 @@ substitutions:
   TT_HV_addr: "8"
   TT_BM_addr: "8"
   TT_WEZ_addr: "1"
+  TT_BD_addr: "1"
   
   
 external_components:
