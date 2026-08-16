@@ -46,3 +46,23 @@ button:
             uint32_t can_id = (device_type << 8) | device_addr;
 
             id(tt).parse_frame(x, can_id, false);
+
+# ---------------------------------------------------------------------------
+# CRC reverse-engineering helper
+# ---------------------------------------------------------------------------
+# Enable DEBUG logging for the 'tt' component so [CRC] lines are emitted.
+# These lines capture the raw 2-byte CRC and payload of every reassembled
+# multi-frame response from the boiler.
+#
+# Usage:
+#   1. Flash this file alongside your main config.
+#   2. Watch serial/OTA logs — look for lines like:
+#        [CRC] len=9 crc=0xA1B2 payload=0x42010200...
+#   3. Collect ~10 samples, then run RevEng to identify the algorithm:
+#        reveng -w 16 -s <payload_hex> <crc_hex> [<payload2_hex> <crc2_hex> ...]
+#        Download: https://reveng.sourceforge.io/
+#
+# Note: overrides the tt:INFO set in board.yaml — remove this file when done.
+# logger:
+#   logs:
+#     tt: DEBUG

@@ -376,7 +376,7 @@ void TopTronic::loop() {}
 void TopTronic::dump_config() {}
 
 void log_response_frame(const std::vector<uint8_t> &data, uint32_t can_id, const std::string &sensor_name) {
-  ESP_LOGI(TAG, "[RES] Can-ID: 0x%08X, Sensor: %s, Data: 0x%s", can_id, sensor_name.c_str(),
+  ESP_LOGI(TAG, "[RES] Can-ID: 0x%08X, Sensor: %s, Data: 0x%s", (unsigned int) can_id, sensor_name.c_str(),
            hex_str(&data[0], data.size()).c_str());
 }
 
@@ -462,17 +462,17 @@ void TopTronic::interpret_message(const std::vector<uint8_t> &data, uint32_t can
                                   bool remote_transmission_request) {
   // Ignore outgoing GET/SET requests that we echoed ourselves — nothing to update.
   if (data[0] == GET_REQ) {
-    ESP_LOGD(TAG, "[GET] Can-ID: 0x%08X, Data: 0x%s", can_id, hex_str(&data[0], data.size()).c_str());
+    ESP_LOGD(TAG, "[GET] Can-ID: 0x%08X, Data: 0x%s", (unsigned int) can_id, hex_str(&data[0], data.size()).c_str());
     return;
   }
 
   if (data[0] == SET_REQ) {
-    ESP_LOGI(TAG, "[SET] Can-ID: 0x%08X, Data: 0x%s", can_id, hex_str(&data[0], data.size()).c_str());
+    ESP_LOGI(TAG, "[SET] Can-ID: 0x%08X, Data: 0x%s", (unsigned int) can_id, hex_str(&data[0], data.size()).c_str());
     return;
   }
 
   if (data[0] != RESPONSE) {
-    ESP_LOGD(TAG, "[UNK] Can-ID: 0x%08X, Data: 0x%s", can_id, hex_str(&data[0], data.size()).c_str());
+    ESP_LOGD(TAG, "[UNK] Can-ID: 0x%08X, Data: 0x%s", (unsigned int) can_id, hex_str(&data[0], data.size()).c_str());
     return;
   }
 
