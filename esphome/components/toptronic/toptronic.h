@@ -97,7 +97,8 @@ class TopTronicSensor : public sensor::Sensor, public TopTronicBase {
   void set_type(TypeName type) { this->type_ = type; }
 
   // Decode raw bytes from the CAN response into a float using the configured type.
-  float parse_value(const std::vector<uint8_t> &value);
+  // data/len point into the reassembly buffer or the received CAN frame — no copy.
+  float parse_value(const uint8_t *data, size_t len);
   SensorType type() override { return SENSOR; }
 
  protected:
@@ -129,7 +130,8 @@ class TopTronicNumber : public number::Number, public TopTronicBase {
 class TopTronicTextSensor : public text_sensor::TextSensor, public TopTronicBase {
  public:
   // Decode raw bytes from the CAN response into a string label using the option map.
-  std::string parse_value(const std::vector<uint8_t> &value);
+  // data/len point into the reassembly buffer or the received CAN frame — no copy.
+  std::string parse_value(const uint8_t *data, size_t len);
   SensorType type() override { return TEXTSENSOR; }
 
   // Register a value↔text mapping (called from generated YAML code at startup).
@@ -205,6 +207,13 @@ class TopTronic : public Component {
   void dump_config() override;
 
  protected:
+  // State of an in-progress multi-frame message being reassembled.
+  struct PendingMessage {
+    std::vector<uint8_t> data;       // accumulated payload (CRC not yet stripped)
+    uint8_t remaining_frames{0};     // continuation frames still expected
+    uint32_t last_update_ms{0};      // for stale-fragment expiry
+  };
+
   // Look up device by ID; create a new TopTronicDevice if it does not exist yet.
   TopTronicDevice *get_or_create_device(uint32_t can_id);
   // For each input, find its matching read sensor (same device + datapoint) and
@@ -213,7 +222,8 @@ class TopTronic : public Component {
   // Return the sensor for a given (device_id, sensor_id) pair, or nullptr if not found.
   TopTronicBase *get_sensor(uint32_t device_id, uint32_t sensor_id);
   // Parse a fully reassembled CAN message and update the matching sensor or input.
-  void interpret_message(const std::vector<uint8_t> &data, uint32_t can_id, bool remote_transmission_request);
+  // data/len reference the reassembly buffer directly — no per-frame heap copies.
+  void interpret_message(const uint8_t *data, size_t len, uint32_t can_id, bool remote_transmission_request);
 
   canbus::Canbus *canbus_;
 
@@ -223,12 +233,16 @@ class TopTronic : public Component {
 
   // Multi-frame reassembly buffer. TopTronic protocol splits long messages across
   // several CAN frames; each entry holds the accumulated bytes and remaining frame count.
-  // Keyed by the msg_header byte from the first frame.
-  std::unordered_map<uint8_t, std::pair<std::vector<uint8_t>, uint8_t>> pending_messages_;
+  // Keyed by (source_device_id << 8 | msg_header) from the first frame so that identical
+  // 8-bit msg_header values from different CAN devices cannot collide.
+  std::unordered_map<uint32_t, PendingMessage> pending_messages_;
 
   // CAN address of this gateway node (used when building outgoing CAN IDs).
   uint16_t device_type_;
   uint8_t device_addr_;
+
+  // Timestamp of the last stale-fragment sweep in loop().
+  uint32_t last_cleanup_ms_{0};
 };
 
 }  // namespace esphome::toptronic

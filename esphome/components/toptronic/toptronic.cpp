@@ -1,9 +1,7 @@
 #include "toptronic.h"
 #include "esphome/core/log.h"
 
-#include <sstream>
 #include <string>
-#include <iomanip>
 
 namespace esphome::toptronic {
 
@@ -13,14 +11,28 @@ static const uint8_t RESPONSE = 0x42;
 static const uint8_t GET_REQ = 0x40;
 static const uint8_t SET_REQ = 0x46;
 
-// Format a byte buffer as a zero-padded hex string for log output (e.g. "0x4001001A").
-// Reference: https://stackoverflow.com/a/14051107/3140799
-std::string hex_str(const uint8_t *data, int len) {
-  std::stringstream ss;
-  ss << std::hex;
-  for (int i = 0; i < len; ++i)
-    ss << std::setw(2) << std::setfill('0') << (int) data[i];
-  return ss.str();
+// Maximum number of concurrently reassembled multi-frame messages to keep.
+static constexpr size_t MAX_PENDING_MESSAGES = 16;
+// A pending message with no continuation frame for this long is considered lost.
+static constexpr uint32_t MAX_PENDING_AGE_MS = 2000;
+// Minimum decodable TopTronic message: cmd | function_group | function_number | dp_hi | dp_lo.
+static constexpr size_t MIN_MESSAGE_LEN = 5;
+// Throttle interval for the stale-fragment sweep in loop().
+static constexpr uint32_t CLEANUP_INTERVAL_MS = 2000;
+
+// Format a byte buffer as a zero-padded hex string for log output (e.g. "4001001a").
+// Uses a plain std::string (no std::stringstream) — common short messages fit in the
+// small-string-optimization buffer, so the hot path (every received frame) performs
+// no heap allocation.
+std::string hex_str(const uint8_t *data, size_t len) {
+  static const char *const HEX = "0123456789abcdef";
+  std::string out;
+  out.reserve(len * 2);
+  for (size_t i = 0; i < len; ++i) {
+    out.push_back(HEX[(data[i] >> 4) & 0x0F]);
+    out.push_back(HEX[data[i] & 0x0F]);
+  }
+  return out;
 }
 
 // The ESP32 CAN gateway presents itself on the bus as a TopTronic gateway (GW)
@@ -87,31 +99,31 @@ void TopTronicBase::update() { this->update_callback_.call(); }
 // (left-shifting into the sign bit is undefined for signed types in C++).
 // static_cast<T> of an out-of-range uint64_t is implementation-defined but
 // produces the expected two's-complement result on all ESPHome targets.
-template<typename T> T bytes_to_number(const std::vector<uint8_t> &value) {
+template<typename T> T bytes_to_number(const uint8_t *data, size_t len) {
   uint64_t u = 0;
-  for (size_t i = 0; i < value.size(); i++) {
-    u = (u << 8) | value[i];
+  for (size_t i = 0; i < len; i++) {
+    u = (u << 8) | data[i];
   }
   return static_cast<T>(u);
 }
 
 // Convert raw CAN bytes to a float, interpreting them as the configured integer type.
-float bytes_to_float(const std::vector<uint8_t> &value, TypeName type) {
+float bytes_to_float(const uint8_t *data, size_t len, TypeName type) {
   switch (type) {
     case U8:
-      return (float) bytes_to_number<uint8_t>(value);
+      return (float) bytes_to_number<uint8_t>(data, len);
     case U16:
-      return (float) bytes_to_number<uint16_t>(value);
+      return (float) bytes_to_number<uint16_t>(data, len);
     case U32:
-      return (float) bytes_to_number<uint32_t>(value);
+      return (float) bytes_to_number<uint32_t>(data, len);
     case S8:
-      return (float) bytes_to_number<int8_t>(value);
+      return (float) bytes_to_number<int8_t>(data, len);
     case S16:
-      return (float) bytes_to_number<int16_t>(value);
+      return (float) bytes_to_number<int16_t>(data, len);
     case S32:
-      return (float) bytes_to_number<int32_t>(value);
+      return (float) bytes_to_number<int32_t>(data, len);
     case S64:
-      return (float) bytes_to_number<int64_t>(value);
+      return (float) bytes_to_number<int64_t>(data, len);
   }
   return 0.0f;
 }
@@ -147,7 +159,7 @@ std::vector<uint8_t> float_to_bytes(float value, TypeName type) {
 }
 
 #ifdef USE_SENSOR
-float TopTronicSensor::parse_value(const std::vector<uint8_t> &value) { return bytes_to_float(value, this->type_); }
+float TopTronicSensor::parse_value(const uint8_t *data, size_t len) { return bytes_to_float(data, len, this->type_); }
 #endif
 
 #ifdef USE_NUMBER
@@ -158,13 +170,13 @@ void TopTronicNumber::control(float value) {
   std::vector<uint8_t> data = build_set_request(this->function_group_, this->function_number_, this->datapoint_, bytes);
   this->set_callback_.call(data);
 
-  ESP_LOGI(TAG, "[SET] %s: %f, Data: 0x%s", this->get_name().c_str(), v, hex_str(&data[0], data.size()).c_str());
+  ESP_LOGI(TAG, "[SET] %s: %f, Data: 0x%s", this->get_name().c_str(), v, hex_str(data.data(), data.size()).c_str());
 }
 #endif
 
 #ifdef USE_TEXT_SENSOR
-std::string TopTronicTextSensor::parse_value(const std::vector<uint8_t> &value) {
-  uint8_t int_value = bytes_to_number<uint8_t>(value);
+std::string TopTronicTextSensor::parse_value(const uint8_t *data, size_t len) {
+  uint8_t int_value = bytes_to_number<uint8_t>(data, len);
   auto it = this->to_text_.find(int_value);
   if (it == this->to_text_.end()) {
     ESP_LOGW(TAG, "Unknown text sensor value: %u", int_value);
@@ -188,7 +200,7 @@ void TopTronicSelect::control(const std::string &text) {
   this->set_callback_.call(data);
 
   ESP_LOGI(TAG, "[SET] %s: %s, Data: 0x%s", this->get_name().c_str(), text.c_str(),
-           hex_str(&data[0], data.size()).c_str());
+           hex_str(data.data(), data.size()).c_str());
 }
 #endif
 
@@ -224,7 +236,7 @@ void TopTronic::register_sensor_callbacks() {
       sensor->add_on_update_callback([canbus, sensor, can_id]() -> void {
         const auto &data = sensor->get_request_data();
         canbus->send_data(can_id, true, data);
-        ESP_LOGD(TAG, "[GET] Data: 0x%s", hex_str(&data[0], data.size()).c_str());
+        ESP_LOGD(TAG, "[GET] Data: 0x%s", hex_str(data.data(), data.size()).c_str());
       });
     }
   }
@@ -354,8 +366,8 @@ void TopTronic::link_inputs() {
       }
       if (sensor_base->type() == SENSOR) {
 #if defined(USE_SENSOR) && defined(USE_NUMBER)
-        auto *sensor = (TopTronicSensor *) sensor_base;
-        auto *input = (TopTronicNumber *) input_base;
+        auto *sensor = static_cast<TopTronicSensor *>(sensor_base);
+        auto *input = static_cast<TopTronicNumber *>(input_base);
         sensor->add_on_raw_state_callback([input](float state) -> void {
           float divider = input->get_multiplier();
           input->publish_state(state / divider);
@@ -363,8 +375,8 @@ void TopTronic::link_inputs() {
 #endif  // USE_SENSOR && USE_NUMBER
       } else if (sensor_base->type() == TEXTSENSOR) {
 #if defined(USE_TEXT_SENSOR) && defined(USE_SELECT)
-        auto *sensor = (TopTronicTextSensor *) sensor_base;
-        auto *input = (TopTronicSelect *) input_base;
+        auto *sensor = static_cast<TopTronicTextSensor *>(sensor_base);
+        auto *input = static_cast<TopTronicSelect *>(input_base);
         sensor->add_on_raw_state_callback([input](std::string state) -> void { input->publish_state(state); });
 #endif  // USE_TEXT_SENSOR && USE_SELECT
       }
@@ -383,13 +395,42 @@ void TopTronic::setup() {
   });
 }
 
-void TopTronic::loop() {}
+void TopTronic::loop() {
+  // Periodically evict stale multi-frame reassembly buffers so a lost fragment (or a
+  // device going offline mid-message) cannot pin an entry forever. The map is tiny
+  // (capped at MAX_PENDING_MESSAGES), so the sweep is throttled to avoid per-loop work.
+  const uint32_t now = millis();
+  if (now - this->last_cleanup_ms_ < CLEANUP_INTERVAL_MS)
+    return;
+  this->last_cleanup_ms_ = now;
 
-void TopTronic::dump_config() {}
+  for (auto it = this->pending_messages_.begin(); it != this->pending_messages_.end();) {
+    if (now - it->second.last_update_ms > MAX_PENDING_AGE_MS) {
+      ESP_LOGD(TAG, "Expiring stale pending message 0x%08X (%zu bytes, %u frames remaining)",
+               (unsigned int) it->first, it->second.data.size(), it->second.remaining_frames);
+      it = this->pending_messages_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
 
-void log_response_frame(const std::vector<uint8_t> &data, uint32_t can_id, const std::string &sensor_name) {
+void TopTronic::dump_config() {
+  size_t sensor_count = 0;
+  size_t input_count = 0;
+  for (const auto &d : this->devices_) {
+    sensor_count += d.second->sensors.size();
+    input_count += d.second->inputs.size();
+  }
+  ESP_LOGCONFIG(TAG, "TopTronic:");
+  ESP_LOGCONFIG(TAG, "  Device type: 0x%04X, device address: 0x%02X", this->device_type_, this->device_addr_);
+  ESP_LOGCONFIG(TAG, "  Devices: %u, sensors: %u, inputs: %u", (unsigned) this->devices_.size(),
+                (unsigned) sensor_count, (unsigned) input_count);
+}
+
+static void log_response_frame(const uint8_t *data, size_t len, uint32_t can_id, const std::string &sensor_name) {
   ESP_LOGI(TAG, "[RES] Can-ID: 0x%08X, Sensor: %s, Data: 0x%s", (unsigned int) can_id, sensor_name.c_str(),
-           hex_str(&data[0], data.size()).c_str());
+           hex_str(data, len).c_str());
 }
 
 // Handle a raw CAN frame from the bus.
@@ -400,63 +441,88 @@ void log_response_frame(const std::vector<uint8_t> &data, uint32_t can_id, const
 //
 // Short messages (msg_len == 0) fit in one frame and are dispatched immediately.
 // Longer messages are split into multiple CAN frames and reassembled in pending_messages_
-// using msg_header as the reassembly key. Once all fragments arrive the message is dispatched.
+// using (source_device_id << 8 | msg_header) as the reassembly key. Once the expected
+// number of continuation frames has arrived the message is dispatched.
 void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, bool remote_transmission_request) {
   uint8_t msg_id = can_id >> 24;
+  uint32_t device_id = (can_id >> 11) & 0x7FF;
 
   if (msg_id == 0x1f) {
     // First frame of a message. data[0] upper 5 bits = number of remaining frames.
-    uint8_t msg_len = data[0] >> 3;
-    if (msg_len == 0) {
+    if (data.size() < 2) {
+      ESP_LOGW(TAG, "Dropping malformed start frame (%zu bytes)", data.size());
+      return;
+    }
+    uint8_t num_remaining = data[0] >> 3;
+    if (num_remaining == 0) {
       // Single-frame message: strip the length byte and dispatch directly.
-      this->interpret_message(std::vector<uint8_t>(data.begin() + 1, data.end()), can_id, remote_transmission_request);
+      this->interpret_message(data.data() + 1, data.size() - 1, can_id, remote_transmission_request);
     } else {
       // Multi-frame message: save the first fragment and wait for the rest.
       uint8_t msg_header = data[1];  // reassembly key shared across all frames of this message
-      ESP_LOGD(TAG, "     - Start of message with id: %d with length %d", msg_header, msg_len);
-      if (this->pending_messages_.size() >= 16) {
+      uint32_t header_key = (device_id << 8) | msg_header;
+      ESP_LOGD(TAG, "     - Start of message with id: %d with length %d", msg_header, num_remaining);
+      if (this->pending_messages_.size() >= MAX_PENDING_MESSAGES &&
+          this->pending_messages_.find(header_key) == this->pending_messages_.end()) {
         // A large backlog means start frames from other devices (or lost fragments) accumulated.
         ESP_LOGW(TAG, "Pending message buffer full (%zu entries), clearing stale fragments",
                  this->pending_messages_.size());
         this->pending_messages_.clear();
       }
-      auto initial_data = std::vector<uint8_t>(data.begin() + 2, data.end());
+
+      PendingMessage pending;
+      pending.data.assign(data.begin() + 2, data.end());
       // Pre-allocate: each continuation frame carries at most 7 payload bytes (8 - header byte).
-      initial_data.reserve(static_cast<size_t>(msg_len) * 7);
-      this->pending_messages_[msg_header] = std::make_pair(std::move(initial_data), msg_len - 1);
+      pending.data.reserve(static_cast<size_t>(num_remaining) * 7);
+      pending.remaining_frames = num_remaining;
+      pending.last_update_ms = millis();
+      this->pending_messages_[header_key] = std::move(pending);
     }
   } else {
     // Continuation frame: append payload to the in-progress message.
+    if (data.size() < 2) {
+      ESP_LOGW(TAG, "Dropping malformed continuation frame (%zu bytes)", data.size());
+      return;
+    }
     uint8_t msg_header = data[0];
-    auto it = this->pending_messages_.find(msg_header);
-    if (it != this->pending_messages_.end()) {
-      auto &pending_msg = it->second;
-      auto msg_len = pending_msg.second - 1;  // decrement remaining frame count
-      ESP_LOGD(TAG, "     - Part of message with id: %d with remaining length %d", msg_header, msg_len);
-      pending_msg.first.insert(pending_msg.first.end(), data.begin() + 1, data.end());
-      if (msg_len == 0) {
-        if (pending_msg.first.size() < 2) {
-          ESP_LOGW(TAG, "Reassembled message too short for CRC (%zu bytes)", pending_msg.first.size());
-          this->pending_messages_.erase(msg_header);
-          return;
-        }
+    uint32_t header_key = (device_id << 8) | msg_header;
+    auto it = this->pending_messages_.find(header_key);
+    if (it == this->pending_messages_.end()) {
+      return;  // continuation for an unknown/expired message — ignore
+    }
+    PendingMessage &pending = it->second;
+    if (pending.remaining_frames == 0) {
+      // Duplicate/extra continuation for an already-complete message — discard.
+      this->pending_messages_.erase(it);
+      return;
+    }
+    ESP_LOGD(TAG, "     - Part of message with id: %d with remaining length %d", msg_header,
+             pending.remaining_frames - 1);
+    pending.data.insert(pending.data.end(), data.begin() + 1, data.end());
+    pending.last_update_ms = millis();
+    pending.remaining_frames--;
 
-        uint16_t received_crc =
-            (pending_msg.first[pending_msg.first.size() - 2] << 8) | pending_msg.first[pending_msg.first.size() - 1];
-        uint16_t computed_crc = compute_crc16(pending_msg.first.data(), pending_msg.first.size() - 2);
-
-        if (received_crc != computed_crc) {
-          ESP_LOGW(TAG, "CRC check failed! Recv: 0x%04X, Comp: 0x%04X", received_crc, computed_crc);
-          this->pending_messages_.erase(msg_header);
-          return;
-        }
-
-        auto real_msg = std::vector<uint8_t>(pending_msg.first.begin(), pending_msg.first.end() - 2);
-        this->pending_messages_.erase(msg_header);  // free reassembly buffer
-        this->interpret_message(real_msg, can_id, remote_transmission_request);
-      } else {
-        pending_msg.second = msg_len;  // store updated remaining count
+    if (pending.remaining_frames == 0) {
+      const size_t msg_len = pending.data.size();
+      if (msg_len < MIN_MESSAGE_LEN + 2) {
+        ESP_LOGW(TAG, "Reassembled message too short for CRC (%zu bytes)", msg_len);
+        this->pending_messages_.erase(it);
+        return;
       }
+
+      const uint8_t *msg = pending.data.data();
+      uint16_t received_crc = (msg[msg_len - 2] << 8) | msg[msg_len - 1];
+      uint16_t computed_crc = compute_crc16(msg, msg_len - 2);
+
+      if (received_crc != computed_crc) {
+        ESP_LOGW(TAG, "CRC check failed! Recv: 0x%04X, Comp: 0x%04X", received_crc, computed_crc);
+        this->pending_messages_.erase(it);
+        return;
+      }
+
+      // Dispatch first, then free the reassembly buffer (msg points into pending.data).
+      this->interpret_message(msg, msg_len - 2, can_id, remote_transmission_request);
+      this->pending_messages_.erase(it);
     }
   }
 }
@@ -470,27 +536,33 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
 //   [3]   datapoint high byte
 //   [4]   datapoint low byte
 //   [5..] value payload
-void TopTronic::interpret_message(const std::vector<uint8_t> &data, uint32_t can_id, bool remote_transmission_request) {
+void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_id,
+                                  bool remote_transmission_request) {
+  if (len < MIN_MESSAGE_LEN) {
+    ESP_LOGW(TAG, "Message too short (%u bytes), ignoring", (unsigned) len);
+    return;
+  }
+
   // Ignore outgoing GET/SET requests that we echoed ourselves — nothing to update.
   if (data[0] == GET_REQ) {
-    ESP_LOGD(TAG, "[GET] Can-ID: 0x%08X, Data: 0x%s", (unsigned int) can_id, hex_str(&data[0], data.size()).c_str());
+    ESP_LOGD(TAG, "[GET] Can-ID: 0x%08X, Data: 0x%s", (unsigned int) can_id, hex_str(data, len).c_str());
     return;
   }
 
   if (data[0] == SET_REQ) {
-    ESP_LOGI(TAG, "[SET] Can-ID: 0x%08X, Data: 0x%s", (unsigned int) can_id, hex_str(&data[0], data.size()).c_str());
+    ESP_LOGI(TAG, "[SET] Can-ID: 0x%08X, Data: 0x%s", (unsigned int) can_id, hex_str(data, len).c_str());
     return;
   }
 
   if (data[0] != RESPONSE) {
-    ESP_LOGD(TAG, "[UNK] Can-ID: 0x%08X, Data: 0x%s", (unsigned int) can_id, hex_str(&data[0], data.size()).c_str());
+    ESP_LOGD(TAG, "[UNK] Can-ID: 0x%08X, Data: 0x%s", (unsigned int) can_id, hex_str(data, len).c_str());
     return;
   }
 
   // The sender node ID sits in bits 21-11 of the CAN ID.
-  uint32_t device_id = (can_id >> 11) & 0x7FF;
+  uint32_t rx_device_id = (can_id >> 11) & 0x7FF;
 
-  auto device_it = this->devices_.find(device_id);
+  auto device_it = this->devices_.find(rx_device_id);
   if (device_it == this->devices_.end()) {
     return;  // message from a device we have no entities registered for — ignore
   }
@@ -512,18 +584,18 @@ void TopTronic::interpret_message(const std::vector<uint8_t> &data, uint32_t can
   // data[5..] contains the raw value bytes.
 #ifdef USE_SENSOR
   if (sensor_base->type() == SENSOR) {
-    auto *sensor = (TopTronicSensor *) sensor_base;
-    float value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 5, data.end()));
+    auto *sensor = static_cast<TopTronicSensor *>(sensor_base);
+    float value = sensor->parse_value(data + 5, len - 5);
     sensor->publish_state(value);
-    log_response_frame(data, can_id, sensor->get_name());
+    log_response_frame(data, len, can_id, sensor->get_name());
   }
 #endif
 #ifdef USE_TEXT_SENSOR
   if (sensor_base->type() == TEXTSENSOR) {
-    auto *sensor = (TopTronicTextSensor *) sensor_base;
-    std::string value = sensor->parse_value(std::vector<uint8_t>(data.begin() + 5, data.end()));
+    auto *sensor = static_cast<TopTronicTextSensor *>(sensor_base);
+    std::string value = sensor->parse_value(data + 5, len - 5);
     sensor->publish_state(value);
-    log_response_frame(data, can_id, sensor->get_name());
+    log_response_frame(data, len, can_id, sensor->get_name());
   }
 #endif
 }
