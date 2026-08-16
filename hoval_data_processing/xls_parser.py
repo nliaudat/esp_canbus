@@ -198,6 +198,16 @@ def parse_datapoints(wb: Workbook, filter: Filter) -> List[Datapoint]:
 
     return datapoints
 
+class _IndentDumper(yaml.SafeDumper):
+    def increase_indent(self, flow: bool = False, indentless: bool = False) -> str:
+        return super().increase_indent(flow, False)
+
+
+def _dump_yaml(data, path: str) -> None:
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        yaml.dump(data, f, encoding="utf-8", sort_keys=False, Dumper=_IndentDumper)
+
+
 def dump_sensors(datapoints: List[Datapoint], path: str):
     sensors = [dp.into_sensor() for dp in datapoints if dp.type_name != 'LIST']
     text_sensors = [dp.into_text_sensor() for dp in datapoints if dp.type_name == 'LIST']
@@ -210,8 +220,8 @@ def dump_sensors(datapoints: List[Datapoint], path: str):
         **({'text_sensor': text_sensors} if len(text_sensors) > 0 else {}),
     }
 
-    with open(path, 'w', encoding='utf-8') as f:
-        yaml.dump(all_sensors, f, encoding="utf-8", sort_keys=False)
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
+        _dump_yaml(all_sensors, path)
 
 def dump_inputs(datapoints: List[Datapoint], path: str):
     numbers = [dp.into_number() for dp in datapoints if dp.writable and dp.type_name != 'LIST']
@@ -225,8 +235,8 @@ def dump_inputs(datapoints: List[Datapoint], path: str):
         **({'select': selects} if len(selects) > 0 else {}),
     }
 
-    with open(path, 'w', encoding='utf-8') as f:
-        yaml.dump(all_inputs, f, encoding="utf-8", sort_keys=False)
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
+        _dump_yaml(all_inputs, path)
         
 def unit_to_device_class(unit, name, class_measurement=0):
 
