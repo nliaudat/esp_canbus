@@ -65,7 +65,7 @@ packages:
   hv_inputs: !include src/preset/HV/inputs_fr.yaml
 ```
 
-If you want to create your own preset or need other datapoints have a look at [`esphome/hoval_data_processing`](https://github.com/nliaudat/esp_canbus/tree/main/esphome/hoval_data_processing)
+If you want to create your own preset or need other datapoints have a look at [`hoval_data_processing`](https://github.com/nliaudat/esp_canbus/tree/main/hoval_data_processing)
 
 #### Flash the firmware
 
