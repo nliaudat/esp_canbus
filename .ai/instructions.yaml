@@ -1,0 +1,393 @@
+# =============================================================================
+# ESP32 CANBus (Hoval TopTronic) --- Token-Optimized Rule Database (v1.0)
+# =============================================================================
+# Source: .ai/instructions.md (SINGLE SOURCE OF TRUTH --- full text)
+# This file is a DERIVED ARTIFACT --- regenerate when .ai/instructions.md changes.
+# It enables token-efficient AI queries and automated rule checking.
+# For context/examples, fall back to .ai/instructions.md.
+# =============================================================================
+
+version: "1.0"
+source: ".ai/instructions.md"
+
+# =============================================================================
+# S1 PROJECT OVERVIEW
+# =============================================================================
+project:
+  repo: "https://github.com/nliaudat/esp_canbus"
+  license: "CC BY-NC-SA 4.0 (non-commercial, share-alike)"
+  target_board: "ESP32-WROOM-32D/32U (classic ESP32, az-delivery-devkit-v4)"
+  framework: "ESPHome external_components + ESP-IDF (esp32_can platform)"
+  esphome_version: "2026.7.0+"
+  canbus: "50 kbps, 29-bit extended identifiers"
+  note: "SINGLE SOURCE OF TRUTH for all code reviews. Generic C++ advice OVERRIDDEN."
+  key_chars:
+    - "Single-board classic ESP32 (no S3, no TFLite, no camera, no PSRAM)"
+    - "ESP-IDF only"
+    - "Reverse-engineered TopTronic protocol is the core asset"
+    - "Non-commercial license --- derivatives must stay BY-NC-SA"
+
+# =============================================================================
+# S2 REPOSITORY ARCHITECTURE
+# =============================================================================
+architecture:
+  esphome_config:
+    - "esphome/config.yaml: main entrypoint --- toptronic hubs + packages"
+    - "esphome/src/*.yaml: ESPHome packages (wifi/board/time/canbus/sensors/switch/debug)"
+  component: "esphome/components/toptronic/"
+  component_files:
+    - "__init__.py: hub schema, preset loading, entity generation"
+    - "toptronic.h/.cpp: C++ protocol engine"
+    - "sensor.py / text_sensor.py: read-only entities"
+    - "number.py / select.py: writable entities"
+    - "presets/{WEZ,HV,BM}/*.yaml: GENERATED entity YAML (de/en/fr/it)"
+  data_processing: "hoval_data_processing/ (NOT shipped): generate_presets.py, xls_parser.py, TTE-GW-Modbus-datapoints.xlsx"
+  pcb: "pcb/ (KiCad schematics, 3D view, wiring photo)"
+  tests: "tests/components/toptronic/ (build tests)"
+  hub_meta:
+    codeowners: "@nliaudat"
+    dependencies: ["canbus"]
+    auto_load: ["sensor", "number", "select", "text_sensor"]
+    multi_conf: true
+  dataflow: "xlsx -> xls_parser.py -> Datapoint -> generate_presets.py -> presets/*.yaml -> __init__.py _load_entities -> entity schemas -> codegen -> CAN parse_frame() -> publish_state()"
+
+# =============================================================================
+# S3 TOPTRONIC CAN PROTOCOL (CRITICAL --- reverse-engineered)
+# =============================================================================
+protocol:
+  bus:
+    bit_rate: "50 kbps --- do not change"
+    extended_ids: true
+    topology: "half-duplex: gateway issues GET/SET; devices respond RESPONSE"
+  can_id_layout:
+    bits_28_22: "0x7F fixed priority/type marker (msg_id)"
+    bits_21_11: "sender node ID"
+    bits_10_0: "receiver node ID (or broadcast mask)"
+    build: "build_can_id(sender, receiver) = (0x7F << 22) | (sender << 11) | receiver"
+    msg_id: "can_id >> 24 (0x1f = start-of-message, other = continuation)"
+    device_id: "(can_id >> 11) & 0x7FF"
+  commands:
+    GET: "0x40"
+    SET: "0x46"
+    RESPONSE: "0x42"
+  message_layout:
+    - "[0] cmd"
+    - "[1] function_group"
+    - "[2] function_number"
+    - "[3] datapoint high"
+    - "[4] datapoint low"
+    - "[5..] value payload (big-endian)"
+  sensor_key: "fg + (fn << 8) + (dp << 16)"
+  device_types:
+    - {name: WEZ, id: 0, meaning: "Heat generator", default_addr: 1}
+    - {name: SOL, id: 64, meaning: "Solar module"}
+    - {name: PS, id: 128, meaning: "Buffer storage tank"}
+    - {name: FW, id: 192, meaning: "District heating"}
+    - {name: HK, id: 256, meaning: "Heating circuit"}
+    - {name: MWA, id: 384, meaning: "Energy meter module"}
+    - {name: GLT, id: 448, meaning: "Building mgmt system (BMS)"}
+    - {name: HV, id: 512, meaning: "HomeVent ventilation", default_addr: 8}
+    - {name: BM_BD, id: 1024, meaning: "Control module (display) --- BD alias, use BM", default_addr: 8}
+    - {name: GW, id: 1153, meaning: "Gateway (Modbus/KNX) --- also this ESP32 node"}
+  get_device_id: "device_type | device_addr"
+  multiframe:
+    single: "data[0]==0x01 (num_remaining=data[0]>>3 == 0) -> interpret immediately skipping byte 0"
+    start_frame: "msg_id 0x1f: [frame_count<<3|0x01, msg_header, payload[0..5]] up to 6 bytes"
+    continuation: "other msg_id: [msg_header, payload[6..12]] up to 7 bytes"
+    reassembly_key: "(device_id << 8) | msg_header"
+    max_pending: 16
+    max_pending_age_ms: 2000
+    cleanup_interval_ms: 2000
+    completion: "last 2 bytes of reassembled payload = CRC-16 big-endian"
+  crc16:
+    class: "CRC-16/ARC family (non-standard init)"
+    poly: "0x1021"
+    init: "0xB006"
+    refin: true
+    refout: true
+    xorout: "0x0000"
+    scope: "computed over payload excluding trailing 2 CRC bytes"
+    mismatch: "drop message, log 'CRC check failed!', do NOT dispatch"
+    note: "parameters found by brute-force against captured bus traffic --- do not change"
+  flows:
+    get: "{0x01, 0x40, fg, fn, dp_hi, dp_lo} sent per-entity on 30s polling interval"
+    set: "{0x01, 0x46, fg, fn, dp_hi, dp_lo, ...value}; send_can_frames() splits >8 bytes"
+    response: "RESPONSE 0x42 -> interpret_message() matches rx_device_id + key -> publish_state()"
+    echoes: "self-echoed GET/SET frames logged and ignored"
+
+# =============================================================================
+# S4 COMPONENT RULES
+# =============================================================================
+component:
+  hub:
+    required:
+      - "Own devices via std::unique_ptr<TopTronicDevice>"
+      - "Register CAN callback exactly once in setup()"
+      - "Cache GET request payloads once at setup (cache_request_data())"
+      - "unordered_map for devices_/pending_messages_ (O(1) lookup per frame)"
+      - "link_inputs() in setup() BEFORE registering callbacks"
+      - "Throttled stale-pending sweep in loop()"
+    blockers:
+      - "No new/delete in entity registration paths"
+      - "No per-frame heap allocation in parse_frame()"
+      - "No blocking calls in CAN callback"
+      - "No RTTI: downcast via SensorType discriminator + static_cast"
+  entities:
+    required:
+      - "Protocol fields validated at schema level (cv.uint8_t/cv.uint16_t)"
+      - "get_id() canonical packing fg + (fn<<8) + (dp<<16)"
+      - "read-only: parse_value(); writable: control()"
+      - "Option maps to_text_/to_value_ mirrored in ONE place (add_option())"
+      - "TopTronicNumber::control() applies multiplier_ (10^decimal) BEFORE encoding"
+      - "link_inputs() uses add_on_raw_state_callback()"
+    blockers:
+      - "No duplicated inverted value<->text mapping"
+      - "No hardcoded entity address/type overrides in entity logic"
+  helpers:
+    - "bytes_to_number<T>() accumulates into uint64_t (avoids signed-shift UB for int64_t)"
+    - "hex_str(): plain std::string + SSO + reserve() --- called on CAN hot path"
+    - "send_can_frames(): keep msg_counter skip-zero + cont_id = can_id & 0x003FFFFF"
+
+# =============================================================================
+# S5 C++ STANDARDS & STYLE
+# =============================================================================
+cpp:
+  version: "gnu++20 (ESPHome toolchain default) --- match codebase: vector/map/lambdas/std::function"
+  this_ref: "MANDATORY --- prefix ALL class member access with this->"
+  naming:
+    class: "UpperCamelCase (TopTronic, TypeName)"
+    enum_constant: "UPPER_SNAKE_CASE (U8, S16)"
+    function: "lower_snake_case (parse_frame, get_id)"
+    variable: "lower_snake_case (can_id, datapoint)"
+    top_constant: "UPPER_SNAKE_CASE (MAX_PENDING_MESSAGES)"
+    file_local_constant: "lower_snake_case"
+    member: "lower_snake_case_ trailing underscore (function_group_)"
+  constants:
+    rule: "static constexpr / enum over #define"
+    ok: "static constexpr size_t MAX_PENDING_MESSAGES = 16;"
+    bad: "#define MAX_PENDING_MESSAGES 16"
+    exceptions: ["conditional compilation flags only (USE_SENSOR, USE_TEXT_SENSOR, USE_NUMBER, USE_SELECT)"]
+  feature_guards:
+    - "Entity classes/headers wrapped in #ifdef USE_SENSOR / USE_TEXT_SENSOR / USE_NUMBER / USE_SELECT"
+    - "toptronic.h includes platform headers ONLY inside matching #ifdef"
+  casts:
+    note: "Existing C-style casts ACCEPTED (clang-tidy disables cstyle-cast checks, clang-format SpaceAfterCStyleCast: true) --- do NOT mass-rewrite"
+    new_code: "prefer static_cast<>"
+    blockers: ["casts breaking aliasing on CAN payload", "casts silently truncating value types"]
+  formatting:
+    tools:
+      - tool: "clang-format"
+        config: ".clang-format"
+        scope: "C/C++ under esphome/components/"
+        style: "Google-based: 2-space indent, 120 col, pointer right"
+        enforced_by: ["pre-commit"]
+      - tool: "flake8"
+        config: ".flake8"
+        scope: "Python under esphome/components/ (max-line-length 120)"
+        enforced_by: ["pre-commit"]
+      - tool: "yamllint"
+        config: ".yamllint"
+        scope: "YAML under esphome/ (2-space indent, no document-start)"
+        enforced_by: ["pre-commit"]
+    command: "pre-commit run --all-files"
+    note: "NO script/ci-custom.py, NO script/run_lint.py, NO pyproject.toml, NO .editorconfig in this repo --- do not invent or reference them"
+  whitespace:
+    lf_only: true
+    no_trailing_whitespace: true
+    eof_newline: "exactly one trailing newline"
+    non_ascii: "PERMITTED (UTF-8) --- e.g. °C units, French/Italian preset labels. NO ASCII-only lint here"
+    preset_generator: "xls_parser.py uses newline='\\n' + encoding='utf-8'"
+
+# =============================================================================
+# S6 PYTHON COMPONENT & CODEGEN RULES
+# =============================================================================
+python:
+  hub_init:
+    - "MULTI_CONF = True --- one hub per device on same bus"
+    - "DeviceType enum values ARE wire protocol values --- never reorder/reassign without bus evidence"
+    - "get_device_type() raises ValueError for unknown; _validate_preset() raises cv.Invalid for missing preset dirs"
+    - "Preset paths resolved relative to __file__ (PRESETS_DIR), NEVER cwd"
+    - "Do NOT filter dir lists by exists() at import time --- defer to runtime/validation"
+    - "Keep _resolve_ids() for preset-synthesized entity IDs (bypass global ID pass)"
+  entity_generation:
+    - "_generate_entities() loads presets/<device>/sensors_<lang>.yaml + inputs_<lang>.yaml"
+    - "strip platform/device_type/device_addr, inject hub reference, run platform schema + codegen"
+    - "All CONF_* constants live in __init__.py (shared by 4 platform files)"
+    - "Platform files import shared pieces (CONFIG_SCHEMA_BASE, CONF_TT_ID, CONF_FUNCTION_GROUP, CONF_FUNCTION_NUMBER, CONF_DATAPOINT, TT_TYPE_OPTIONS)"
+  type_mapping:
+    - "TT_TYPE_OPTIONS (U8/U16/U32/S8/S16/S32/S64 -> TypeName) is the ONLY source --- no duplicates"
+
+# =============================================================================
+# S7 CONFIGURATION SCHEMA PATTERNS
+# =============================================================================
+schema:
+  hub: "cv.All(cv.Schema({GenerateID: TopTronicComponent, GenerateID(canbus_id): use_id(CanbusComponent), Required(device_type): one_of(*DeviceType, upper=True), Required(device_addr): uint8_t, Optional(language, default=en): one_of(de/en/fr/it, lower=True)}).extend(COMPONENT_SCHEMA), _validate_preset)"
+  entity_base: "CONFIG_SCHEMA_BASE: Required(function_group): uint8_t, Required(function_number): uint8_t, Required(datapoint): uint16_t + polling_component_schema('30s')"
+  required:
+    - "Bounds-check ALL user inputs: cv.uint8_t/cv.uint16_t protocol fields, cv.float_range(min=0) decimal, cv.positive_float step"
+    - "number: min/max/step converted with decimal divider BEFORE register_number()"
+    - "select/text_sensor: options + values lists MUST have matching lengths (validate at schema level)"
+    - "Errors by RAISING cv.Invalid (never return)"
+    - "Prefer built-in validators (cv.one_of, cv.float_range, cv.All) over custom lambdas"
+
+# =============================================================================
+# S8 YAML CONFIG & PRESETS
+# =============================================================================
+yaml_presets:
+  hub_usage:
+    - "toptronic: [{id, canbus_id, device_type: HV/WEZ/BM (BD alias -> BM), device_addr: defaults HV=8 BM=8 WEZ=1, language: de/en/fr/it}]"
+    - "canbus bit_rate MUST stay 50kbps"
+    - "secrets.yaml gitignored --- never commit"
+  presets_generated:
+    rule: "NEVER hand-edit presets/**/*.yaml --- regenerate via 'python hoval_data_processing/generate_presets.py ../esphome/components/toptronic/presets'"
+    workflow:
+      - "Edit preset definition/patch hooks in generate_presets.py"
+      - "Regenerate"
+      - "Verify diff is exactly the intended entity changes"
+    generated_rules:
+      - "newline='\\n', encoding='utf-8', sort_keys=False, _IndentDumper (indented sequences)"
+      - "entity id: <DEVICE>_<fg>_<fn>_<dp>; writable adds _set suffix"
+      - "writable presets -> internal: true sensors; read+write pairs linked via link_inputs()"
+  src_packages:
+    - "board.yaml: ESP-IDF, CONFIG_COMPILER_OPTIMIZATION_PERF, CONFIG_TASK_WDT*, logger map, tt: INFO (tt: DEBUG only for CAN/CRC work via debug.yaml)"
+    - "canbus log level BELOW INFO may crash (esphome/issues#4051) --- keep canbus: ERROR/INFO"
+    - "debug.yaml: synthetic-frame test buttons via id(tt_HV).parse_frame(x, can_id, false) --- opt-in, commented out in config.yaml"
+
+# =============================================================================
+# S9 MEMORY & PERFORMANCE
+# =============================================================================
+memory_perf:
+  required:
+    - "Allocate/reuse in setup(); NOTHING per frame in parse_frame() (reserve once at start-frame, worst case bounded)"
+    - "Cache GET request bytes (cache_request_data()), return by const&"
+    - "Reuse last_update_ms for stale expiry --- no extra map"
+    - "Cleanup sweep throttled (2s), off per-loop hot path"
+    - "hex_str() allocation-free for short messages (SSO)"
+    - "std::map for option strings (not unordered_map) --- tiny maps"
+  avoid:
+    - "std::stringstream (use std::string + push_back)"
+    - "std::to_string() + strtol() round-trips in frame path"
+    - "Per-frame vector resize()/reserve() churn"
+  never:
+    - "delay()/blocking in loop() or CAN callback"
+    - "new/delete in receive path"
+    - "Unbounded containers sized by untrusted frame data"
+
+# =============================================================================
+# S10 SECURITY & PROTOCOL SAFETY
+# =============================================================================
+security:
+  required:
+    - "len >= MIN_MESSAGE_LEN (5) before reading cmd/fg/fn/dp in interpret_message()"
+    - "Frame payload length checks (data.size() < 2) in parse_frame()"
+    - "CRC-16 verified before dispatching multi-frame messages"
+    - "Pending map capped at MAX_PENDING_MESSAGES (16) + stale eviction"
+    - "Reject continuation frames for unknown/expired keys"
+    - "Ignore messages from unregistered devices and self-echoed GET/SET"
+    - "datapoint reconstruction treated as untrusted input --- map lookup rejects unknown combos"
+  blockers:
+    - "No ptr + N before checking N fits remaining length"
+    - "No multiplication overflow in buffer-size math"
+    - "No format-string: always ESP_LOGD(TAG, '%s', value.c_str())"
+
+# =============================================================================
+# S11 TESTING REQUIREMENTS
+# =============================================================================
+testing:
+  build:
+    - "tests/components/toptronic/common.yaml: canbus + toptronic hubs (HV + WEZ), no top-level esphome:/esp32: blocks"
+    - "test.esp32-idf.yaml: includes shared UART package + <<: !include common.yaml"
+    - "Changes to toptronic/*.py, .h/.cpp, presets/ MUST keep test compiling: esphome compile tests/components/toptronic/test.esp32-idf.yaml"
+  lint:
+    - "pre-commit run --all-files (clang-format, flake8, yamllint) must pass"
+    - "flake8 docstring rules D100-D401 ignored per .flake8; do NOT add new ignores"
+  runtime:
+    - "Watch tt: INFO logs for [GET]/[SET]/[RES] to verify polling/decoding"
+    - "CRC work: tt: DEBUG + debug.yaml, ~10 samples, reveng -w 16 -s to validate assumptions before touching compute_crc16()"
+
+# =============================================================================
+# S12 ANTI-PATTERNS (ok/bad)
+# =============================================================================
+anti_patterns:
+  - id: AP-THIS
+    bad: "void control(float value) { multiplier_ * value; }"
+    ok: "float v = this->multiplier_ * value;"
+  - id: AP-DEFINE
+    bad: "#define MAX_PENDING_MESSAGES 16"
+    ok: "static constexpr size_t MAX_PENDING_MESSAGES = 16;"
+  - id: AP-BLOCKING
+    bad: "void loop() { delay(100); }"
+    ok: "throttled non-blocking sweep: if (now - last_cleanup_ms_ >= CLEANUP_INTERVAL_MS) { ... }"
+  - id: AP-PER-FRAME-ALLOC
+    bad: "void update() { auto data = build_get_request(...); canbus_->send_data(can_id, true, data); }"
+    ok: "const auto &data = sensor->get_request_data(); canbus_->send_data(can_id, true, data);"
+  - id: AP-CRC
+    bad: "if (received_crc == computed_crc) { this->interpret_message(...); }"
+    ok: "if (received_crc != computed_crc) { log + erase; return; }"
+  - id: AP-UNBOUNDED
+    bad: "pending_messages_[header_key] = pending;"
+    ok: "if (size >= MAX_PENDING_MESSAGES && not existing) clear(); + stale eviction"
+  - id: AP-DUP-MAPPING
+    bad: "value = to_text_.at(...); // plus separate text_to_value_ elsewhere"
+    ok: "single add_option() registers both directions"
+  - id: AP-PRESET-EDIT
+    bad: "manual edit to presets/HV/sensors_en.yaml"
+    ok: "regenerate via generate_presets.py"
+  - id: AP-MAGIC
+    bad: "uint8_t cmd = 0x42; // magic number"
+    ok: "static const uint8_t RESPONSE = 0x42;"
+  - id: AP-WS
+    bad: "CRLF / trailing whitespace / missing EOF newline"
+    ok: "LF-only, no trailing spaces, exactly one \\n at EOF"
+
+# =============================================================================
+# S13 REVIEW PRIORITIES
+# =============================================================================
+review:
+  blocker:
+    - "Missing this-> on member access"
+    - "#define constants (non-conditional)"
+    - "Memory leaks / manual new/delete in receive path"
+    - "Per-frame heap allocation in parse_frame()/update()"
+    - "CRC or multi-frame regressions (protocol correctness)"
+    - "Unvalidated frame lengths before indexing (overflow/CVE pattern)"
+    - "Blocking calls in loop() or CAN callback"
+    - "Format-string vulnerabilities in logging"
+    - "Hand-edited presets/ or schema bypass"
+    - "CRLF / trailing whitespace / missing EOF newline"
+  warning:
+    - "Magic numbers for protocol values (add named constants)"
+    - "GET request rebuild per poll instead of cache_request_data()"
+    - "std::regex / std::stringstream on hot path"
+    - "Missing schema bounds on user inputs"
+    - "Unbounded option maps (stay bounded per entity)"
+  info:
+    - "Const correctness / include-what-you-use"
+    - "Dead or commented-out code"
+    - "Naming consistency"
+
+# =============================================================================
+# S14 AI-SPECIFIC INSTRUCTIONS
+# =============================================================================
+ai_instructions:
+  mandatory_pre_read:
+    - "BEFORE any analysis: read this entire YAML"
+    - "BEFORE any suggestion: check no rule violation"
+  license: "CC BY-NC-SA 4.0 --- non-commercial, share-alike; derivatives must stay BY-NC-SA; no license changes without human approval"
+  preset_regeneration: "Never 'fix' generated presets by hand --- update generate_presets.py/xls_parser.py and regenerate"
+  protocol_sensitivity: "TopTronic framing, CRC, device-type tables reverse-engineered --- change to protocol section requires bus evidence + human approval"
+  when_uncertain:
+    - "STATE the specific rule being considered"
+    - "ASK user to confirm"
+    - "REFERENCE section number"
+  no_unauthorized_commits: "NEVER commit without explicit human approval --- present proposals first"
+  communication: "Output only findings and fixes. No 'open questions' in code comments."
+  file_output_validation:
+    rules:
+      - "LF-only line endings --- NO \\r characters"
+      - "No trailing whitespace --- strip trailing spaces/tabs"
+      - "No tab characters --- 2-space indentation"
+      - "Exactly one trailing newline at EOF --- ends with \\n, not \\n\\n"
+      - "UTF-8 (non-ASCII allowed in this repo) --- valid UTF-8"
+    scope: "ALL write operations: new files, edits, patches, generated output"
+  maintenance: "When .ai/instructions.md changes, this YAML MUST be regenerated"
