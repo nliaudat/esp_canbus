@@ -19,6 +19,8 @@ static constexpr uint32_t MAX_PENDING_AGE_MS = 2000;
 static constexpr size_t MIN_MESSAGE_LEN = 5;
 // Throttle interval for the stale-fragment sweep in loop().
 static constexpr uint32_t CLEANUP_INTERVAL_MS = 2000;
+// Max number of sensors refreshed per loop() tick in a throttled update_all() burst.
+static constexpr size_t MAX_REFRESH_PER_LOOP = 8;
 
 // Format a byte buffer as a zero-padded hex string for log output (e.g. "4001001a").
 // Uses a plain std::string (no std::stringstream) — common short messages fit in the
@@ -266,15 +268,34 @@ static uint32_t reflect(uint32_t val, uint8_t width) {
 // Parameters identified by brute-force search against captured bus traffic:
 //   poly=0x1021  init=0xB006  refin=true  refout=true  xorout=0x0000
 // This matches the CRC-16/ARC family with a non-standard init value.
+//
+// Lookup-table form: the bit-wise algorithm reflects each input byte, runs an
+// MSB-first (left-shifting) poly 0x1021 loop, then reflects the final CRC. The
+// table is therefore MSB-first over PRE-REFLECTED bytes:
+//   crc = (crc << 8) ^ table[((crc >> 8) ^ reflect(byte)) & 0xFF]
+// Equivalent to the bit-wise loop (validated against captured samples).
+static const uint16_t *crc16_table() {
+  static uint16_t table[256];
+  static bool initialized = false;
+  if (!initialized) {
+    for (int i = 0; i < 256; ++i) {
+      uint16_t v = static_cast<uint16_t>(i << 8);
+      for (int b = 0; b < 8; ++b) {
+        v = (v & 0x8000) ? static_cast<uint16_t>((v << 1) ^ 0x1021) : static_cast<uint16_t>(v << 1);
+      }
+      table[i] = v;
+    }
+    initialized = true;
+  }
+  return table;
+}
+
 static uint16_t compute_crc16(const uint8_t *data, size_t len) {
+  const uint16_t *const table = crc16_table();
   uint16_t crc = 0xB006;  // init
   for (size_t i = 0; i < len; ++i) {
     uint8_t byte = static_cast<uint8_t>(reflect(data[i], 8));
-    for (int b = 7; b >= 0; --b) {
-      uint8_t bit = (byte >> b) & 1;
-      uint8_t top = (crc >> 15) & 1;
-      crc = static_cast<uint16_t>((crc << 1) ^ (top ^ bit ? 0x1021 : 0));
-    }
+    crc = static_cast<uint16_t>((crc << 8) ^ table[((crc >> 8) ^ byte) & 0xFF]);
   }
   return static_cast<uint16_t>(reflect(crc, 16));  // refout=true, xorout=0x0000
 }
@@ -353,11 +374,18 @@ void TopTronic::register_input_callbacks() {
 // Request an immediate refresh from every registered sensor by firing its update
 // callback (the same path the polling scheduler takes). Writable inputs (number/
 // select) follow automatically through the linked sensors set up in link_inputs().
+//
+// The refresh is THROTTLED: sensors are queued into pending_refresh_ and released
+// a few per loop() tick (MAX_REFRESH_PER_LOOP) so a large preset does not saturate
+// the 50 kbps bus with a burst of GET frames.
 void TopTronic::update_all() {
+  if (!this->pending_refresh_.empty()) {
+    return;  // a burst is already in progress
+  }
   for (const auto &d : this->devices_) {
     auto *device = d.second.get();
     for (const auto &s : device->sensors) {
-      s.second->update();
+      this->pending_refresh_.push_back(s.second);
     }
   }
   ESP_LOGI(TAG, "Refresh requested for all registered sensors");
@@ -368,20 +396,23 @@ void TopTronic::update_all() {
 // the actual work, so component state is never touched from other tasks.
 void TopTronic::request_refresh() {
   Command cmd = Command::Refresh;
-  if (this->cmd_queue_ != nullptr)
-    xQueueSend(this->cmd_queue_, &cmd, 0);
+  if (this->cmd_queue_ != nullptr && xQueueSend(this->cmd_queue_, &cmd, 0) != pdTRUE) {
+    ESP_LOGD(TAG, "Command queue full — refresh request dropped");
+  }
 }
 
 void TopTronic::request_pause() {
   Command cmd = Command::Pause;
-  if (this->cmd_queue_ != nullptr)
-    xQueueSend(this->cmd_queue_, &cmd, 0);
+  if (this->cmd_queue_ != nullptr && xQueueSend(this->cmd_queue_, &cmd, 0) != pdTRUE) {
+    ESP_LOGD(TAG, "Command queue full — pause request dropped");
+  }
 }
 
 void TopTronic::request_resume() {
   Command cmd = Command::Resume;
-  if (this->cmd_queue_ != nullptr)
-    xQueueSend(this->cmd_queue_, &cmd, 0);
+  if (this->cmd_queue_ != nullptr && xQueueSend(this->cmd_queue_, &cmd, 0) != pdTRUE) {
+    ESP_LOGD(TAG, "Command queue full — resume request dropped");
+  }
 }
 
 // Look up a sensor by its (device_id, sensor_id) pair.
@@ -410,6 +441,7 @@ void TopTronic::link_inputs() {
       }
       auto *sensor_base = this->get_sensor(this->get_device_id(), input_base->get_id());
       if (sensor_base == nullptr) {
+        ESP_LOGD(TAG, "Input 0x%08X has no matching sensor — sync skipped", (unsigned) input_base->get_id());
         continue;
       }
       if (sensor_base->type() == SENSOR) {
@@ -437,10 +469,11 @@ void TopTronic::setup() {
   this->register_sensor_callbacks();
   this->register_input_callbacks();
 
-  // One-shot full refresh 30 s after boot. Fires on the ESPHome loop task via the
-  // scheduler — non-blocking and thread-safe (no FreeRTOS task involved). After the
-  // CAN gateway settles, steady-state reads come from each sensor's own 30 s poll.
-  this->set_timeout("update_all_initial", 30000, [this]() { this->update_all(); });
+  // One-shot full refresh shortly after boot (configurable, default 30 s, 0 = off).
+  // Fires on the ESPHome loop task via the scheduler — non-blocking and thread-safe.
+  if (this->boot_refresh_delay_ms_ != 0) {
+    this->set_timeout("update_all_initial", this->boot_refresh_delay_ms_, [this]() { this->update_all(); });
+  }
 
   // Producer/consumer bridge for commands issued from other FreeRTOS tasks.
   // Producers only enqueue; the main loop task drains and executes in loop().
@@ -459,20 +492,43 @@ void TopTronic::setup() {
 void TopTronic::loop() {
   // Drain cross-task commands first (non-blocking), so requests issued from other
   // FreeRTOS tasks are serviced on the main loop task — keeping all component state
-  // single-threaded (the ESPHome model). Nothing here blocks.
+  // single-threaded (the ESPHome model). Duplicate commands in one drain cycle are
+  // coalesced into a single action; the queue itself caps backlog, and the overflow
+  // is logged by the producers. Nothing here blocks.
+  bool handled_refresh = false;
+  bool handled_pause = false;
+  bool handled_resume = false;
   Command cmd;
   while (this->cmd_queue_ != nullptr && xQueueReceive(this->cmd_queue_, &cmd, 0) == pdTRUE) {
     switch (cmd) {
       case Command::Refresh:
-        this->update_all();
+        if (!handled_refresh) {
+          this->update_all();
+          handled_refresh = true;
+        }
         break;
       case Command::Pause:
-        this->pause();
+        if (!handled_pause) {
+          this->pause();
+          handled_pause = true;
+        }
         break;
       case Command::Resume:
-        this->resume();
+        if (!handled_resume) {
+          this->resume();
+          handled_resume = true;
+        }
         break;
     }
+  }
+
+  // Throttled refresh burst: release at most MAX_REFRESH_PER_LOOP sensors per tick.
+  size_t sent = 0;
+  while (!this->pending_refresh_.empty() && sent < MAX_REFRESH_PER_LOOP) {
+    TopTronicBase *sensor = this->pending_refresh_.front();
+    this->pending_refresh_.pop_front();
+    sensor->update();
+    ++sent;
   }
 
   // Periodically evict stale multi-frame reassembly buffers so a lost fragment (or a
@@ -513,6 +569,7 @@ void TopTronic::dump_config() {
   ESP_LOGCONFIG(TAG, "  Device type: 0x%04X, device address: 0x%02X", this->device_type_, this->device_addr_);
   ESP_LOGCONFIG(TAG, "  Devices: %u, sensors: %u, inputs: %u", (unsigned) this->devices_.size(),
                 (unsigned) sensor_count, (unsigned) input_count);
+  ESP_LOGCONFIG(TAG, "  Boot refresh delay: %u ms", (unsigned) this->boot_refresh_delay_ms_);
 }
 
 static void log_response_frame(const uint8_t *data, size_t len, uint32_t can_id, const std::string &sensor_name) {
