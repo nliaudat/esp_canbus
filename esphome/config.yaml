@@ -18,21 +18,44 @@ substitutions:
 
 toptronic:
   - id: tt_HV  # HomeVent
-    canbus_id: cbus  # the canbus bit_rate must be 50kbps
+    canbus_id: cbus  # the canbus bit_rate must be 50kbps. do not change name as it used to pause in case of OTA
     device_type: HV  # WEZ, HV, BM (BD is an alias for BM and BM must be used)
     device_addr: 8  # defaults are : HV=8, BM=8, WEZ=1
     language: en  # de, en, fr, it
+    use_canbus_callback: true  # false -> route via canbus on_frame instead
 
   - id: tt_BM  # display
     canbus_id: cbus  # the canbus bit_rate must be 50kbps
     device_type: BM
     device_addr: 8
     language: en
+    use_canbus_callback: true  # false -> route via canbus on_frame instead
 
 external_components:
   - source:
       type: local
       path: components
+      
+      
+# Enable logging
+logger:
+  level: INFO  # NONE / ERROR / INFO / DEBUG / VERBOSE
+  # baud_rate: 0  # to disable logging via UART (fully headless)
+  logs:
+    text_sensor: ERROR
+    homeassistant.sensor: ERROR
+    canbus: ERROR  # setting log level for canbus lower than INFO may crash  : esphome/issues#4051
+    uptime: ERROR
+    uptime.sensor: ERROR
+    wifi_signal: ERROR
+    wifi_signal.sensor: ERROR
+    esp32.preferences: ERROR
+    internal_temperature: ERROR
+    esp-idf: ERROR
+    select: ERROR
+    number: ERROR
+    sensor: INFO
+    toptronic: INFO  # silences per-frame [RES]/[SET]/[GET]/[UNK] + reassembly logs (real C++ tag is "toptronic")
 
 packages:
   wifi: !include src/wifi.yaml
@@ -41,6 +64,7 @@ packages:
   canbus: !include src/canbus.yaml
   sensors_others: !include src/sensors_others.yaml
   switch: !include src/switch.yaml
+  button: !include src/button.yaml
   # debug: !include src/debug.yaml
 
 # web_server:
