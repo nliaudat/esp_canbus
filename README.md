@@ -72,14 +72,7 @@ toptronic:
     language: en
 ```
 
-Each `toptronic:` list entry is an independent hub on the same CAN bus and automatically generates all of its preset's sensors (and writable numbers/selects) — no per-entity YAML is required.<br />
-Default addresses: `HV=8`, `BM=8`, `WEZ=1`.
-
-Available device types: `WEZ` (heat generator), `HV` (HomeVent ventilation), `BM` (control module/display).<br />
-Available languages: `de`, `en`, `fr`, `it`.
-
 If you want to create your own preset or need other datapoints have a look at [`hoval_data_processing`](https://github.com/nliaudat/esp_canbus/tree/main/hoval_data_processing)
-
 
 #### Flash the firmware
 
