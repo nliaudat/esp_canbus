@@ -3,6 +3,27 @@
 <!---[![Wiki badge](https://img.shields.io/badge/Wiki-up_to_date-dark_green)](https://github.com/nliaudat/esp_canbus/wiki)
 [![Build badge](https://github.com/nliaudat/esp_canbus/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/nliaudat/esp_canbus/actions?query=workflow%3ABuild+branch%3Amain)-->
 
+> **⚠️ New core version — major refactor**
+>
+> This is a major refactor of the firmware, targeting a future submission to the
+> official ESPHome components. The original firmware remains available on the
+> [`legacy`](https://github.com/nliaudat/esp_canbus/tree/legacy) branch.
+>
+> Key changes:
+>
+> - **Presets moved into the component** (`esphome/components/toptronic/presets/`),
+>   with multi-language support (`de`/`en`/`fr`/`it`) and many upgrades.
+> - **`config.yaml` changed** — you can now define **multiple `toptronic:` components**
+>   (one per CAN device, e.g. `HV`, `BM`, `WEZ`).
+> - Improved multi-frame reassembly, CRC validation, OTA pause/resume, a non-blocking
+>   post-boot refresh, and a thread-safe FreeRTOS command bridge.
+
+**Migrating from `legacy`?** Device addressing moved from each entity to the hub,
+entities are now auto-generated from the presets, and the config is multi-hub.
+See the [component reference](esphome/readme.md) for details. Protocol
+documentation, CRC reverse-engineering notes, and review references live in
+the [`docs`](docs/) folder.
+
 ![alt text](pcb/3d_view.PNG "board")
 
 <img src="pcb/hoval_wiring.jpg" width=50% height=50%>
@@ -58,18 +79,26 @@ Then open `config.yaml` and make the following changes:
 2. Configure one `toptronic:` block **per device** (device type + address). You can find the address of each hoval device in your room control unit under maintenance (e.g. `HV(8)`, `BM(8)`, `WEZ(1)`). All presets are located at [`esphome/components/toptronic/presets`](https://github.com/nliaudat/esp_canbus/tree/main/esphome/components/toptronic/presets). <br /> e.g. to expose both an HV and a WEZ device:
 
 ```yaml
+
+substitutions:
+ ### toptronic hubs — used by board.yaml OTA pause/resume and button.yaml refresh all
+  toptronic_hubs:
+    - toptronic_HV
+    - toptronic_BM
+
 toptronic:
-  - id: tt_HV # HomeVent
-    canbus_id: cbus # the canbus bit_rate must be 50kbps
-    device_type: HV # WEZ, HV, BM (BD is an alias for BM and BM must be used), 
-    device_addr: 8 # defaults are : HV=8, BM=8, WEZ=1
-    language: en # fr, de, en, fr, it
-    
-  - id: tt_BM # display
-    canbus_id: cbus # same canbus
-    device_type: BM 
+  - id: toptronic_HV  # HomeVent
+    canbus_id: cbus  # the canbus bit_rate must be 50kbps. do not change name as it used in canbus.yaml
+    device_type: HV  # WEZ, HV, BM (BD is an alias for BM and BM must be used)
+    device_addr: 8  # defaults are : HV=8, BM=8, WEZ=1
+    language: en  # de, en, fr, it
+
+  - id: toptronic_BM  # display
+    canbus_id: cbus  # the canbus bit_rate must be 50kbps
+    device_type: BM
     device_addr: 8
     language: en
+
 ```
 
 If you want to create your own preset or need other datapoints have a look at [`hoval_data_processing`](https://github.com/nliaudat/esp_canbus/tree/main/hoval_data_processing)
