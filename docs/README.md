@@ -37,5 +37,15 @@ ESP32 CAN bus firmware and the Hoval TopTronic integration.
 | `MAX_PENDING_AGE_MS` | 2000 | Stale-fragment expiry in `loop()` |
 | `CLEANUP_INTERVAL_MS` | 2000 | Throttle for the stale sweep |
 | Poll default | 30 s | Entity `PollingComponent` interval |
-| Post-boot refresh | 30 000 ms | One-shot `update_all()` after `setup()` |
-| CRC-16 | poly `0x1021`, init `0xB006`, ref in/out `true`, xorout `0` | Multi-frame checksum |
+| Post-boot refresh | 30 000 ms | One-shot `update_all()` after `setup()` (config `boot_refresh_delay`, `0` = off) |
+| Throttled refresh | 8 / loop tick | Max sensors released per `loop()` in an `update_all()` burst |
+| CRC-16 | poly `0x1021`, init `0xB006`, ref in/out `true`, xorout `0` | Multi-frame checksum (lookup-table form) |
+
+## Testing
+
+- `tests/toptronic_logic_test.py` — known-answer tests for the protocol logic
+  (CRC-16 bit-wise + table form against 14 captured samples, CAN-ID layout,
+  request builders, continuation-count semantics). Run with:
+  `python tests/toptronic_logic_test.py`
+- CI (`.github/workflows/ci.yml`) runs the logic tests, `pre-commit` lint, and
+  `esphome compile` for the component test config and `esphome/config.yaml`.
