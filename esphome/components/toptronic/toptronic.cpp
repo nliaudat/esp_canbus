@@ -509,9 +509,9 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       pending.data.assign(data.begin() + 2, data.end());
       // Pre-allocate: each continuation frame carries at most 7 payload bytes (8 - header byte).
       pending.data.reserve(static_cast<size_t>(num_remaining) * 7);
-      // data[0]>>3 is the TOTAL frame count (first frame + continuations), so only
-      // num_remaining - 1 continuation frames are expected.
-      pending.remaining_frames = num_remaining - 1;
+      // data[0]>>3 is the number of continuation frames expected (excluding the
+      // first frame) — matches num_cont written by send_can_frames().
+      pending.remaining_frames = num_remaining;
       pending.last_update_ms = millis();
       this->pending_messages_[header_key] = std::move(pending);
     }
