@@ -20,6 +20,7 @@
 #include "esphome/components/button/button.h"
 #endif
 
+#include <deque>
 #include <map>
 #include <memory>
 #include <unordered_map>
@@ -238,6 +239,9 @@ class TopTronic : public Component {
   void set_device_addr(uint8_t device_addr) { this->device_addr_ = device_addr; }
   uint16_t get_device_id() { return this->device_type_ | this->device_addr_; }
 
+  // Delay before the one-shot post-boot refresh; 0 disables it.
+  void set_boot_refresh_delay(uint32_t ms) { this->boot_refresh_delay_ms_ = ms; }
+
   // Enable/disable registration of the internal canbus frame callback.
   // When false, routing must be done via the canbus `on_frame` trigger.
   void set_use_canbus_callback(bool use_callback) { this->use_canbus_callback_ = use_callback; }
@@ -294,6 +298,13 @@ class TopTronic : public Component {
   // Producer/consumer bridge: other tasks enqueue here, loop() drains on the
   // main loop task. Created in setup(); nullptr until then.
   QueueHandle_t cmd_queue_{nullptr};
+
+  // Delay (ms) for the one-shot post-boot refresh; 0 disables it.
+  uint32_t boot_refresh_delay_ms_{30000};
+
+  // Sensors still waiting in a throttled update_all() burst. Drained a few per
+  // loop() tick to avoid saturating the 50 kbps bus. Empty = no burst pending.
+  std::deque<TopTronicBase *> pending_refresh_;
 
   // Timestamp of the last stale-fragment sweep in loop().
   uint32_t last_cleanup_ms_{0};
