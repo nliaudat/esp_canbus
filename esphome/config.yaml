@@ -22,14 +22,14 @@ substitutions:
     - toptronic_BM
 
 toptronic:
-  - id: tt_HV  # HomeVent
-    canbus_id: cbus  # the canbus bit_rate must be 50kbps. do not change name as it used to pause in case of OTA
+  - id: toptronic_HV  # HomeVent
+    canbus_id: cbus  # the canbus bit_rate must be 50kbps. do not change name as it used in canbus.yaml
     device_type: HV  # WEZ, HV, BM (BD is an alias for BM and BM must be used)
     device_addr: 8  # defaults are : HV=8, BM=8, WEZ=1
     language: en  # de, en, fr, it
     use_canbus_callback: true  # false -> route via canbus on_frame instead
 
-  - id: tt_BM  # display
+  - id: toptronic_BM  # display
     canbus_id: cbus  # the canbus bit_rate must be 50kbps
     device_type: BM
     device_addr: 8
