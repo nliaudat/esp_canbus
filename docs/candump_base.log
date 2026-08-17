@@ -1,0 +1,128 @@
+=============================================================================
+TopTronic CAN bus - reference capture (candump + toptronic debug)
+=============================================================================
+Date      : 2026-08-17 (after the 0x56 extended-response fix)
+Config    : device 47FF (HV), gateway 4208 (GW), 50 kbps
+Evidence  : multi-frame reassembly (TOTAL frame count in first byte),
+            CRC-16 validation, 0x56 extended responses, unknown traffic.
+
+Key results
+  - 'Cleaning count value message cleaning (operating weeks)'  -> 52
+  - 'Maint.ctr.value message maint. (op. wks)'                 -> 52
+  Both update after the extended-response (0x56) decoding was added.
+
+Format
+  Single-frame   GET : 01 40 <fg> <fn> <dp_hi> <dp_lo>
+                 RES : 01 42 <fg> <fn> <dp_hi> <dp_lo> <value...>
+  Multi-frame   first-frame byte 0 upper 5 bits = TOTAL frame count
+                (first frame + continuations); reassembler waits for
+                total - 1 continuation frames.
+  0x56 response  = extended RESPONSE: value starts at offset 7
+                   (2 extra bytes 0x80 0x00 between datapoint and value).
+=============================================================================
+
+---------------------------------------------------------------------------
+1) Normal single-frame exchange (0x42 RESPONSE) - Eco ventilation modulation
+---------------------------------------------------------------------------
+[D][toptronic:705]: [GET] Can-ID: 0x1FE04208, Data: 0x4032009eee
+[I][candump:026]: 0x1FE04208 : 01 40 32 00 9E EE
+[I][candump:026]: 0x1FD047FF : 01 42 32 00 9E EE 1E
+[D][toptronic:582]: [RES] Can-ID: 0x1FD047FF, Sensor: Eco ventilation modulation, Data: 0x4232009eee1e
+[S][number]: 'Eco ventilation modulation' >> 30.00
+
+---------------------------------------------------------------------------
+2) 0x56 extended RESPONSE - Cleaning count (3-frame, header 0x19 = 3 TOTAL)
+---------------------------------------------------------------------------
+[GET] Data: 0x01400000a28d                       <- sensor poll (fg=00 fn=00 dp=A28D)
+
+[D][toptronic:618]: - Start of message with id: 95 with length 3
+[I][candump:026]: 0x1F5047FF : 19 5F 56 00 00 A2 8D 80   <- byte0=0x19 -> 3 total
+[I][candump:026]: 0x1E1047FF : 5F 00 00 00 00 00 00 00   <- continuation #1
+[I][candump:026]: 0x1D9047FF : 5F 34 10 B3               <- continuation #2 (+CRC 0x10B3)
+[D][toptronic:582]: [RES] Can-ID: 0x1D9047FF, Sensor: Cleaning count value message cleaning (operating weeks), Data: 0x560000a28d800000000000000034
+[S][sensor]: 'Cleaning count value message cleaning (operating weeks)' >> 52
+
+  Reassembled payload : 56 00 00 A2 8D 80 00 00 00 00 34 10 B3
+  CRC-16 fields       : CRC hi=0x10, CRC lo=0xB3 (validated by compute_crc16)
+  Value at offset 7   : 00 00 00 34  -> U32 0x34 = 52          (cleaning count, weeks)
+
+---------------------------------------------------------------------------
+3) 0x56 extended RESPONSE - Maint.ctr (3-frame, header 0x19 = 3 TOTAL)
+---------------------------------------------------------------------------
+[GET] Data: 0x014000004e45                       <- sensor poll (fg=00 fn=00 dp=4E45)
+
+[D][toptronic:618]: - Start of message with id: 97 with length 3
+[I][candump:026]: 0x1F5047FF : 19 61 56 00 00 4E 45 80
+[I][candump:026]: 0x1E1047FF : 61 00 00 00 00 00 00 00
+[I][candump:026]: 0x1D9047FF : 61 34 D5 7C
+[D][toptronic:582]: [RES] Can-ID: 0x1D9047FF, Sensor: Maint.ctr.value message maint. (op. wks), Data: 0x5600004e45800000000000000034
+[S][sensor]: 'Maint.ctr.value message maint. (op. wks)' >> 52
+
+  Reassembled payload : 56 00 00 4E 45 80 00 00 00 00 34 D5 7C
+  Value at offset 7   : 00 00 00 34  -> U32 0x34 = 52          (maint. weeks)
+
+---------------------------------------------------------------------------
+4) 0x42 multi-frame RESPONSE (3-frame, header 0x19 = 3 TOTAL) with ASCII value
+---------------------------------------------------------------------------
+[GET] Can-ID: 0x1FE04208, Data: 0x40320001f9      <- register 0x3201F9
+
+[D][toptronic:618]: - Start of message with id: 92 with length 3
+[I][candump:026]: 0x1F5047FF : 19 5C 42 32 00 01 F9 43
+[I][candump:026]: 0x1E1047FF : 5C 6F 6E 73 74 61 6E 74
+[I][candump:026]: 0x1D9047FF : 5C 7B D2
+[D][toptronic:582]: [RES] Can-ID: 0x1FD047FF, Sensor: Op. choice ventilation, Data: 0x42320001f9436f6e7374616e74
+[S][select]: 'Op. choice ventilation' >> Constant operation, setpoint 40651
+[S][text_sensor]: 'Op. choice ventilation' >> 'Constant operation, setpoint 40651'
+
+  Reassembled payload : 42 32 00 01 F9 "Constant" + CRC 0x7BD2 (matches docs sample).
+
+---------------------------------------------------------------------------
+5) 0x42 / 0x56 single-frame + short multi-frame (header 0x11 = 2 TOTAL)
+   Register 0x74 set - not configured in presets -> [UNK]
+---------------------------------------------------------------------------
+[I][candump:026]: 0x1F5047FF : 11 44 74 00 FF 00 00 00
+[I][candump:026]: 0x1E9047FF : 44 00 FF FF 71 E5
+[D][toptronic:656]: - Part of message with id: 68 with remaining length 0
+[D][toptronic:716]: [UNK] Can-ID: 0x1E9047FF, Data: 0x7400ff00000000ffff
+
+  Note: byte0=0x11 -> 2 TOTAL -> 1 continuation (waits for exactly 1).
+  Frames carry register 0x74 status data; no entity is configured for it.
+
+---------------------------------------------------------------------------
+6) Unknown short frames (still valid CAN, not TopTronic protocol)
+---------------------------------------------------------------------------
+[I][candump:026]: 0x1FE047FF : 01 61 54 FF FF
+[D][toptronic:699]: Message too short (4 bytes), ignoring
+[I][candump:026]: 0x1FD047FF : 01 50 02 08 04 08
+[D][toptronic:716]: [UNK] Can-ID: 0x1FD047FF, Data: 0x5002080408
+[I][candump:026]: 0x1FD047FF : 01 08 6A 83 84 05
+[D][toptronic:716]: [UNK] Can-ID: 0x1FD047FF, Data: 0x086a838405
+[I][candump:026]: 0x00D047FF : 01 0A 02 02 08 04 08
+[I][candump:026]: 0x00D047FF : 01 02
+
+  Commands 0x61/0x52/0x50/0x4C/0x0A/0x08 are boiler status/broadcast;
+  0x0A/0x08 carry <5 bytes so they hit the "Message too short" (DEBUG) path.
+
+---------------------------------------------------------------------------
+7) Bogus 20-frame message (header 0xA1 = 20 TOTAL) -> stale expiry
+---------------------------------------------------------------------------
+[I][candump:026]: 0x1F5047FF : A1 0A 4C 00 80 00 00 00   <- byte0=0xA1 -> 20 total
+[D][toptronic:618]: - Start of message with id: 10 with length 20
+[D][toptronic:656]: - Part of message with id: 10 with remaining length 18
+... (0x0A-payload frames from 0x1E/1D/1C/1B/1A/19/17/16/13/0F 1047FF) ...
+[D][toptronic:550]: Expiring stale pending message 0x0002080A (76 bytes, 9 frames remaining)
+
+  Doesn't match real traffic; evicted by the 2s stale sweep. Not a leak.
+  Optional hardening: cap first-frame count (e.g. max 8) to reject instantly.
+
+---------------------------------------------------------------------------
+8) Loop-latency cost of candump (full-traffic INFO logging)
+---------------------------------------------------------------------------
+[W][component:473]: canbus took a long time for an operation (192 ms), max is 50 ms
+
+  Cause: candump logs every frame with a per-frame std::string build on the
+  loop task. Remove/comment the canbus.yaml on_frame candump in production.
+
+-----------------------------------------------------------------------------
+End of reference capture.
+-----------------------------------------------------------------------------

@@ -70,7 +70,7 @@ Payloads larger than 6 bytes (after the two header bytes) are split:
 
 ```
 First frame  (msg_id = 0x1F):
-  byte 0          : num_cont << 3 | 0x01   -> number of CONTINUATION frames
+  byte 0          : total << 3 | 0x01      -> TOTAL frame count (first + continuations)
   byte 1          : msg_header             -> reassembly key (shared by all frames)
   bytes 2 .. 7    : payload[0..5]          -> up to 6 payload bytes
 
@@ -79,10 +79,11 @@ Continuation frames (msg_id != 0x1F):
   bytes 1 .. 7    : payload[6..12], [13..19], ...  -> up to 7 bytes per frame
 ```
 
-> **Important (frame counting).** `num_cont` in the first-frame header is the
-> number of **continuation** frames, i.e. excluding the first frame itself.
-> The reassembler therefore waits for exactly `num_cont` continuation frames
-> before CRC-checking and dispatching.
+> **Important (frame counting).** The value in the first-frame header is the
+> **TOTAL frame count** (first frame + continuations). Verified against captured
+> bus traffic: a 3-frame response carries 0x19, a 2-frame response carries 0x11.
+> The reassembler therefore waits for `total - 1` continuation frames before
+> CRC-checking and dispatching.
 
 The reassembly key stored in `pending_messages_` is:
 

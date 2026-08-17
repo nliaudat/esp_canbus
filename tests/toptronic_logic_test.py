@@ -68,10 +68,19 @@ def build_set_request(function_group, function_number, datapoint, value):
 
 
 def num_continuation_frames(msg_len):
-    """num_cont written into the first-frame header: ceil(remaining / 7)."""
+    """Number of continuation frames for a payload of this length."""
     first_chunk = min(6, msg_len)
     after_first = msg_len - first_chunk
     return math.ceil(after_first / 7)
+
+
+def total_frame_count(msg_len):
+    """TOTAL frame count written into the first-frame header (first + continuations).
+
+    Verified against captured bus traffic: a 14-byte response carries header
+    0x19 (3 total), a 9-byte response carries 0x11 (2 total).
+    """
+    return 1 + num_continuation_frames(msg_len)
 
 
 # ---------------------------------------------------------------------------
@@ -159,34 +168,34 @@ def test_build_set_request():
 
 
 def test_continuation_count_semantics():
-    # num_cont = number of CONTINUATION frames (first frame excluded); the first
-    # frame header carries num_cont, and reassembly waits for exactly num_cont.
+    # data[0]>>3 is the TOTAL frame count (first frame + continuations);
+    # the reassembler must wait for num_remaining - 1 continuation frames.
     for msg_len in range(7, 60):
-        total_frames = 1 + num_continuation_frames(msg_len)
-        assert num_continuation_frames(msg_len) >= 1
-        assert total_frames == 1 + math.ceil(max(0, msg_len - 6) / 7)
-        # first_frame byte 0 upper 5 bits == number of continuation frames
-        first_header = num_continuation_frames(msg_len) << 3
-        assert (first_header >> 3) == num_continuation_frames(msg_len)
-    # Spot checks
+        total = total_frame_count(msg_len)
+        assert num_continuation_frames(msg_len) == total - 1
+        assert total == 1 + math.ceil(max(0, msg_len - 6) / 7)
+        # first-frame byte 0 upper 5 bits == TOTAL frame count
+        first_header = total << 3
+        assert (first_header >> 3) == total
+    # Spot checks (continuation counts stay the same)
     assert num_continuation_frames(7) == 1  # 6 in first frame, 1 left
     assert num_continuation_frames(13) == 1  # 7 left -> one 7-byte continuation
     assert num_continuation_frames(14) == 2  # 8 left -> two continuations
-    print("OK  continuation-frame counting (num_remaining == num_cont)")
+    print("OK  continuation-frame counting (header=total, wait=total-1)")
 
 
 def test_reassembly_wait_count():
-    # Regression for the off-by-one fix: a message declaring num_remaining (>0)
-    # must dispatch after receiving exactly num_remaining continuation frames,
-    # NOT num_remaining - 1.
-    for num_remaining in (1, 2, 3, 5, 10):
-        remaining = num_remaining  # fixed semantics
-        assert remaining == num_remaining  # no -1 introduced
-    # One-continuation message: 1 frame must complete it.
-    assert num_continuation_frames(7) == 1
-    # Two-continuation message: 2 frames must complete it.
-    assert num_continuation_frames(14) == 2
-    print("OK  reassembly completes after exactly num_cont continuation frames")
+    # Regression: the first-frame header is the TOTAL frame count, so a message
+    # declaring num_remaining (>0) dispatches after exactly num_remaining - 1
+    # continuation frames.
+    for num_remaining in (2, 3, 4, 6, 11):
+        expected_wait = num_remaining - 1
+        assert expected_wait == num_remaining - 1
+    # 2-total message (1 continuation): 1 frame completes it.
+    assert num_continuation_frames(9) == 1  # 9-byte response -> total 2
+    # 3-total message (2 continuations): 2 frames complete it.
+    assert num_continuation_frames(14) == 2  # 14-byte response -> total 3
+    print("OK  reassembly completes after num_remaining - 1 continuation frames")
 
 
 if __name__ == "__main__":

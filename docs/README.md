@@ -10,6 +10,7 @@ ESP32 CAN bus firmware and the Hoval TopTronic integration.
 | [`hoval_canbus.md`](hoval_canbus.md) | **Protocol specification** — CAN identifier layout, single/multi-frame formats, message layout, value types, CRC-16 parameters + validation samples, device-type table, and component behaviour notes. |
 | [`catch_crc.md`](catch_crc.md) | **CRC reverse-engineering guide** — step-by-step process used to identify the multi-frame CRC-16 (collect samples with debug logging, analyse with RevEng, implement in `toptronic.cpp`). |
 | [`crc_find.py`](crc_find.py) | **CRC search tool** — brute-force Python script that reverse-engineers the polynomial/init/reflection from the captured XOR-difference samples. See `catch_crc.md` for context. |
+| [`candump_base.log`](candump_base.log) | **Reference bus capture** — annotated candump + toptronic debug showing single-frame GET/RES, `0x42` and `0x56` multi-frame reassembly (TOTAL frame count), 0x56 extended responses (cleaning/maint. counters), unknown traffic, and loop-latency notes. |
 
 ## For later review — quick orientation
 
@@ -40,6 +41,7 @@ ESP32 CAN bus firmware and the Hoval TopTronic integration.
 | Post-boot refresh | 30 000 ms | One-shot `update_all()` after `setup()` (config `boot_refresh_delay`, `0` = off) |
 | Throttled refresh | 8 / loop tick | Max sensors released per `loop()` in an `update_all()` burst |
 | CRC-16 | poly `0x1021`, init `0xB006`, ref in/out `true`, xorout `0` | Multi-frame checksum (lookup-table form) |
+| `0x56` value offset | 7 | Extended RESPONSE value starts at byte 7 (2 extra `0x80 0x00` bytes) |
 
 ## Testing
 

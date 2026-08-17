@@ -43,7 +43,7 @@ external_components:
 
 # Enable logging
 logger:
-  level: INFO  # NONE / ERROR / INFO / DEBUG / VERBOSE
+  level: DEBUG  # NONE / ERROR / INFO / DEBUG / VERBOSE
   # baud_rate: 0  # to disable logging via UART (fully headless)
   logs:
     text_sensor: ERROR
@@ -59,7 +59,7 @@ logger:
     select: ERROR
     number: ERROR
     sensor: INFO
-    toptronic: INFO  # DEBUG for frame details
+    toptronic: DEBUG  # full frame details: [RES]/[SET]/[GET]/[UNK] + reassembly
 
 packages:
   wifi: !include src/wifi.yaml

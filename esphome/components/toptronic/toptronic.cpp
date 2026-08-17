@@ -8,6 +8,10 @@ namespace esphome::toptronic {
 static const char *const TAG = "toptronic";
 
 static const uint8_t RESPONSE = 0x42;
+// 0x56 = extended-format RESPONSE (larger value payload, e.g. cleaning /
+// maint. counters). Same layout as 0x42 but 2 extra bytes (0x80 0x00) between
+// the datapoint and the value.
+static const uint8_t RESPONSE_EXT = 0x56;
 static const uint8_t GET_REQ = 0x40;
 static const uint8_t SET_REQ = 0x46;
 
@@ -332,9 +336,11 @@ static void send_can_frames(canbus::Canbus *canbus, uint32_t can_id, const std::
   size_t after_first = msg.size() - first_chunk;
   auto num_cont = static_cast<uint8_t>((after_first + 6) / 7);  // ceil(remaining / 7)
 
+  // The first-frame header carries the TOTAL frame count (first frame +
+  // continuations), matching the boiler's receive convention.
   std::vector<uint8_t> first_frame;
-  first_frame.push_back(static_cast<uint8_t>((num_cont << 3) | 0x01));  // frame count in upper 5 bits
-  first_frame.push_back(msg_header);                                    // reassembly key
+  first_frame.push_back(static_cast<uint8_t>(((num_cont + 1) << 3) | 0x01));
+  first_frame.push_back(msg_header);  // reassembly key
   first_frame.insert(first_frame.end(), msg.begin(), msg.begin() + first_chunk);
   canbus->send_data(can_id, true, first_frame);
 
@@ -622,9 +628,10 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       pending.data.assign(data.begin() + 2, data.end());
       // Pre-allocate: each continuation frame carries at most 7 payload bytes (8 - header byte).
       pending.data.reserve(static_cast<size_t>(num_remaining) * 7);
-      // data[0]>>3 is the number of continuation frames expected (excluding the
-      // first frame) — matches num_cont written by send_can_frames().
-      pending.remaining_frames = num_remaining;
+      // data[0]>>3 is the TOTAL frame count (first frame + continuations), so
+      // only num_remaining - 1 continuation frames are expected. Verified against
+      // captured bus traffic (command 0x42 responses to register 0x74).
+      pending.remaining_frames = num_remaining - 1;
       pending.last_update_ms = millis();
       this->pending_messages_[header_key] = std::move(pending);
     }
@@ -680,15 +687,16 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
 // Dispatch a fully reassembled TopTronic message.
 //
 // Message byte layout (after the CAN framing bytes are stripped):
-//   [0]   command byte  (0x40 GET, 0x46 SET, 0x42 RESPONSE)
+//   [0]   command byte  0x40 GET, 0x46 SET, 0x42/0x56 RESPONSE
 //   [1]   function_group
 //   [2]   function_number
 //   [3]   datapoint high byte
 //   [4]   datapoint low byte
-//   [5..] value payload
+//   [5..] value payload (0x42). 0x56 inserts 2 bytes (0x80 0x00) at [5..6],
+//         so its value starts at [7].
 void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_id, bool remote_transmission_request) {
   if (len < MIN_MESSAGE_LEN) {
-    ESP_LOGW(TAG, "Message too short (%u bytes), ignoring", (unsigned) len);
+    ESP_LOGD(TAG, "Message too short (%u bytes), ignoring", (unsigned) len);
     return;
   }
 
@@ -703,8 +711,15 @@ void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_
     return;
   }
 
-  if (data[0] != RESPONSE) {
+  bool is_response = (data[0] == RESPONSE || data[0] == RESPONSE_EXT);
+  if (!is_response) {
     ESP_LOGD(TAG, "[UNK] Can-ID: 0x%08X, Data: 0x%s", (unsigned int) can_id, hex_str(data, len).c_str());
+    return;
+  }
+  // 0x56 inserts 2 header bytes (0x80 0x00) between the datapoint and the value.
+  const size_t value_off = (data[0] == RESPONSE_EXT) ? 7 : 5;
+  if (len < value_off) {
+    ESP_LOGD(TAG, "Response without value bytes (%u bytes), ignoring", (unsigned) len);
     return;
   }
 
@@ -730,11 +745,11 @@ void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_
   TopTronicBase *sensor_base = sensor_it->second;
 
   // Downcast to the concrete type and publish the decoded value.
-  // data[5..] contains the raw value bytes.
+  // data[value_off..] contains the raw value bytes.
 #ifdef USE_SENSOR
   if (sensor_base->type() == SENSOR) {
     auto *sensor = static_cast<TopTronicSensor *>(sensor_base);
-    float value = sensor->parse_value(data + 5, len - 5);
+    float value = sensor->parse_value(data + value_off, len - value_off);
     sensor->publish_state(value);
     log_response_frame(data, len, can_id, sensor->get_name());
   }
@@ -742,7 +757,7 @@ void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_
 #ifdef USE_TEXT_SENSOR
   if (sensor_base->type() == TEXTSENSOR) {
     auto *sensor = static_cast<TopTronicTextSensor *>(sensor_base);
-    std::string value = sensor->parse_value(data + 5, len - 5);
+    std::string value = sensor->parse_value(data + value_off, len - value_off);
     sensor->publish_state(value);
     log_response_frame(data, len, can_id, sensor->get_name());
   }
