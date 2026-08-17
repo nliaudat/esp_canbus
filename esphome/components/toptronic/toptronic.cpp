@@ -416,6 +416,11 @@ void TopTronic::setup() {
   this->register_sensor_callbacks();
   this->register_input_callbacks();
 
+  // One-shot full refresh 30 s after boot. Fires on the ESPHome loop task via the
+  // scheduler — non-blocking and thread-safe (no FreeRTOS task involved). After the
+  // CAN gateway settles, steady-state reads come from each sensor's own 30 s poll.
+  this->set_timeout("update_all_initial", 30000, [this]() { this->update_all(); });
+
   // Register with the CAN bus so all received frames are routed to parse_frame().
   // Disabled via `use_canbus_callback: false` when routing through the canbus
   // `on_frame` trigger instead.
