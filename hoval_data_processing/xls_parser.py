@@ -29,11 +29,12 @@ class Datapoint:
         return f'{self.unit_name}_{self.function_group}_{self.function_number}_{self.datapoint}'
     
     def __toptronic_base(self) -> dict:
+        # device_type / device_addr are owned by the toptronic hub config and are
+        # stripped by _load_entities() before validation — no need to emit them.
         return {
             'platform': 'toptronic',
             'name': self.name,
             'device_type': self.unit_name,
-            'device_addr': '${TT_' + self.unit_name + '_addr}',
             'function_group': self.function_group,
             'function_number': self.function_number,
             'datapoint': self.datapoint,
