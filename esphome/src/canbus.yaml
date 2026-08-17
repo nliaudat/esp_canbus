@@ -6,6 +6,17 @@ canbus:
     can_id: 0  # unused
     bit_rate: 50kbps  # hoval canbus speed
 
+    # Route every received extended frame to the toptronic hubs.
+    # Each hub filters internally by its own device id.
+    # on_frame:
+      # - can_id: 0
+        # can_id_mask: 0
+        # use_extended_id: true
+        # then:
+          # - lambda: |-
+              # id(tt_HV).parse_frame(x, can_id, remote_transmission_request);
+              # id(tt_BM).parse_frame(x, can_id, remote_transmission_request);
+
     ######### debug ###########
     #### CANDUMP : to debug only
     # - can_id: 0  # listen to all messages
