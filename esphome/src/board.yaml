@@ -28,8 +28,6 @@ esp32:
 preferences:
   flash_write_interval: 60min
 
-
-
 # Enable Home Assistant API
 api:
   reboot_timeout: 30min

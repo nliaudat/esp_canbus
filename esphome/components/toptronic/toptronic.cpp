@@ -541,8 +541,8 @@ void TopTronic::loop() {
 
   for (auto it = this->pending_messages_.begin(); it != this->pending_messages_.end();) {
     if (now - it->second.last_update_ms > MAX_PENDING_AGE_MS) {
-      ESP_LOGD(TAG, "Expiring stale pending message 0x%08X (%zu bytes, %u frames remaining)",
-               (unsigned int) it->first, it->second.data.size(), it->second.remaining_frames);
+      ESP_LOGD(TAG, "Expiring stale pending message 0x%08X (%zu bytes, %u frames remaining)", (unsigned int) it->first,
+               it->second.data.size(), it->second.remaining_frames);
       it = this->pending_messages_.erase(it);
     } else {
       ++it;
@@ -686,8 +686,7 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
 //   [3]   datapoint high byte
 //   [4]   datapoint low byte
 //   [5..] value payload
-void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_id,
-                                  bool remote_transmission_request) {
+void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_id, bool remote_transmission_request) {
   if (len < MIN_MESSAGE_LEN) {
     ESP_LOGW(TAG, "Message too short (%u bytes), ignoring", (unsigned) len);
     return;

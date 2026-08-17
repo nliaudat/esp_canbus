@@ -261,9 +261,9 @@ class TopTronic : public Component {
  protected:
   // State of an in-progress multi-frame message being reassembled.
   struct PendingMessage {
-    std::vector<uint8_t> data;       // accumulated payload (CRC not yet stripped)
-    uint8_t remaining_frames{0};     // continuation frames still expected
-    uint32_t last_update_ms{0};      // for stale-fragment expiry
+    std::vector<uint8_t> data;    // accumulated payload (CRC not yet stripped)
+    uint8_t remaining_frames{0};  // continuation frames still expected
+    uint32_t last_update_ms{0};   // for stale-fragment expiry
   };
 
   // Look up device by ID; create a new TopTronicDevice if it does not exist yet.

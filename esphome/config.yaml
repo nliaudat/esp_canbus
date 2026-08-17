@@ -9,10 +9,10 @@ substitutions:
   ### canbus
   can_tx_pin: "GPIO22"  # GPIO5
   can_rx_pin: "GPIO21"  # GPIO4
-  
+
   ### board
   board_type: az-delivery-devkit-v4 #nodemcu-32s #esp-wrover-kit
-  
+
   ### time
   TZ: "Europe/Zurich"  # timezone
 
@@ -40,8 +40,7 @@ external_components:
   - source:
       type: local
       path: components
-      
-      
+
 # Enable logging
 logger:
   level: INFO  # NONE / ERROR / INFO / DEBUG / VERBOSE

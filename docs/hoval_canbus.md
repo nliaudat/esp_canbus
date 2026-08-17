@@ -18,7 +18,7 @@ heating / ventilation devices, as implemented by the `toptronic:` component
 | Bus | CAN 2.0B (extended 29-bit identifiers) |
 | Bit rate | **50 kbps** |
 | Transceiver | SN65HVD230 (3.3 V) on the ESP32 shield |
-| Connectors | Standard CAN-H / CAN-L with 120 Ω termination |
+| Connectors | Standard CAN-H / CAN-L with 120 Ohm termination |
 
 ---
 
@@ -35,8 +35,8 @@ bits 10-0   = receiver_mask  node id of the destination (or broadcast mask)
 On receive, the two fields used by `parse_frame()` are:
 
 ```
-msg_id    = can_id >> 24         → selects start-of-message vs continuation
-device_id = (can_id >> 11) & 0x7FF  → source device (0x7FF would be broadcast)
+msg_id    = can_id >> 24         -> selects start-of-message vs continuation
+device_id = (can_id >> 11) & 0x7FF  -> source device (0x7FF would be broadcast)
 ```
 
 ### Start-of-message vs continuation
@@ -58,7 +58,7 @@ A standard CAN data frame carries at most **8 bytes** of payload.
 ### 3.1 Single-frame message (`num_remaining == 0`)
 
 ```
-byte 0          : 0x00 << 3 | flags   (upper 5 bits = 0 → single frame)
+byte 0          : 0x00 << 3 | flags   (upper 5 bits = 0 -> single frame)
 byte 1 .. n     : message payload
 ```
 
@@ -70,13 +70,13 @@ Payloads larger than 6 bytes (after the two header bytes) are split:
 
 ```
 First frame  (msg_id = 0x1F):
-  byte 0          : num_cont << 3 | 0x01   → number of CONTINUATION frames
-  byte 1          : msg_header             → reassembly key (shared by all frames)
-  bytes 2 .. 7    : payload[0..5]          → up to 6 payload bytes
+  byte 0          : num_cont << 3 | 0x01   -> number of CONTINUATION frames
+  byte 1          : msg_header             -> reassembly key (shared by all frames)
+  bytes 2 .. 7    : payload[0..5]          -> up to 6 payload bytes
 
 Continuation frames (msg_id != 0x1F):
-  byte 0          : msg_header             → reassembly key
-  bytes 1 .. 7    : payload[6..12], [13..19], ...  → up to 7 bytes per frame
+  byte 0          : msg_header             -> reassembly key
+  bytes 1 .. 7    : payload[6..12], [13..19], ...  -> up to 7 bytes per frame
 ```
 
 > **Important (frame counting).** `num_cont` in the first-frame header is the
@@ -145,9 +145,9 @@ methodology and [`crc_find.py`](crc_find.py) for the search tool):
 
 This is the CRC-16/ARC family with a non-standard initial value.
 
-The component's `compute_crc16()` implements it bit-by-bit (no lookup table);
-for many multi-frame payloads this runs only on the reassembly-complete path
-and on SET operations, so the bit loop is acceptable.
+The component's `compute_crc16()` uses a 256-entry lookup table (MSB-first, over
+pre-reflected bytes) initialized once on first use — faster than a per-bit loop
+and validated against the captured samples in both forms.
 
 ### Known samples (for validation)
 
@@ -205,9 +205,13 @@ The gateway presents itself on the bus as a **GW** device
   - Stale entries expired after `MAX_PENDING_AGE_MS = 2000` ms in `loop()`.
   - Duplicate / extra continuation frames are discarded.
 - **OTA safety** — `pause()` / `resume()` drop frames during OTA updates.
-- **Post-boot refresh** — a one-shot `update_all()` fires 30 s after setup.
+- **Post-boot refresh** — a one-shot `update_all()` fires after
+  `boot_refresh_delay` (default 30 s, `0` disables it).
+- **Throttled refresh** — `update_all()` queues sensors and `loop()` releases
+  at most `MAX_REFRESH_PER_LOOP` (8) per tick to avoid bus saturation.
 - **Thread safety** — `request_refresh() / request_pause() / request_resume()`
-  enqueue commands on a FreeRTOS queue drained by `loop()` on the main task.
+  enqueue commands on a FreeRTOS queue drained by `loop()` on the main task
+  (duplicate commands are coalesced and queue overflow is logged).
 
 ---
 
