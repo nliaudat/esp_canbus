@@ -39,22 +39,22 @@ ota:
     on_begin:
       then:
         - lambda: |-
-            id(tt_HV).pause();
-            id(tt_BM).pause();
+            <% for h in toptronic_hubs %>id(${ h }).pause();
+            <% endfor %>
     on_end:
       then:
         - lambda: |-
-            id(tt_HV).resume();
-            id(tt_BM).resume();
+            <% for h in toptronic_hubs %>id(${ h }).resume();
+            <% endfor %>
     on_abort:
       then:
         - lambda: |-
-            id(tt_HV).resume();
-            id(tt_BM).resume();
+            <% for h in toptronic_hubs %>id(${ h }).resume();
+            <% endfor %>
     on_error:
       then:
         - lambda: |-
-            id(tt_HV).resume();
-            id(tt_BM).resume();
+            <% for h in toptronic_hubs %>id(${ h }).resume();
+            <% endfor %>
 
 safe_mode:

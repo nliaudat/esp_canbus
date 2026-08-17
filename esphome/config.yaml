@@ -16,6 +16,11 @@ substitutions:
   ### time
   TZ: "Europe/Zurich"  # timezone
 
+  ### toptronic hubs — used by board.yaml OTA pause/resume and button.yaml refresh all
+  toptronic_hubs:
+    - toptronic_HV
+    - toptronic_BM
+
 toptronic:
   - id: tt_HV  # HomeVent
     canbus_id: cbus  # the canbus bit_rate must be 50kbps. do not change name as it used to pause in case of OTA

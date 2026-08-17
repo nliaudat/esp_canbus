@@ -7,5 +7,5 @@ button:
     on_press:
       then:
         - lambda: |-
-            id(tt_HV).update_all();
-            id(tt_BM).update_all();
+            <% for h in toptronic_hubs %>id(${ h }).update_all();
+            <% endfor %>
