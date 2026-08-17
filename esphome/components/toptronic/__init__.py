@@ -12,7 +12,7 @@ from esphome.cpp_types import Component
 
 CODEOWNERS = ["@nliaudat"]
 DEPENDENCIES = ["canbus"]
-AUTO_LOAD = ["sensor", "number", "select", "text_sensor"]
+AUTO_LOAD = ["sensor", "number", "select", "text_sensor", "button"]
 MULTI_CONF = True
 
 CONF_TT_ID = "toptronic_id"
@@ -25,6 +25,7 @@ CONF_DATAPOINT = "datapoint"
 CONF_DECIMAL = "decimal"
 CONF_VALUES = "values"
 CONF_LANGUAGE = "language"
+CONF_USE_CANBUS_CALLBACK = "use_canbus_callback"
 
 LANGS = ("de", "en", "fr", "it")
 
@@ -109,6 +110,7 @@ CONFIG_SCHEMA = cv.All(
             ),
             cv.Required(CONF_DEVICE_ADDR): cv.uint8_t,
             cv.Optional(CONF_LANGUAGE, default="en"): cv.one_of(*LANGS, lower=True),
+            cv.Optional(CONF_USE_CANBUS_CALLBACK, default=True): cv.boolean,
         }
     ).extend(cv.COMPONENT_SCHEMA),
     _validate_preset,
@@ -117,7 +119,7 @@ CONFIG_SCHEMA = cv.All(
 
 def _load_entities(device_type: str, language: str):
     entities = []
-    for kind in ("sensors", "inputs"):
+    for kind in ("sensors", "inputs", "buttons"):
         path = PRESETS_DIR / device_type / f"{kind}_{language}.yaml"
         if not path.exists():
             continue
@@ -157,13 +159,14 @@ def _resolve_ids(obj, used=None):
 
 
 async def _generate_entities(hub, config):
-    from . import number, select, sensor, text_sensor
+    from . import button, number, select, sensor, text_sensor
 
     platforms = {
         "sensor": (sensor.CONFIG_SCHEMA, sensor.to_code),
         "text_sensor": (text_sensor.CONFIG_SCHEMA, text_sensor.to_code),
         "number": (number.CONFIG_SCHEMA, number.to_code),
         "select": (select.CONFIG_SCHEMA, select.to_code),
+        "button": (button.CONFIG_SCHEMA, button.to_code),
     }
 
     used_ids = _shared_used_ids()
@@ -195,5 +198,6 @@ async def to_code(config):
     device_type = get_device_type(config[CONF_DEVICE_TYPE])
     cg.add(var.set_device_type(device_type))
     cg.add(var.set_device_addr(config[CONF_DEVICE_ADDR]))
+    cg.add(var.set_use_canbus_callback(config[CONF_USE_CANBUS_CALLBACK]))
 
     await _generate_entities(var, config)

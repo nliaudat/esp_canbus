@@ -16,6 +16,9 @@
 #ifdef USE_SELECT
 #include "esphome/components/select/select.h"
 #endif
+#ifdef USE_BUTTON
+#include "esphome/components/button/button.h"
+#endif
 
 #include <map>
 #include <memory>
@@ -40,6 +43,7 @@ enum TypeName {
 enum SensorType {
   SENSOR,      // read-only numeric (TopTronicSensor)
   TEXTSENSOR,  // read-only string  (TopTronicTextSensor) or read-write (TopTronicSelect)
+  BUTTON,      // fire-and-forget action (TopTronicButton)
 };
 
 // Build a 29-bit extended CAN ID from sender and receiver addresses.
@@ -170,6 +174,24 @@ class TopTronicSelect : public select::Select, public TopTronicBase {
 };
 #endif
 
+#ifdef USE_BUTTON
+// Fire-and-forget button: sends a fixed SET request on the CAN bus when pressed.
+// The value is configured in YAML (e.g. an acknowledgment or reset command).
+class TopTronicButton : public button::Button, public TopTronicBase {
+ public:
+  void set_type(TypeName type) { this->type_ = type; }
+  void set_value(float value) { this->value_ = value; }
+  SensorType type() override { return BUTTON; }
+
+ protected:
+  TypeName type_;
+  float value_{0.0f};
+
+  // Called by ESPHome when the user presses the button from Home Assistant.
+  void press_action() override;
+};
+#endif
+
 // Groups all sensors and writable inputs that belong to a single CAN device (device_type | device_addr).
 // Lifetime of sensors/inputs is managed by the ESPHome component registry — these are non-owning pointers.
 class TopTronicDevice {
@@ -198,9 +220,24 @@ class TopTronic : public Component {
   // Wire up write callbacks for inputs so they send SET requests over CAN.
   void register_input_callbacks();
 
+  // Trigger a GET refresh for every registered sensor across all devices.
+  // Can be called from a template button or automation to force an update.
+  void update_all();
+
   void set_device_type(uint16_t device_type) { this->device_type_ = device_type; }
   void set_device_addr(uint8_t device_addr) { this->device_addr_ = device_addr; }
   uint16_t get_device_id() { return this->device_type_ | this->device_addr_; }
+
+  // Enable/disable registration of the internal canbus frame callback.
+  // When false, routing must be done via the canbus `on_frame` trigger.
+  void set_use_canbus_callback(bool use_callback) { this->use_canbus_callback_ = use_callback; }
+  bool get_use_canbus_callback() { return this->use_canbus_callback_; }
+
+  // Pause/resume CAN frame processing. Used during OTA to free the main loop
+  // and logging path so the update connection is not starved.
+  void pause() { this->paused_ = true; }
+  void resume() { this->paused_ = false; }
+  bool is_paused() { return this->paused_; }
 
   void setup() override;
   void loop() override;
@@ -243,6 +280,12 @@ class TopTronic : public Component {
 
   // Timestamp of the last stale-fragment sweep in loop().
   uint32_t last_cleanup_ms_{0};
+
+  // When true, parse_frame() ignores incoming CAN frames (used during OTA).
+  bool paused_{false};
+
+  // When true, setup() registers the internal canbus frame callback.
+  bool use_canbus_callback_{true};
 };
 
 }  // namespace esphome::toptronic

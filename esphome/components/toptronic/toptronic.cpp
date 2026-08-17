@@ -5,7 +5,7 @@
 
 namespace esphome::toptronic {
 
-static const char *const TAG = "tt";
+static const char *const TAG = "toptronic";
 
 static const uint8_t RESPONSE = 0x42;
 static const uint8_t GET_REQ = 0x40;
@@ -204,6 +204,17 @@ void TopTronicSelect::control(const std::string &text) {
 }
 #endif
 
+#ifdef USE_BUTTON
+void TopTronicButton::press_action() {
+  std::vector<uint8_t> bytes = float_to_bytes(this->value_, this->type_);
+  std::vector<uint8_t> data = build_set_request(this->function_group_, this->function_number_, this->datapoint_, bytes);
+  this->set_callback_.call(data);
+
+  ESP_LOGI(TAG, "[SET] %s: %f, Data: 0x%s", this->get_name().c_str(), this->value_,
+           hex_str(data.data(), data.size()).c_str());
+}
+#endif
+
 // Return the TopTronicDevice for this ID, creating it on first access.
 // operator[] performs a single map lookup rather than count() + operator[] (two lookups).
 TopTronicDevice *TopTronic::get_or_create_device(uint32_t device_id) {
@@ -339,6 +350,19 @@ void TopTronic::register_input_callbacks() {
   }
 }
 
+// Request an immediate refresh from every registered sensor by firing its update
+// callback (the same path the polling scheduler takes). Writable inputs (number/
+// select) follow automatically through the linked sensors set up in link_inputs().
+void TopTronic::update_all() {
+  for (const auto &d : this->devices_) {
+    auto *device = d.second.get();
+    for (const auto &s : device->sensors) {
+      s.second->update();
+    }
+  }
+  ESP_LOGI(TAG, "Refresh requested for all registered sensors");
+}
+
 // Look up a sensor by its (device_id, sensor_id) pair.
 // Uses find() on both maps so each is traversed at most once (no double-lookup).
 TopTronicBase *TopTronic::get_sensor(uint32_t device_id, uint32_t sensor_id) {
@@ -360,6 +384,9 @@ void TopTronic::link_inputs() {
     auto *device = d.second.get();
     for (const auto &i : device->inputs) {
       auto *input_base = i.second;
+      if (input_base->type() == BUTTON) {
+        continue;  // buttons are fire-and-forget — no linked sensor to sync
+      }
       auto *sensor_base = this->get_sensor(this->get_device_id(), input_base->get_id());
       if (sensor_base == nullptr) {
         continue;
@@ -390,9 +417,13 @@ void TopTronic::setup() {
   this->register_input_callbacks();
 
   // Register with the CAN bus so all received frames are routed to parse_frame().
-  this->canbus_->add_callback([this](uint32_t can_id, bool, bool rtr, const std::vector<uint8_t> &data) {
-    this->parse_frame(data, can_id, rtr);
-  });
+  // Disabled via `use_canbus_callback: false` when routing through the canbus
+  // `on_frame` trigger instead.
+  if (this->use_canbus_callback_) {
+    this->canbus_->add_callback([this](uint32_t can_id, bool, bool rtr, const std::vector<uint8_t> &data) {
+      this->parse_frame(data, can_id, rtr);
+    });
+  }
 }
 
 void TopTronic::loop() {
@@ -444,6 +475,10 @@ static void log_response_frame(const uint8_t *data, size_t len, uint32_t can_id,
 // using (source_device_id << 8 | msg_header) as the reassembly key. Once the expected
 // number of continuation frames has arrived the message is dispatched.
 void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, bool remote_transmission_request) {
+  if (this->paused_) {
+    return;  // OTA in progress — drop frames to keep the main loop and logging free
+  }
+
   uint8_t msg_id = can_id >> 24;
   uint32_t device_id = (can_id >> 11) & 0x7FF;
 
@@ -474,7 +509,9 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       pending.data.assign(data.begin() + 2, data.end());
       // Pre-allocate: each continuation frame carries at most 7 payload bytes (8 - header byte).
       pending.data.reserve(static_cast<size_t>(num_remaining) * 7);
-      pending.remaining_frames = num_remaining;
+      // data[0]>>3 is the TOTAL frame count (first frame + continuations), so only
+      // num_remaining - 1 continuation frames are expected.
+      pending.remaining_frames = num_remaining - 1;
       pending.last_update_ms = millis();
       this->pending_messages_[header_key] = std::move(pending);
     }
