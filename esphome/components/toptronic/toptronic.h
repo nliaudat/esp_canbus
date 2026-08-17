@@ -251,6 +251,7 @@ class TopTronic : public Component {
 
   void setup() override;
   void loop() override;
+  void on_shutdown() override;
   void dump_config() override;
 
  protected:

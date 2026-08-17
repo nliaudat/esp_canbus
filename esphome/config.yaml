@@ -60,7 +60,7 @@ logger:
     select: ERROR
     number: ERROR
     sensor: INFO
-    toptronic: INFO  # silences per-frame [RES]/[SET]/[GET]/[UNK] + reassembly logs (real C++ tag is "toptronic")
+    toptronic: INFO  # DEBUG for frame details
 
 packages:
   wifi: !include src/wifi.yaml

@@ -170,7 +170,7 @@ void TopTronicNumber::control(float value) {
   std::vector<uint8_t> data = build_set_request(this->function_group_, this->function_number_, this->datapoint_, bytes);
   this->set_callback_.call(data);
 
-  ESP_LOGI(TAG, "[SET] %s: %f, Data: 0x%s", this->get_name().c_str(), v, hex_str(data.data(), data.size()).c_str());
+  ESP_LOGD(TAG, "[SET] %s: %f, Data: 0x%s", this->get_name().c_str(), v, hex_str(data.data(), data.size()).c_str());
 }
 #endif
 
@@ -199,7 +199,7 @@ void TopTronicSelect::control(const std::string &text) {
       build_set_request(this->function_group_, this->function_number_, this->datapoint_, {value});
   this->set_callback_.call(data);
 
-  ESP_LOGI(TAG, "[SET] %s: %s, Data: 0x%s", this->get_name().c_str(), text.c_str(),
+  ESP_LOGD(TAG, "[SET] %s: %s, Data: 0x%s", this->get_name().c_str(), text.c_str(),
            hex_str(data.data(), data.size()).c_str());
 }
 #endif
@@ -210,7 +210,7 @@ void TopTronicButton::press_action() {
   std::vector<uint8_t> data = build_set_request(this->function_group_, this->function_number_, this->datapoint_, bytes);
   this->set_callback_.call(data);
 
-  ESP_LOGI(TAG, "[SET] %s: %f, Data: 0x%s", this->get_name().c_str(), this->value_,
+  ESP_LOGD(TAG, "[SET] %s: %f, Data: 0x%s", this->get_name().c_str(), this->value_,
            hex_str(data.data(), data.size()).c_str());
 }
 #endif
@@ -494,6 +494,14 @@ void TopTronic::loop() {
   }
 }
 
+void TopTronic::on_shutdown() {
+  // Free the command bridge queue created in setup().
+  if (this->cmd_queue_ != nullptr) {
+    vQueueDelete(this->cmd_queue_);
+    this->cmd_queue_ = nullptr;
+  }
+}
+
 void TopTronic::dump_config() {
   size_t sensor_count = 0;
   size_t input_count = 0;
@@ -508,7 +516,7 @@ void TopTronic::dump_config() {
 }
 
 static void log_response_frame(const uint8_t *data, size_t len, uint32_t can_id, const std::string &sensor_name) {
-  ESP_LOGI(TAG, "[RES] Can-ID: 0x%08X, Sensor: %s, Data: 0x%s", (unsigned int) can_id, sensor_name.c_str(),
+  ESP_LOGD(TAG, "[RES] Can-ID: 0x%08X, Sensor: %s, Data: 0x%s", (unsigned int) can_id, sensor_name.c_str(),
            hex_str(data, len).c_str());
 }
 
@@ -635,7 +643,7 @@ void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_
   }
 
   if (data[0] == SET_REQ) {
-    ESP_LOGI(TAG, "[SET] Can-ID: 0x%08X, Data: 0x%s", (unsigned int) can_id, hex_str(data, len).c_str());
+    ESP_LOGD(TAG, "[SET] Can-ID: 0x%08X, Data: 0x%s", (unsigned int) can_id, hex_str(data, len).c_str());
     return;
   }
 
