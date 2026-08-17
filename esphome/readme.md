@@ -31,6 +31,7 @@ toptronic:
 | `device_addr` | yes | — | Bus address (typical defaults: `HV=8`, `BM=8`, `WEZ=1` — find it on the room control unit). |
 | `language` | no | `en` | Preset language: `de`, `en`, `fr`, `it`. |
 | `use_canbus_callback` | no | `true` | When `false`, frames are routed through the canbus `on_frame` trigger instead of the internal callback. |
+| `boot_refresh_delay` | no | `30s` | One-shot full refresh after boot; `0` disables it. |
 
 `MULTI_CONF = true` — declare as many hubs as you have devices.
 
@@ -77,11 +78,14 @@ plus the platform-specific options).
 
 - **Polling** — every entity extends `PollingComponent` (default `30s`); each poll
   sends a `GET_REQUEST` frame for its datapoint.
-- **Post-boot refresh** — 30 s after setup the hub fires a one-shot `update_all()`
-  to catch values that changed while the CAN gateway was settling.
+- **Post-boot refresh** — `boot_refresh_delay` (default `30s`) after setup the hub
+  fires a one-shot `update_all()` to catch values that changed while the CAN
+  gateway was settling; `0` disables it.
+- **Throttled refresh** — `update_all()` enqueues sensors and `loop()` releases at
+  most 8 per tick, so large presets do not saturate the 50 kbps bus with a burst.
 - **Multi-frame reassembly** — long responses (U32/S32/S64) are reassembled with
-  CRC-16 validation; stale fragments are evicted after 2 s by the throttled
-  `loop()` sweep.
+  CRC-16 validation (lookup-table accelerated); stale fragments are evicted after
+  2 s by the throttled `loop()` sweep.
 - **OTA** — `board.yaml` calls `pause()` / `resume()` on every hub during OTA so
   frame processing does not starve the update path.
 - **Refresh button** — `button.yaml` provides a "Refresh all" button that calls
