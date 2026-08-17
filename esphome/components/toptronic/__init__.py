@@ -26,6 +26,7 @@ CONF_DECIMAL = "decimal"
 CONF_VALUES = "values"
 CONF_LANGUAGE = "language"
 CONF_USE_CANBUS_CALLBACK = "use_canbus_callback"
+CONF_BOOT_REFRESH_DELAY = "boot_refresh_delay"
 
 LANGS = ("de", "en", "fr", "it")
 
@@ -111,6 +112,9 @@ CONFIG_SCHEMA = cv.All(
             cv.Required(CONF_DEVICE_ADDR): cv.uint8_t,
             cv.Optional(CONF_LANGUAGE, default="en"): cv.one_of(*LANGS, lower=True),
             cv.Optional(CONF_USE_CANBUS_CALLBACK, default=True): cv.boolean,
+            cv.Optional(
+                CONF_BOOT_REFRESH_DELAY, default="30s"
+            ): cv.positive_time_period_milliseconds,
         }
     ).extend(cv.COMPONENT_SCHEMA),
     _validate_preset,
@@ -199,5 +203,6 @@ async def to_code(config):
     cg.add(var.set_device_type(device_type))
     cg.add(var.set_device_addr(config[CONF_DEVICE_ADDR]))
     cg.add(var.set_use_canbus_callback(config[CONF_USE_CANBUS_CALLBACK]))
+    cg.add(var.set_boot_refresh_delay(config[CONF_BOOT_REFRESH_DELAY]))
 
     await _generate_entities(var, config)
