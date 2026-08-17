@@ -363,6 +363,27 @@ void TopTronic::update_all() {
   ESP_LOGI(TAG, "Refresh requested for all registered sensors");
 }
 
+// Thread-safe producers. Safe to call from any FreeRTOS task: they only enqueue a
+// command (non-blocking). The main loop task drains the queue in loop() and performs
+// the actual work, so component state is never touched from other tasks.
+void TopTronic::request_refresh() {
+  Command cmd = Command::Refresh;
+  if (this->cmd_queue_ != nullptr)
+    xQueueSend(this->cmd_queue_, &cmd, 0);
+}
+
+void TopTronic::request_pause() {
+  Command cmd = Command::Pause;
+  if (this->cmd_queue_ != nullptr)
+    xQueueSend(this->cmd_queue_, &cmd, 0);
+}
+
+void TopTronic::request_resume() {
+  Command cmd = Command::Resume;
+  if (this->cmd_queue_ != nullptr)
+    xQueueSend(this->cmd_queue_, &cmd, 0);
+}
+
 // Look up a sensor by its (device_id, sensor_id) pair.
 // Uses find() on both maps so each is traversed at most once (no double-lookup).
 TopTronicBase *TopTronic::get_sensor(uint32_t device_id, uint32_t sensor_id) {
@@ -421,6 +442,10 @@ void TopTronic::setup() {
   // CAN gateway settles, steady-state reads come from each sensor's own 30 s poll.
   this->set_timeout("update_all_initial", 30000, [this]() { this->update_all(); });
 
+  // Producer/consumer bridge for commands issued from other FreeRTOS tasks.
+  // Producers only enqueue; the main loop task drains and executes in loop().
+  this->cmd_queue_ = xQueueCreate(8, sizeof(Command));
+
   // Register with the CAN bus so all received frames are routed to parse_frame().
   // Disabled via `use_canbus_callback: false` when routing through the canbus
   // `on_frame` trigger instead.
@@ -432,6 +457,24 @@ void TopTronic::setup() {
 }
 
 void TopTronic::loop() {
+  // Drain cross-task commands first (non-blocking), so requests issued from other
+  // FreeRTOS tasks are serviced on the main loop task — keeping all component state
+  // single-threaded (the ESPHome model). Nothing here blocks.
+  Command cmd;
+  while (this->cmd_queue_ != nullptr && xQueueReceive(this->cmd_queue_, &cmd, 0) == pdTRUE) {
+    switch (cmd) {
+      case Command::Refresh:
+        this->update_all();
+        break;
+      case Command::Pause:
+        this->pause();
+        break;
+      case Command::Resume:
+        this->resume();
+        break;
+    }
+  }
+
   // Periodically evict stale multi-frame reassembly buffers so a lost fragment (or a
   // device going offline mid-message) cannot pin an entry forever. The map is tiny
   // (capped at MAX_PENDING_MESSAGES), so the sweep is throttled to avoid per-loop work.

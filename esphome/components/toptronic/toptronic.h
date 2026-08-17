@@ -24,6 +24,9 @@
 #include <memory>
 #include <unordered_map>
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
+
 namespace esphome::toptronic {
 
 // Byte width / signedness of a TopTronic datapoint value.
@@ -224,6 +227,13 @@ class TopTronic : public Component {
   // Can be called from a template button or automation to force an update.
   void update_all();
 
+  // Thread-safe requests callable from any FreeRTOS task. They only enqueue a
+  // command; the main loop task drains the queue and does the real work, so all
+  // component state stays single-threaded. Non-blocking (not ISR-safe).
+  void request_refresh();
+  void request_pause();
+  void request_resume();
+
   void set_device_type(uint16_t device_type) { this->device_type_ = device_type; }
   void set_device_addr(uint8_t device_addr) { this->device_addr_ = device_addr; }
   uint16_t get_device_id() { return this->device_type_ | this->device_addr_; }
@@ -277,6 +287,12 @@ class TopTronic : public Component {
   // CAN address of this gateway node (used when building outgoing CAN IDs).
   uint16_t device_type_;
   uint8_t device_addr_;
+
+  // Commands marshalled from other tasks into the main loop task.
+  enum class Command : uint8_t { Refresh, Pause, Resume };
+  // Producer/consumer bridge: other tasks enqueue here, loop() drains on the
+  // main loop task. Created in setup(); nullptr until then.
+  QueueHandle_t cmd_queue_{nullptr};
 
   // Timestamp of the last stale-fragment sweep in loop().
   uint32_t last_cleanup_ms_{0};
