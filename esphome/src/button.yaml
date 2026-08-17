@@ -1,0 +1,11 @@
+button:
+  - platform: template
+    name: "${friendly_name} Refresh all"
+    id: refresh_all
+    icon: "mdi:refresh"
+    entity_category: "config"
+    on_press:
+      then:
+        - lambda: |-
+            id(tt_HV).update_all();
+            id(tt_BM).update_all();
