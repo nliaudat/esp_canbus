@@ -1,0 +1,85 @@
+=============================================================================
+TopTronic party mode - reverse-engineered (undocumented HV feature)
+=============================================================================
+Captures : _party_capture.log  (1st, 2026-08-17 22:34-22:38,
+                                sequences 10h@100% / 9h@100% / 8h@100% / 3h@99%)
+           _party_capture2.log (2nd, 2026-08-17 22:50-22:52,
+                                controlled 1h@100% / 2h@50% / 3h@20%)
+Decoder  : see table below (duration in 0.1 h units, power in %)
+
+---------------------------------------------------------------------------
+The write protocol (GW -> HV)
+---------------------------------------------------------------------------
+Every party-mode action sends TWO consecutive SET requests from the gateway
+CAN id 0x1FE04208 (extended, msg_id=0x1F, sender=0x0421 GW, rx=0x47FF HV):
+
+  Frame 1 - DURATION   : 01 46 32 00 07 DA 00 <duration>
+  Frame 2 - POWER      : 01 46 32 00 9F 0A <power%>
+
+  command 0x46 = SET_REQUEST
+  function_group  = 0x32
+  function_number  = 0x00
+  Frame 1 datapoint = 0x07DA   value = duration in 0.1 h units
+  Frame 2 datapoint = 0x9F0A   value = power in percent
+
+The device echoes both writes back as 0x42 RESPONSE frames on 0x1FD047FF
+(cmd 0x42, same datapoint/value), confirming acceptance.
+
+---------------------------------------------------------------------------
+Decoded sample (from _party_capture2.log)
+---------------------------------------------------------------------------
+Party 1h @ 100% :
+  SET  0x1FE04208 : 01 46 32 00 07 DA 00 0A      <- duration 0x0A = 10 x 0.1h = 1h
+  SET  0x1FE04208 : 01 46 32 00 9F 0A 64         <- power 0x64 = 100%
+  RES  0x1FD047FF : 01 42 32 00 07 DA 00 0A
+  RES  0x1FD047FF : 01 42 32 00 9F 0A 64
+  (then 0x44 ack frames 44320007da / 44320007e2 from the GW)
+
+Party 2h @ 50% :
+  SET  0x1FE04208 : 01 46 32 00 07 DA 00 14      <- 0x14 = 20 x 0.1h = 2h
+  SET  0x1FE04208 : 01 46 32 00 9F 0A 32         <- 0x32 = 50%
+  RES  0x1FD047FF : 01 42 32 00 07 DA 00 14
+  RES  0x1FD047FF : 01 42 32 00 9F 0A 32
+
+Party 3h @ 20% :
+  SET  0x1FE04208 : 01 46 32 00 07 DA 00 1E      <- 0x1E = 30 x 0.1h = 3h
+  SET  0x1FE04208 : 01 46 32 00 9F 0A 14         <- 0x14 = 20%
+  RES  0x1FD047FF : 01 42 32 00 07 DA 00 1E
+  RES  0x1FD047FF : 01 42 32 00 9F 0A 14
+
+---------------------------------------------------------------------------
+Value encoding
+---------------------------------------------------------------------------
+DURATION (datapoint 0x07DA): hours x 10  (0.1 h per unit, U8)
+  desired   raw    hex       desired  raw    hex
+  1h        10     0x0A      8h       80     0x50
+  2h        20     0x14      9h       90     0x5A
+  3h        30     0x1E      10h      100    0x64
+
+POWER (datapoint 0x9F0A): percent, raw byte (U8)
+  desired %   raw
+  100 %       0x64
+  99 %        0x63
+  50 %        0x32
+  20 %        0x14
+
+Turning "off" (normal week modes) is done with a duration write of 0x00
+(01 46 32 00 07 DA 00 00).
+
+---------------------------------------------------------------------------
+Cross-check with capture #1 (uncontrolled series)
+---------------------------------------------------------------------------
+  Time    action        duration frame          power frame
+  22:35:37 10h @ 100%   07 DA 00 64 (0x64->10h) 9F 0A 00 64 (100%)
+  22:35:48 (normal)     07 DA 00 00 (off)
+  22:35:59 9h @ 100%    07 DA 00 5A (0x5A->9h)  (9F 0A 00 64)
+  22:36:08 (normal)     07 DA 00 00
+  22:36:18 8h @ 100%    07 DA 00 50 (0x50->8h)  (9F 0A 00 64)
+  22:36:25 (normal)     07 DA 00 00
+  22:36:51 3h @ 99%     07 DA 00 1E (0x1E->3h)  9F 0A 00 63 (99%)
+
+Both captures agree: duration = hours x 10, power = percent.
+
+=============================================================================
+End of party-mode reference.
+=============================================================================

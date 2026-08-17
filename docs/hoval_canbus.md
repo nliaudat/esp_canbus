@@ -216,6 +216,35 @@ The gateway presents itself on the bus as a **GW** device
 
 ---
 
+## 7bis. Party mode (undocumented HV feature)
+
+Party mode is an undocumented HomeVent (HV) feature that forces the ventilation
+to a fixed power level for a limited time. Activating it sends **two consecutive
+SET requests** from the gateway (CAN id `0x1FE04208`) to the HV device
+(`0x47FF`):
+
+```
+Frame 1 - DURATION : 01 46 32 00 07 DA 00 <value>
+Frame 2 - POWER    : 01 46 32 00 9F 0A <value>
+```
+
+| Field | Meaning | Encoding |
+|---|---|---|
+| `0x46` | SET_REQUEST command | — |
+| `0x32 0x00` | function group / number | — |
+| `0x07DA` + value | duration | **hours x 10** (0.1 h per unit, U8). `0x0A`=1 h, `0x14`=2 h, `0x1E`=3 h, `0x50`=8 h, `0x5A`=9 h, `0x64`=10 h |
+| `0x9F0A` + value | power | **percent** (U8). `0x64`=100 %, `0x63`=99 %, `0x32`=50 %, `0x14`=20 % |
+| duration `0x00` | normal operation | turns party mode off (back to week schedule) |
+
+The device confirms each write by echoing a `0x42` RESPONSE with the same
+datapoint/value; the gateway also emits `0x44` acknowledge frames.
+
+Both values are single bytes behind the header — "concatenated" simply means two
+separate SET frames (duration then power) are sent per action.
+
+See [`candump_party_mode.log`](candump_party_mode.log) for the full captured
+samples and the cross-check table.
+
 ## 8. References
 
 - [`catch_crc.md`](catch_crc.md) — step-by-step CRC reverse-engineering guide.

@@ -11,6 +11,7 @@ ESP32 CAN bus firmware and the Hoval TopTronic integration.
 | [`catch_crc.md`](catch_crc.md) | **CRC reverse-engineering guide** — step-by-step process used to identify the multi-frame CRC-16 (collect samples with debug logging, analyse with RevEng, implement in `toptronic.cpp`). |
 | [`crc_find.py`](crc_find.py) | **CRC search tool** — brute-force Python script that reverse-engineers the polynomial/init/reflection from the captured XOR-difference samples. See `catch_crc.md` for context. |
 | [`candump_base.log`](candump_base.log) | **Reference bus capture** — annotated candump + toptronic debug showing single-frame GET/RES, `0x42` and `0x56` multi-frame reassembly (TOTAL frame count), 0x56 extended responses (cleaning/maint. counters), unknown traffic, and loop-latency notes. |
+| [`candump_party_mode.log`](candump_party_mode.log) | **Party mode (undocumented)** -- decoded SET frames: duration 0x07DA (hours x 10) + power 0x9F0A (percent). |
 
 ## For later review — quick orientation
 
