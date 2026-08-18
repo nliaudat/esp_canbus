@@ -57,7 +57,7 @@ logger:
     select: ERROR
     number: ERROR
     sensor: INFO
-    toptronic: DEBUG  # full frame details: [RES]/[SET]/[GET]/[UNK] + reassembly
+    toptronic: INFO  # DEBUG for full frame details: [RES]/[SET]/[GET]/[UNK] + reassembly
 
 packages:
   wifi: !include packages/wifi.yaml

@@ -11,16 +11,62 @@ address) and auto-generates all its entities from the bundled presets.
 
 ---
 
+## Before you start — user-editable files
+
+The firmware is organized as ESPHome packages. Before flashing, customize these
+files in the `esphome/` folder (full checklist in the root
+[`README.md`](../README.md)):
+
+| File | Purpose | Usually edited? |
+|---|---|---|
+| `secrets.yaml` | WiFi credentials + fallback AP password (**gitignored**, create it) | **Always** |
+| `config.yaml` | `substitutions:` (`name`, `can_tx_pin`, `can_rx_pin`, `board_type`, `TZ`, `toptronic_hubs`) + `toptronic:` hub blocks | **Always** |
+| `packages/wifi.yaml` | WiFi network list (`!secret` references) | Almost always |
+| `packages/board.yaml` | ESP-IDF, watchdog/sdkconfig, API/OTA | Rarely |
+| `packages/canbus.yaml` | 50 kbps `esp32_can` bus + debug candump `on_frame` | Rarely (debug only) |
+| `packages/debug.yaml` | Opt-in synthetic-frame test buttons + CRC logging | Only for reverse-engineering |
+
+> ⚠️ Every hub id listed under `toptronic_hubs` must match an `id:` in a
+> `toptronic:` block — `board.yaml` OTA pause/resume and `button.yaml`
+> refresh-all iterate over that list.
+
+---
+
 ## Hub configuration
 
 ```yaml
+  ### toptronic hubs — used by board.yaml OTA pause/resume and button.yaml refresh all
+substitutions:
+  name: canbus
+  friendly_name: "CanBus Controller"
+
+  ### canbus
+  can_tx_pin: "GPIO22"  # GPIO5
+  can_rx_pin: "GPIO21"  # GPIO4
+
+  ### board
+  board_type: az-delivery-devkit-v4 #nodemcu-32s #esp-wrover-kit
+
+  ### time
+  TZ: "Europe/Zurich"  # timezone
+
+  ### toptronic hubs — used by board.yaml OTA pause/resume and button.yaml refresh all
+  toptronic_hubs:
+    - toptronic_HV
+    # - toptronic_BM
+
 toptronic:
-  - id: toptronic_HV             # unique id, referenced by lambdas / substitutions
-    canbus_id: cbus              # the canbus component id (bit_rate: 50kbps)
-    device_type: HV              # WEZ, SOL, PS, FW, HK, MWA, GLT, HV, BM, GW
-    device_addr: 8               # bus address of the device
-    language: en                 # preset language: de, en, fr, it
-    use_canbus_callback: true    # true → internal canbus callback; false → route via canbus on_frame
+  - id: toptronic_HV  # HomeVent
+    canbus_id: cbus  # the canbus bit_rate must be 50kbps. do not change name as it used in canbus.yaml
+    device_type: HV  # WEZ, HV, BM (BD is an alias for BM and BM must be used)
+    device_addr: 8  # defaults are : HV=8, BM=8, WEZ=1
+    language: en  # de, en, fr, it
+
+  # - id: toptronic_BM  # display
+    # canbus_id: cbus  # the canbus bit_rate must be 50kbps
+    # device_type: BM
+    # device_addr: 8
+    # language: en
 ```
 
 | Option | Required | Default | Description |
@@ -30,7 +76,6 @@ toptronic:
 | `device_type` | yes | — | One of `WEZ`, `SOL`, `PS`, `FW`, `HK`, `MWA`, `GLT`, `HV`, `BM`, `GW` (`BD` is an alias for `BM`; use `BM`). |
 | `device_addr` | yes | — | Bus address (typical defaults: `HV=8`, `BM=8`, `WEZ=1` — find it on the room control unit). |
 | `language` | no | `en` | Preset language: `de`, `en`, `fr`, `it`. |
-| `use_canbus_callback` | no | `true` | When `false`, frames are routed through the canbus `on_frame` trigger instead of the internal callback. |
 | `boot_refresh_delay` | no | `30s` | One-shot full refresh after boot; `0` disables it. |
 
 `MULTI_CONF = true` — declare as many hubs as you have devices.

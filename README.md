@@ -73,15 +73,52 @@ Version: 2026.7.0
 
 #### Firmware configuration
 
-Enter your Wifi SSID and password in `secrets.yaml`.<br />
-Then open `config.yaml` and make the following changes:
-1. Set `can_tx_pin` and `can_rx_pin`
-2. Configure one `toptronic:` block **per device** (device type + address). You can find the address of each hoval device in your room control unit under maintenance (e.g. `HV(8)`, `BM(8)`, `WEZ(1)`). All presets are located at [`esphome/components/toptronic/presets`](https://github.com/nliaudat/esp_canbus/tree/main/esphome/components/toptronic/presets). <br /> e.g. to expose both an HV and a WEZ device:
+Before flashing, the following files need to be customized for **your**
+installation. All of them live in the `esphome/` folder.
+
+##### 1. `esphome/secrets.yaml` — REQUIRED (create it)
+
+This file is **gitignored** — it is never committed. Create it in
+`esphome/secrets.yaml` with your WiFi credentials:
 
 ```yaml
+wifi_ssid_1: "your_main_wifi"
+wifi_password_1: "your_main_password"
+wifi_ssid_2: "your_second_wifi"
+wifi_password_2: "your_second_password"
+wifi_ssid_3: "your_third_wifi"
+wifi_password_3: "your_third_password"
+fallback_hotspot_password: "your_fallback_ap_password"
+```
 
+> If you have fewer networks, leave the unused entries — ESPHome only uses the
+> networks that are actually listed in `packages/wifi.yaml`.
+
+##### 2. `esphome/config.yaml` — REQUIRED
+
+Open `config.yaml` and adjust:
+
+- `substitutions:`
+  - `name` — used as the device name / mDNS hostname (`canbus` → `http://canbus.local/`)
+  - `friendly_name` — shown in Home Assistant
+  - `can_tx_pin` / `can_rx_pin` — your CAN transceiver wiring (defaults `GPIO22`/`GPIO21`)
+  - `board_type` — your ESP32 devkit (default `az-delivery-devkit-v4`)
+  - `TZ` — your timezone (default `Europe/Zurich`)
+  - `toptronic_hubs` — **must list every hub id** you declare below; it is used by
+    `board.yaml` (OTA pause/resume) and `button.yaml` (refresh-all) via a Jinja loop.
+- `toptronic:` — one block **per device** (device type + address). You can find the
+  address of each Hoval device in your room control unit under maintenance
+  (e.g. `HV(8)`, `BM(8)`, `WEZ(1)`). All available presets are listed in
+  [`esphome/components/toptronic/presets`](esphome/components/toptronic/presets).
+
+Example exposing both an HV and a BM device:
+
+```yaml
 substitutions:
- ### toptronic hubs — used by board.yaml OTA pause/resume and button.yaml refresh all
+  name: canbus
+  # ...
+
+  ### toptronic hubs — used by board.yaml OTA pause/resume and button.yaml refresh all
   toptronic_hubs:
     - toptronic_HV
     - toptronic_BM
@@ -98,10 +135,41 @@ toptronic:
     device_type: BM
     device_addr: 8
     language: en
-
 ```
 
-If you want to create your own preset or need other datapoints have a look at [`hoval_data_processing`](https://github.com/nliaudat/esp_canbus/tree/main/hoval_data_processing)
+> ⚠️ Every hub id in `toptronic_hubs` MUST match an `id:` in a `toptronic:` block —
+> otherwise `esphome config` fails with an unknown-id error.
+
+##### 3. `esphome/packages/wifi.yaml` — usually REQUIRED
+
+This package contains the WiFi networks referenced by `secrets.yaml`. Add /
+remove network entries to match your environment, and uncomment `hidden: true`
+for hidden SSIDs. The fallback hotspot SSID is derived from `name`
+(`<name> Fallback`, e.g. `canbus Fallback`) and uses
+`fallback_hotspot_password` from `secrets.yaml`.
+
+##### 4. `esphome/packages/board.yaml` — OPTIONAL
+
+- `esp32.board` comes from the `board_type` substitution in `config.yaml`
+  (e.g. `az-delivery-devkit-v4`, `nodemcu-32s`, `esp-wrover-kit`) — change it there,
+  not here.
+- The `api:`, `ota:`, and `safe_mode:` blocks are usually left at their defaults.
+- The OTA `on_begin`/`on_end`/`on_error` lambdas iterate over `toptronic_hubs` to
+  pause/resume frame processing during updates — no change needed unless you want
+  different watchdog/`sdkconfig` values.
+
+##### 5. Other packages — usually leave as-is
+
+`time.yaml` (SNTP + optional weekly reboot), `sensors_others.yaml` (WiFi signal /
+internal temperature), `switch.yaml` (restart), `button.yaml` (refresh-all), and
+`canbus.yaml` (50 kbps `esp32_can` platform). `debug.yaml` is **opt-in** — it
+injects synthetic frames for testing and must be enabled manually in `config.yaml`.
+
+> ℹ️ The `canbus.yaml` file also contains a commented-out **candump** `on_frame`
+> trigger for debugging the raw bus — uncomment it temporarily to log every frame.
+
+If you want to create your own preset or need other datapoints, have a look at
+[`hoval_data_processing`](hoval_data_processing/).
 
 #### Flash the firmware
 

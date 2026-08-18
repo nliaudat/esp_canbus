@@ -9,12 +9,12 @@ with large data types (U32 / S32 / S64).
 
 ## Step 1 — Enable CRC logging
 
-`src/debug.yaml` already contains:
+`esphome/packages/debug.yaml` already contains:
 
 ```yaml
 logger:
   logs:
-    tt: DEBUG
+    toptronic: DEBUG
 ```
 
 Flash it alongside your main config. This activates `[CRC]` log lines in `toptronic.cpp`
@@ -30,7 +30,7 @@ Wait for the boiler to send multi-frame responses (typically starts at boot or o
 Look for lines like:
 
 ```
-[D][tt:395]: [CRC] len=9 crc=0xA1B2 payload=0x420102000BEA0100FF
+[D][toptronic:395]: [CRC] len=9 crc=0xA1B2 payload=0x420102000BEA0100FF
 ```
 
 Copy at least **5–10 different lines** — more is better. You need:
@@ -101,4 +101,4 @@ implemented as a simple lookup table or polynomial loop.
 ## Cleanup
 
 Once the CRC is identified and implemented, remove the `logger:` block from
-`src/debug.yaml` to stop verbose `[CRC]` output.
+`esphome/packages/debug.yaml` to stop verbose `[CRC]` output.
