@@ -1,4 +1,14 @@
-packages:
-  uart: !include ../../test_build_components/common/uart/esp32-idf.yaml
+esphome:
+  name: toptronic-test
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+external_components:
+  - source:
+      type: local
+      path: ../../../esphome/components
 
 <<: !include common.yaml
