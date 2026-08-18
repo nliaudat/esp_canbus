@@ -9,5 +9,6 @@ time:
         hours: 6
         days_of_week: MON  # -SUN
         then:
+          - delay: 2s  # allow any in-flight CAN transaction to complete
           - switch.toggle: canbus_controller_reboot
     id: canbus_controller_time

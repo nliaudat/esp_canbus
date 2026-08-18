@@ -6,7 +6,7 @@ import yaml
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components.canbus import CanbusComponent
-from esphome.const import CONF_ID
+from esphome.const import CONF_ID, CONF_OPTIONS
 from esphome.core import CORE, ID
 from esphome.cpp_types import Component
 
@@ -86,9 +86,24 @@ def _validate_preset(config):
     if device_type not in _device_types:
         raise cv.Invalid(f"Device type '{device_type}' is not a known TopTronic device type")
     if not (PRESETS_DIR / device_type).is_dir():
+        available = sorted(d.name for d in PRESETS_DIR.iterdir() if d.is_dir()) if PRESETS_DIR.is_dir() else []
         raise cv.Invalid(
             f"No preset directory found for device type '{device_type}'. "
-            "Available presets: WEZ, HV, BM"
+            f"Available presets: {', '.join(available)}"
+        )
+    return config
+
+
+def _validate_options_values_lengths(config):
+    """Validate that 'options' and 'values' lists have matching lengths (select/text_sensor).
+
+    Per instructions.md §7.3 these MUST match; a mismatch would otherwise surface as a
+    bare IndexError during code generation instead of a clean validation error.
+    """
+    if len(config[CONF_OPTIONS]) != len(config[CONF_VALUES]):
+        raise cv.Invalid(
+            f"'options' length ({len(config[CONF_OPTIONS])}) must match "
+            f"'values' length ({len(config[CONF_VALUES])})"
         )
     return config
 

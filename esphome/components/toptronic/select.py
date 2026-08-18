@@ -17,24 +17,28 @@ from . import (
     CONF_DATAPOINT,
     CONF_VALUES,
     TT_TYPE_OPTIONS,
+    _validate_options_values_lengths,
 )
 
 TopTronicSelect = toptronic.class_(
     "TopTronicSelect", select.Select, cg.PollingComponent
 )
 
-CONFIG_SCHEMA = cv.Schema({
-    cv.GenerateID(CONF_TT_ID): cv.use_id(TopTronicComponent),
-    cv.Required(CONF_OPTIONS): cv.All(
-        cv.ensure_list(cv.string_strict), cv.Length(min=1)
-    ),
-    cv.Required(CONF_VALUES): cv.All(
-        cv.ensure_list(cv.int_), cv.Length(min=1)
-    ),
-    cv.Optional(CONF_TYPE, default="U8"): cv.enum(TT_TYPE_OPTIONS),
-}).extend(select.select_schema(
-    TopTronicSelect
-)).extend(CONFIG_SCHEMA_BASE)
+CONFIG_SCHEMA = cv.All(
+    cv.Schema({
+        cv.GenerateID(CONF_TT_ID): cv.use_id(TopTronicComponent),
+        cv.Required(CONF_OPTIONS): cv.All(
+            cv.ensure_list(cv.string_strict), cv.Length(min=1)
+        ),
+        cv.Required(CONF_VALUES): cv.All(
+            cv.ensure_list(cv.int_), cv.Length(min=1)
+        ),
+        cv.Optional(CONF_TYPE, default="U8"): cv.enum(TT_TYPE_OPTIONS),
+    }).extend(select.select_schema(
+        TopTronicSelect
+    )).extend(CONFIG_SCHEMA_BASE),
+    _validate_options_values_lengths,
+)
 
 
 async def new_select(config, *, options: list[str]):

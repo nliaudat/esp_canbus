@@ -19,7 +19,7 @@ substitutions:
   ### toptronic hubs — used by board.yaml OTA pause/resume and button.yaml refresh all
   toptronic_hubs:
     - toptronic_HV
-    - toptronic_BM
+    # - toptronic_BM
 
 toptronic:
   - id: toptronic_HV  # HomeVent
@@ -29,12 +29,12 @@ toptronic:
     language: en  # de, en, fr, it
     use_canbus_callback: true  # false -> route via canbus on_frame instead
 
-  - id: toptronic_BM  # display
-    canbus_id: cbus  # the canbus bit_rate must be 50kbps
-    device_type: BM
-    device_addr: 8
-    language: en
-    use_canbus_callback: true  # false -> route via canbus on_frame instead
+  # - id: toptronic_BM  # display
+    # canbus_id: cbus  # the canbus bit_rate must be 50kbps
+    # device_type: BM
+    # device_addr: 8
+    # language: en
+    # use_canbus_callback: true  # false -> route via canbus on_frame instead
 
 external_components:
   - source:

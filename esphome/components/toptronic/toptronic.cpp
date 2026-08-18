@@ -278,6 +278,12 @@ static uint32_t reflect(uint32_t val, uint8_t width) {
 // table is therefore MSB-first over PRE-REFLECTED bytes:
 //   crc = (crc << 8) ^ table[((crc >> 8) ^ reflect(byte)) & 0xFF]
 // Equivalent to the bit-wise loop (validated against captured samples).
+//
+// Thread-safety: the lazy one-time init below is intentionally not atomic.
+// ESPHome routes all component calls ({parse_frame, loop, update}) through the
+// single main-loop task, so no two tasks can race on `initialized` in practice.
+// Keep this function on the main loop task; do not call it from other FreeRTOS
+// tasks without first adding a mutex or moving the init to setup().
 static const uint16_t *crc16_table() {
   static uint16_t table[256];
   static bool initialized = false;
@@ -386,6 +392,7 @@ void TopTronic::register_input_callbacks() {
 // the 50 kbps bus with a burst of GET frames.
 void TopTronic::update_all() {
   if (!this->pending_refresh_.empty()) {
+    ESP_LOGI(TAG, "Refresh already in progress (%zu sensors pending), request ignored", this->pending_refresh_.size());
     return;  // a burst is already in progress
   }
   for (const auto &d : this->devices_) {
