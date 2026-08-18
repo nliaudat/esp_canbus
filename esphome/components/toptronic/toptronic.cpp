@@ -201,8 +201,8 @@ void TopTronicSelect::control(const std::string &text) {
   }
   uint8_t value = it->second;
 
-  std::vector<uint8_t> data =
-      build_set_request(this->function_group_, this->function_number_, this->datapoint_, {value});
+  std::vector<uint8_t> data = build_set_request(this->function_group_, this->function_number_, this->datapoint_,
+                                                float_to_bytes(static_cast<float>(value), this->type_));
   this->set_callback_.call(data);
 
   ESP_LOGD(TAG, "[SET] %s: %s, Data: 0x%s", this->get_name().c_str(), text.c_str(),

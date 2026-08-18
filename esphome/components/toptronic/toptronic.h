@@ -161,7 +161,9 @@ class TopTronicTextSensor : public text_sensor::TextSensor, public TopTronicBase
 // Mirrors TopTronicTextSensor but exposes a dropdown in Home Assistant.
 class TopTronicSelect : public select::Select, public TopTronicBase {
  public:
+  void set_type(TypeName type) { this->type_ = type; }
   SensorType type() override { return TEXTSENSOR; }
+  TypeName get_value_type() { return this->type_; }
 
   // Register a value↔text mapping (called from generated YAML code at startup).
   void add_option(uint8_t value, const std::string &text) {
@@ -173,6 +175,7 @@ class TopTronicSelect : public select::Select, public TopTronicBase {
   std::map<uint8_t, std::string> to_text_;   // raw boiler code → label string
   std::map<std::string, uint8_t> to_value_;  // label string → raw boiler code
 
+  TypeName type_{U8};  // value encoding width (U8 default; U16 used by party duration)
   // Called by ESPHome when the user picks a new option from Home Assistant.
   void control(const std::string &value) override;
 };

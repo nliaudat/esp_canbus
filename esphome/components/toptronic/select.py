@@ -4,6 +4,7 @@ from esphome.components import select
 from esphome.const import (
     CONF_ID,
     CONF_OPTIONS,
+    CONF_TYPE,
 )
 
 from . import (
@@ -15,6 +16,7 @@ from . import (
     CONF_FUNCTION_NUMBER,
     CONF_DATAPOINT,
     CONF_VALUES,
+    TT_TYPE_OPTIONS,
 )
 
 TopTronicSelect = toptronic.class_(
@@ -29,6 +31,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Required(CONF_VALUES): cv.All(
         cv.ensure_list(cv.int_), cv.Length(min=1)
     ),
+    cv.Optional(CONF_TYPE, default="U8"): cv.enum(TT_TYPE_OPTIONS),
 }).extend(select.select_schema(
     TopTronicSelect
 )).extend(CONFIG_SCHEMA_BASE)
@@ -48,6 +51,7 @@ async def to_code(config):
     cg.add(var.set_function_group(config[CONF_FUNCTION_GROUP]))
     cg.add(var.set_function_number(config[CONF_FUNCTION_NUMBER]))
     cg.add(var.set_datapoint(config[CONF_DATAPOINT]))
+    cg.add(var.set_type(config[CONF_TYPE]))
 
     for i in range(len(config[CONF_OPTIONS])):
         value = config[CONF_VALUES][i]
