@@ -62,14 +62,14 @@ logger:
     toptronic: DEBUG  # full frame details: [RES]/[SET]/[GET]/[UNK] + reassembly
 
 packages:
-  wifi: !include src/wifi.yaml
-  board: !include src/board.yaml
-  time: !include src/time.yaml
-  canbus: !include src/canbus.yaml
-  sensors_others: !include src/sensors_others.yaml
-  switch: !include src/switch.yaml
-  button: !include src/button.yaml
-  # debug: !include src/debug.yaml
+  wifi: !include packages/wifi.yaml
+  board: !include packages/board.yaml
+  time: !include packages/time.yaml
+  canbus: !include packages/canbus.yaml
+  sensors_others: !include packages/sensors_others.yaml
+  switch: !include packages/switch.yaml
+  button: !include packages/button.yaml
+  # debug: !include packages/debug.yaml
 
 # web_server:
 #   port: 80
