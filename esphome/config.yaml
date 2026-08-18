@@ -27,14 +27,12 @@ toptronic:
     device_type: HV  # WEZ, HV, BM (BD is an alias for BM and BM must be used)
     device_addr: 8  # defaults are : HV=8, BM=8, WEZ=1
     language: en  # de, en, fr, it
-    use_canbus_callback: true  # false -> route via canbus on_frame instead
 
   # - id: toptronic_BM  # display
     # canbus_id: cbus  # the canbus bit_rate must be 50kbps
     # device_type: BM
     # device_addr: 8
     # language: en
-    # use_canbus_callback: true  # false -> route via canbus on_frame instead
 
 external_components:
   - source:

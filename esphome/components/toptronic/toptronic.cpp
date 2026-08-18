@@ -493,13 +493,9 @@ void TopTronic::setup() {
   this->cmd_queue_ = xQueueCreate(8, sizeof(Command));
 
   // Register with the CAN bus so all received frames are routed to parse_frame().
-  // Disabled via `use_canbus_callback: false` when routing through the canbus
-  // `on_frame` trigger instead.
-  if (this->use_canbus_callback_) {
-    this->canbus_->add_callback([this](uint32_t can_id, bool, bool rtr, const std::vector<uint8_t> &data) {
-      this->parse_frame(data, can_id, rtr);
-    });
-  }
+  this->canbus_->add_callback([this](uint32_t can_id, bool, bool rtr, const std::vector<uint8_t> &data) {
+    this->parse_frame(data, can_id, rtr);
+  });
 }
 
 void TopTronic::loop() {

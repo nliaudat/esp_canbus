@@ -209,7 +209,8 @@ class TopTronicDevice {
 };
 
 // Root component: owns all TopTronicDevice instances and is the entry point
-// for every incoming CAN frame (parse_frame is called from canbus trigger).
+// for every incoming CAN frame (parse_frame is called from the internal
+// canbus callback registered in setup()).
 class TopTronic : public Component {
  public:
   explicit TopTronic(canbus::Canbus *canbus) : canbus_(canbus) {}
@@ -244,11 +245,6 @@ class TopTronic : public Component {
 
   // Delay before the one-shot post-boot refresh; 0 disables it.
   void set_boot_refresh_delay(uint32_t ms) { this->boot_refresh_delay_ms_ = ms; }
-
-  // Enable/disable registration of the internal canbus frame callback.
-  // When false, routing must be done via the canbus `on_frame` trigger.
-  void set_use_canbus_callback(bool use_callback) { this->use_canbus_callback_ = use_callback; }
-  bool get_use_canbus_callback() { return this->use_canbus_callback_; }
 
   // Pause/resume CAN frame processing. Used during OTA to free the main loop
   // and logging path so the update connection is not starved.
@@ -314,9 +310,6 @@ class TopTronic : public Component {
 
   // When true, parse_frame() ignores incoming CAN frames (used during OTA).
   bool paused_{false};
-
-  // When true, setup() registers the internal canbus frame callback.
-  bool use_canbus_callback_{true};
 };
 
 }  // namespace esphome::toptronic
