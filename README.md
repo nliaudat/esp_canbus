@@ -116,6 +116,5 @@ For HomeVent :
 
 
 
-## Licence: 
-* Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC-BY-NC-SA)
-* No commercial use
+## License
+This project is licensed under the Apache-2.0 license
