@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Logic tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run protocol logic tests
+        run: python tests/toptronic_logic_test.py
+
+  lint:
+    name: Lint (pre-commit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run pre-commit
+        run: |
+          pip install pre-commit
+          pre-commit run --all-files
+
+  clang-format:
+    name: clang-format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run clang-format
+        run: |
+          pip install pre-commit
+          pre-commit run clang-format --all-files
+
+  yamllint:
+    name: yamllint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run yamllint
+        run: |
+          pip install pre-commit
+          pre-commit run yamllint --all-files
+
+  compile:
+    name: ESPHome compile
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/esphome/esphome:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile component test config
+        run: esphome compile tests/components/toptronic/test.esp32-idf.yaml

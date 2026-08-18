@@ -1,40 +1,44 @@
-# https://github.com/esphome/esphome/blob/dev/esphome/components/template/select/__init__.py
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import select
 from esphome.const import (
     CONF_ID,
     CONF_OPTIONS,
+    CONF_TYPE,
 )
+
 from . import (
     toptronic,
     CONF_TT_ID,
     TopTronicComponent,
     CONFIG_SCHEMA_BASE,
-    CONF_DEVICE_TYPE,
-    CONF_DEVICE_ADDR,
     CONF_FUNCTION_GROUP,
     CONF_FUNCTION_NUMBER,
     CONF_DATAPOINT,
     CONF_VALUES,
-    get_device_type,
+    TT_TYPE_OPTIONS,
+    _validate_options_values_lengths,
 )
 
 TopTronicSelect = toptronic.class_(
-    "TopTronicSelect", select.Select
+    "TopTronicSelect", select.Select, cg.PollingComponent
 )
 
-CONFIG_SCHEMA = cv.Schema({
-    cv.GenerateID(CONF_TT_ID): cv.use_id(TopTronicComponent),
-    cv.Required(CONF_OPTIONS): cv.All(
-        cv.ensure_list(cv.string_strict), cv.Length(min=1)
-    ),
-    cv.Required(CONF_VALUES): cv.All(
-        cv.ensure_list(cv.int_), cv.Length(min=1)
-    ),
-}).extend(select.select_schema(
-    TopTronicSelect
-)).extend(CONFIG_SCHEMA_BASE)
+CONFIG_SCHEMA = cv.All(
+    cv.Schema({
+        cv.GenerateID(CONF_TT_ID): cv.use_id(TopTronicComponent),
+        cv.Required(CONF_OPTIONS): cv.All(
+            cv.ensure_list(cv.string_strict), cv.Length(min=1)
+        ),
+        cv.Required(CONF_VALUES): cv.All(
+            cv.ensure_list(cv.int_), cv.Length(min=1)
+        ),
+        cv.Optional(CONF_TYPE, default="U8"): cv.enum(TT_TYPE_OPTIONS),
+    }).extend(select.select_schema(
+        TopTronicSelect
+    )).extend(CONFIG_SCHEMA_BASE),
+    _validate_options_values_lengths,
+)
 
 
 async def new_select(config, *, options: list[str]):
@@ -46,13 +50,12 @@ async def new_select(config, *, options: list[str]):
 async def to_code(config):
     tt = await cg.get_variable(config[CONF_TT_ID])
     var = await new_select(config, options=config[CONF_OPTIONS])
+    await cg.register_component(var, config)
 
-    device_type = get_device_type(config[CONF_DEVICE_TYPE])
-    cg.add(var.set_device_type(device_type))
-    cg.add(var.set_device_addr(config[CONF_DEVICE_ADDR]))
     cg.add(var.set_function_group(config[CONF_FUNCTION_GROUP]))
     cg.add(var.set_function_number(config[CONF_FUNCTION_NUMBER]))
     cg.add(var.set_datapoint(config[CONF_DATAPOINT]))
+    cg.add(var.set_type(config[CONF_TYPE]))
 
     for i in range(len(config[CONF_OPTIONS])):
         value = config[CONF_VALUES][i]

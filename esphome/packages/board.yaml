@@ -1,0 +1,58 @@
+esphome:
+  name: $name
+  on_boot:
+    priority: 200
+    then:
+      - wait_until:
+          condition:
+            wifi.connected:
+          timeout: 15s
+
+esp32:
+  board: ${board_type} #az-delivery-devkit-v4  # nodemcu-32s / esp-wrover-kit
+  framework:
+    type: esp-idf  # arduino / esp-idf — not ready missing json and async_tcp
+    version: recommended  # latest
+    sdkconfig_options:
+      CONFIG_COMPILER_OPTIMIZATION_PERF: y
+      CONFIG_ESP32_DEFAULT_CPU_FREQ_240: y
+      CONFIG_MBEDTLS_SSL_PROTO_TLS1_3: "y"
+      CONFIG_TASK_WDT: "y"  # prevents watchdog timeouts
+      CONFIG_TASK_WDT_TIMEOUT_S: "30"  # prevents watchdog timeouts
+      CONFIG_TASK_WDT_CHECK_IDLE_TASK_CPU0: "n"  # prevents watchdog timeouts
+      # CONFIG_LOG_DEFAULT_LEVEL: "0"  # prevents "ESP-IDF" Guru Meditation Error
+      CONFIG_FREERTOS_HZ: "1000"
+
+# psram:
+
+preferences:
+  flash_write_interval: 60min
+
+# Enable Home Assistant API
+api:
+  reboot_timeout: 30min
+
+ota:
+  - platform: esphome
+    on_begin:
+      then:
+        - lambda: |-
+            <% for h in toptronic_hubs %>id(${ h }).pause();
+            <% endfor %>
+    on_end:
+      then:
+        - lambda: |-
+            <% for h in toptronic_hubs %>id(${ h }).resume();
+            <% endfor %>
+    on_abort:
+      then:
+        - lambda: |-
+            <% for h in toptronic_hubs %>id(${ h }).resume();
+            <% endfor %>
+    on_error:
+      then:
+        - lambda: |-
+            <% for h in toptronic_hubs %>id(${ h }).resume();
+            <% endfor %>
+
+safe_mode:

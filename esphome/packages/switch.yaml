@@ -1,0 +1,5 @@
+switch:
+  - platform: restart
+    name: "${friendly_name} restart"
+    icon: "mdi:restart"
+    id: canbus_controller_reboot

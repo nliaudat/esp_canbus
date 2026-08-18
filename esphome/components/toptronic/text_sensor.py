@@ -1,40 +1,38 @@
-# https://github.com/esphome/esphome/blob/dev/esphome/components/fs3000/sensor.py
-# https://github.com/esphome/esphome/blob/dev/esphome/components/daly_bms/sensor.py
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import text_sensor
-from esphome.const import (
-    CONF_OPTIONS,
-)
+from esphome.const import CONF_OPTIONS
+
 from . import (
     toptronic,
     CONF_TT_ID,
     TopTronicComponent,
     CONFIG_SCHEMA_BASE,
-    CONF_DEVICE_TYPE,
-    CONF_DEVICE_ADDR,
     CONF_FUNCTION_GROUP,
     CONF_FUNCTION_NUMBER,
     CONF_DATAPOINT,
     CONF_VALUES,
-    get_device_type,
+    _validate_options_values_lengths,
 )
 
 TopTronicTextSensor = toptronic.class_(
     "TopTronicTextSensor", text_sensor.TextSensor, cg.PollingComponent,
 )
 
-CONFIG_SCHEMA = cv.Schema({
-    cv.GenerateID(CONF_TT_ID): cv.use_id(TopTronicComponent),
-    cv.Required(CONF_OPTIONS): cv.All(
-        cv.ensure_list(cv.string_strict), cv.Length(min=1)
-    ),
-    cv.Required(CONF_VALUES): cv.All(
-        cv.ensure_list(cv.int_), cv.Length(min=1)
-    ),
-}).extend(text_sensor.text_sensor_schema(
-    TopTronicTextSensor
-)).extend(CONFIG_SCHEMA_BASE)
+CONFIG_SCHEMA = cv.All(
+    cv.Schema({
+        cv.GenerateID(CONF_TT_ID): cv.use_id(TopTronicComponent),
+        cv.Required(CONF_OPTIONS): cv.All(
+            cv.ensure_list(cv.string_strict), cv.Length(min=1)
+        ),
+        cv.Required(CONF_VALUES): cv.All(
+            cv.ensure_list(cv.int_), cv.Length(min=1)
+        ),
+    }).extend(text_sensor.text_sensor_schema(
+        TopTronicTextSensor
+    )).extend(CONFIG_SCHEMA_BASE),
+    _validate_options_values_lengths,
+)
 
 
 async def to_code(config):
@@ -42,9 +40,6 @@ async def to_code(config):
     sens = await text_sensor.new_text_sensor(config)
     await cg.register_component(sens, config)
 
-    device_type = get_device_type(config[CONF_DEVICE_TYPE])
-    cg.add(sens.set_device_type(device_type))
-    cg.add(sens.set_device_addr(config[CONF_DEVICE_ADDR]))
     cg.add(sens.set_function_group(config[CONF_FUNCTION_GROUP]))
     cg.add(sens.set_function_number(config[CONF_FUNCTION_NUMBER]))
     cg.add(sens.set_datapoint(config[CONF_DATAPOINT]))

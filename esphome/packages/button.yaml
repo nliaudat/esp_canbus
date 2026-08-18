@@ -1,0 +1,11 @@
+button:
+  - platform: template
+    name: "${friendly_name} Refresh all"
+    id: refresh_all
+    icon: "mdi:refresh"
+    entity_category: "config"
+    on_press:
+      then:
+        - lambda: |-
+            <% for h in toptronic_hubs %>id(${ h }).update_all();
+            <% endfor %>
