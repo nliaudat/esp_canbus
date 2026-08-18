@@ -15,7 +15,7 @@ source: ".ai/instructions.md"
 # =============================================================================
 project:
   repo: "https://github.com/nliaudat/esp_canbus"
-  license: "CC BY-NC-SA 4.0 (non-commercial, share-alike)"
+  license: "Apache-2.0"
   target_board: "ESP32-WROOM-32D/32U (classic ESP32, az-delivery-devkit-v4)"
   framework: "ESPHome external_components + ESP-IDF (esp32_can platform)"
   esphome_version: "2026.7.0+"
@@ -25,7 +25,7 @@ project:
     - "Single-board classic ESP32 (no S3, no TFLite, no camera, no PSRAM)"
     - "ESP-IDF only"
     - "Reverse-engineered TopTronic protocol is the core asset"
-    - "Non-commercial license --- derivatives must stay BY-NC-SA"
+    - "Apache-2.0 licensed"
 
 # =============================================================================
 # S2 REPOSITORY ARCHITECTURE
@@ -33,13 +33,14 @@ project:
 architecture:
   esphome_config:
     - "esphome/config.yaml: main entrypoint --- toptronic hubs + packages"
-    - "esphome/src/*.yaml: ESPHome packages (wifi/board/time/canbus/sensors/switch/debug)"
+    - "esphome/packages/*.yaml: ESPHome packages (wifi/board/time/canbus/sensors/switch/button/debug)"
   component: "esphome/components/toptronic/"
   component_files:
     - "__init__.py: hub schema, preset loading, entity generation"
     - "toptronic.h/.cpp: C++ protocol engine"
     - "sensor.py / text_sensor.py: read-only entities"
     - "number.py / select.py: writable entities"
+    - "button.py: fire-and-forget action entities"
     - "presets/{WEZ,HV,BM}/*.yaml: GENERATED entity YAML (de/en/fr/it)"
   data_processing: "hoval_data_processing/ (NOT shipped): generate_presets.py, xls_parser.py, TTE-GW-Modbus-datapoints.xlsx"
   pcb: "pcb/ (KiCad schematics, 3D view, wiring photo)"
@@ -47,7 +48,7 @@ architecture:
   hub_meta:
     codeowners: "@nliaudat"
     dependencies: ["canbus"]
-    auto_load: ["sensor", "number", "select", "text_sensor"]
+    auto_load: ["sensor", "number", "select", "text_sensor", "button"]
     multi_conf: true
   dataflow: "xlsx -> xls_parser.py -> Datapoint -> generate_presets.py -> presets/*.yaml -> __init__.py _load_entities -> entity schemas -> codegen -> CAN parse_frame() -> publish_state()"
 
@@ -166,9 +167,9 @@ cpp:
     rule: "static constexpr / enum over #define"
     ok: "static constexpr size_t MAX_PENDING_MESSAGES = 16;"
     bad: "#define MAX_PENDING_MESSAGES 16"
-    exceptions: ["conditional compilation flags only (USE_SENSOR, USE_TEXT_SENSOR, USE_NUMBER, USE_SELECT)"]
+    exceptions: ["conditional compilation flags only (USE_SENSOR, USE_TEXT_SENSOR, USE_NUMBER, USE_SELECT, USE_BUTTON)"]
   feature_guards:
-    - "Entity classes/headers wrapped in #ifdef USE_SENSOR / USE_TEXT_SENSOR / USE_NUMBER / USE_SELECT"
+    - "Entity classes/headers wrapped in #ifdef USE_SENSOR / USE_TEXT_SENSOR / USE_NUMBER / USE_SELECT / USE_BUTTON"
     - "toptronic.h includes platform headers ONLY inside matching #ifdef"
   casts:
     note: "Existing C-style casts ACCEPTED (clang-tidy disables cstyle-cast checks, clang-format SpaceAfterCStyleCast: true) --- do NOT mass-rewrite"
@@ -212,7 +213,7 @@ python:
   entity_generation:
     - "_generate_entities() loads presets/<device>/sensors_<lang>.yaml + inputs_<lang>.yaml"
     - "strip platform/device_type/device_addr, inject hub reference, run platform schema + codegen"
-    - "All CONF_* constants live in __init__.py (shared by 4 platform files)"
+    - "All CONF_* constants live in __init__.py (shared by 5 platform files)"
     - "Platform files import shared pieces (CONFIG_SCHEMA_BASE, CONF_TT_ID, CONF_FUNCTION_GROUP, CONF_FUNCTION_NUMBER, CONF_DATAPOINT, TT_TYPE_OPTIONS)"
   type_mapping:
     - "TT_TYPE_OPTIONS (U8/U16/U32/S8/S16/S32/S64 -> TypeName) is the ONLY source --- no duplicates"
@@ -246,12 +247,12 @@ yaml_presets:
       - "Verify diff is exactly the intended entity changes"
     generated_rules:
       - "newline='\\n', encoding='utf-8', sort_keys=False, _IndentDumper (indented sequences)"
-      - "entity id: <DEVICE>_<fg>_<fn>_<dp>; writable adds _set suffix"
-      - "writable presets -> internal: true sensors; read+write pairs linked via link_inputs()"
+    - "entity id: <DEVICE>_<fg>_<fn>_<dp>; writable adds _set suffix"
+    - "writable presets -> internal: true sensors; read+write pairs linked via link_inputs()"
   src_packages:
-    - "board.yaml: ESP-IDF, CONFIG_COMPILER_OPTIMIZATION_PERF, CONFIG_TASK_WDT*, logger map, tt: INFO (tt: DEBUG only for CAN/CRC work via debug.yaml)"
+    - "board.yaml: ESP-IDF, CONFIG_COMPILER_OPTIMIZATION_PERF, CONFIG_TASK_WDT*, logger map, toptronic: INFO (toptronic: DEBUG only for CAN/CRC work via debug.yaml)"
     - "canbus log level BELOW INFO may crash (esphome/issues#4051) --- keep canbus: ERROR/INFO"
-    - "debug.yaml: synthetic-frame test buttons via id(tt_HV).parse_frame(x, can_id, false) --- opt-in, commented out in config.yaml"
+    - "debug.yaml: synthetic-frame test buttons via id(toptronic_HV).parse_frame(x, can_id, false) --- opt-in, commented out in config.yaml"
 
 # =============================================================================
 # S9 MEMORY & PERFORMANCE
@@ -302,8 +303,8 @@ testing:
     - "pre-commit run --all-files (clang-format, flake8, yamllint) must pass"
     - "flake8 docstring rules D100-D401 ignored per .flake8; do NOT add new ignores"
   runtime:
-    - "Watch tt: INFO logs for [GET]/[SET]/[RES] to verify polling/decoding"
-    - "CRC work: tt: DEBUG + debug.yaml, ~10 samples, reveng -w 16 -s to validate assumptions before touching compute_crc16()"
+    - "Watch toptronic: INFO logs for [GET]/[SET]/[RES] to verify polling/decoding"
+    - "CRC work: toptronic: DEBUG + debug.yaml, ~10 samples, reveng -w 16 -s to validate assumptions before touching compute_crc16()"
 
 # =============================================================================
 # S12 ANTI-PATTERNS (ok/bad)
@@ -373,7 +374,7 @@ ai_instructions:
   mandatory_pre_read:
     - "BEFORE any analysis: read this entire YAML"
     - "BEFORE any suggestion: check no rule violation"
-  license: "CC BY-NC-SA 4.0 --- non-commercial, share-alike; derivatives must stay BY-NC-SA; no license changes without human approval"
+  license: "Apache-2.0 --- no license changes without human approval"
   preset_regeneration: "Never 'fix' generated presets by hand --- update generate_presets.py/xls_parser.py and regenerate"
   protocol_sensitivity: "TopTronic framing, CRC, device-type tables reverse-engineered --- change to protocol section requires bus evidence + human approval"
   when_uncertain:

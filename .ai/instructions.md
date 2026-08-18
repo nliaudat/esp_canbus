@@ -2,7 +2,7 @@
 
 **Repository:** https://github.com/nliaudat/esp_canbus
 **Primary Goal:** ESP32 CAN bus shield bridging Hoval TopTronic devices (HomeVent/HV, Heat Generator/WEZ, Control Module/BM) to ESPHome and Home Assistant
-**License:** Creative Commons CC-BY-NC-SA 4.0 (non-commercial, share-alike)
+**License:** Apache-2.0
 **Target Board:** ESP32-WROOM-32D / ESP32-WROOM-32U (classic ESP32, `az-delivery-devkit-v4`)
 **Framework:** ESPHome `external_components` + ESP-IDF (`esp32_can` platform)
 **ESPHome Version:** 2026.7.0+
@@ -39,14 +39,14 @@ This project is a hardware + firmware project:
 - **PCB shield** (`pcb/`) for ESP32 devkits (1000/900 mil) with an SN65HVD230 CAN transceiver, powered from the CAN 12V bus.
 - **ESPHome component** (`esphome/components/toptronic/`) implementing the Hoval **TopTronic** CAN protocol (GET/SET/response datapoints over 50 kbps CAN).
 - **Preset generation tooling** (`hoval_data_processing/`) that derives entity YAML from the Hoval `TTE-GW-Modbus-datapoints.xlsx` workbook.
-- **Example firmware** (`esphome/config.yaml` + `esphome/src/*.yaml`) using ESPHome packages, OTA, API, web server and a weekly reboot.
+- **Example firmware** (`esphome/config.yaml` + `esphome/packages/*.yaml`) using ESPHome packages, OTA, API, web server and a weekly reboot.
 
 **Key Characteristics:**
 
 - **Single-board classic ESP32** — NOT ESP32-S3. No TFLite, no camera, no PSRAM requirements.
 - **ESP-IDF only** (`framework: type: esp-idf` in `board.yaml`).
 - **Dual constraint:** the firmware is both a *component library* (for other users' configs) and a *concrete device* config.
-- **Non-commercial license:** CC BY-NC-SA 4.0 — derivatives must stay BY-NC-SA.
+- **License:** Apache-2.0.
 - **Protocol knowledge is the core asset** — the TopTronic message layout, CRC-16, and multi-frame framing (§3) are reverse-engineered and MUST NOT be changed casually.
 
 **This file is the SINGLE SOURCE OF TRUTH for all code reviews.**
@@ -60,14 +60,14 @@ Generic ESPHome/C++ advice is OVERRIDDEN by the rules below.
 esp_canbus/
 ├── esphome/
 │   ├── config.yaml                    # Main entrypoint: toptronic hubs + packages
-│   ├── src/                           # ESPHome packages (wifi/board/time/canbus/...)
+│   ├── packages/                      # ESPHome packages (wifi/board/time/canbus/...)
 │   │   ├── board.yaml                 # esp32: esp-idf, sdkconfig, logger, api, ota
-│   │   ├── canbus.yaml                # esp32_can platform, 50kbps
-│   │   ├── wifi.yaml / time.yaml / sensors_others.yaml / switch.yaml / debug.yaml
+│   │   ├── canbus.yaml                # esp32_can platform, 50kbps, candump on_frame (debug)
+│   │   ├── wifi.yaml / time.yaml / sensors_others.yaml / switch.yaml / button.yaml / debug.yaml
 │   └── components/toptronic/          # External ESPHome component (AUTO_LOAD'd platforms)
 │       ├── __init__.py                # Hub schema, preset loading, entity generation
 │       ├── toptronic.h / toptronic.cpp# Hub + entity classes, CAN protocol
-│       ├── sensor.py / number.py / select.py / text_sensor.py
+│       ├── sensor.py / number.py / select.py / text_sensor.py / button.py
 │       └── presets/{WEZ,HV,BM}/       # Generated entity YAML per language (de/en/fr/it)
 ├── hoval_data_processing/             # Preset generator (NOT shipped as component)
 │   ├── generate_presets.py            # CLI: preset definitions + patch hooks
@@ -77,7 +77,7 @@ esp_canbus/
 ├── tests/components/toptronic/        # ESPHome build tests (common.yaml + platform yaml)
 ├── .clang-format .clang-tidy .flake8 .yamllint .pre-commit-config.yaml
 ├── README.md                          # User-facing firmware guide
-└── licence.md                         # CC BY-NC-SA 4.0
+└── licence.md                         # Apache-2.0
 ```
 
 ### 2.1 Dataflow
@@ -93,7 +93,7 @@ CAN bus (50kbps) ──esphome esp32_can──▶ TopTronic::parse_frame() ─�
 
 | Path | Role | Notes |
 |------|------|-------|
-| `esphome/components/toptronic/__init__.py` | Hub schema + codegen | `MULTI_CONF = True`, `DEPENDENCIES = ["canbus"]`, `AUTO_LOAD = ["sensor","number","select","text_sensor"]` |
+| `esphome/components/toptronic/__init__.py` | Hub schema + codegen | `MULTI_CONF = True`, `DEPENDENCIES = ["canbus"]`, `AUTO_LOAD = ["sensor","number","select","text_sensor","button"]` |
 | `toptronic.h/.cpp` | C++ protocol engine | single `TopTronic` hub, `TopTronicBase` entities, CRC, multi-frame |
 | `sensor.py`/`text_sensor.py` | Read-only entities | schema extends `CONFIG_SCHEMA_BASE` |
 | `number.py`/`select.py` | Writable entities | SET requests, multiplier / option mapping |
@@ -276,7 +276,7 @@ static constexpr uint32_t MAX_PENDING_AGE_MS = 2000;
 #define MAX_PENDING_MESSAGES 16
 ```
 
-`#define` is acceptable ONLY for conditional compilation flags (`USE_SENSOR`, `USE_TEXT_SENSOR`, `USE_NUMBER`, `USE_SELECT`).
+`#define` is acceptable ONLY for conditional compilation flags (`USE_SENSOR`, `USE_TEXT_SENSOR`, `USE_NUMBER`, `USE_SELECT`, `USE_BUTTON`).
 
 ### 5.5 Feature Guards
 
@@ -339,7 +339,7 @@ from esphome.core import CORE, ID
 
 CODEOWNERS = ["@nliaudat"]
 DEPENDENCIES = ["canbus"]
-AUTO_LOAD = ["sensor", "number", "select", "text_sensor"]
+AUTO_LOAD = ["sensor", "number", "select", "text_sensor", "button"]
 MULTI_CONF = True
 
 toptronic = cg.esphome_ns.namespace("toptronic")
@@ -358,7 +358,7 @@ TopTronicBase = toptronic.class_("TopTronicBase", cg.PollingComponent)
 ### 6.2 Entity Generation
 
 - `_generate_entities()` loads `presets/<device>/sensors_<lang>.yaml` and `inputs_<lang>.yaml`, strips `platform`/`device_type`/`device_addr`, injects the hub reference, and runs each platform's own schema + codegen.
-- All predefined `CONF_*` constants live in `__init__.py` (shared by the four platform files) — do not scatter new constants into `sensor.py`/`number.py`/`select.py`/`text_sensor.py`.
+- All predefined `CONF_*` constants live in `__init__.py` (shared by the five platform files) — do not scatter new constants into `sensor.py`/`number.py`/`select.py`/`text_sensor.py`/`button.py`.
 - Platform files import shared pieces (`CONFIG_SCHEMA_BASE`, `CONF_TT_ID`, `CONF_FUNCTION_GROUP`, `CONF_FUNCTION_NUMBER`, `CONF_DATAPOINT`, `TT_TYPE_OPTIONS`) from the package — keep this DRY.
 
 ### 6.3 Type Mappings
@@ -411,7 +411,7 @@ CONFIG_SCHEMA_BASE = cv.Schema({
 
 ```yaml
 toptronic:
-  - id: tt_HV
+  - id: toptronic_HV
     canbus_id: cbus
     device_type: HV   # WEZ, HV, BM (BD alias → use BM)
     device_addr: 8    # defaults: HV=8, BM=8, WEZ=1
@@ -439,11 +439,11 @@ python hoval_data_processing/generate_presets.py ../esphome/components/toptronic
 - Entity `id` convention: `<DEVICE>_<fg>_<fn>_<dp>` for read-only, `_set` suffix for writable (e.g. `HV_50_0_40651`, `HV_50_0_40651_set`).
 - Writable presets become `internal: true` sensors; read+write pairs are linked by the hub (`link_inputs()`).
 
-### 8.3 src/ packages
+### 8.3 packages/
 
-- `board.yaml`: ESP-IDF framework, `CONFIG_COMPILER_OPTIMIZATION_PERF`, `CONFIG_TASK_WDT*`, `logger` log-level map, `tt: INFO` (use `tt: DEBUG` only for CAN/CRC reverse-engineering via `debug.yaml`).
+- `board.yaml`: ESP-IDF framework, `CONFIG_COMPILER_OPTIMIZATION_PERF`, `CONFIG_TASK_WDT*`, `logger` log-level map, `toptronic: INFO` (use `toptronic: DEBUG` only for CAN/CRC reverse-engineering via `debug.yaml`).
 - **⚠️ canbus log level:** setting the canbus log level BELOW `INFO` may crash (`esphome/issues#4051`) — keep `canbus: ERROR`/`INFO`.
-- `debug.yaml` contains test buttons that inject synthetic frames via `id(tt_HV).parse_frame(x, can_id, false)` — useful for entity wiring checks without hardware changes. Keep it opt-in (commented out in `config.yaml`).
+- `debug.yaml` contains test buttons that inject synthetic frames via `id(toptronic_HV).parse_frame(x, can_id, false)` — useful for entity wiring checks without hardware changes. Keep it opt-in (commented out in `config.yaml`).
 
 ---
 
@@ -507,8 +507,8 @@ python hoval_data_processing/generate_presets.py ../esphome/components/toptronic
 
 ### 11.3 Runtime verification
 
-- On hardware, watch `tt: INFO` logs for `[GET]`/`[SET]`/`[RES]` frames to confirm the entity is polled and decoded.
-- For CRC work: enable `tt: DEBUG` + `debug.yaml`, capture ~10 samples, run `reveng -w 16 -s ...` to validate any CRC assumptions before touching `compute_crc16()`.
+- On hardware, watch `toptronic: INFO` logs for `[GET]`/`[SET]`/`[RES]` frames to confirm the entity is polled and decoded.
+- For CRC work: enable `toptronic: DEBUG` + `debug.yaml`, capture ~10 samples, run `reveng -w 16 -s ...` to validate any CRC assumptions before touching `compute_crc16()`.
 
 ---
 
@@ -649,9 +649,7 @@ Any of these will fail pre-commit hooks. Keep LF-only, no trailing spaces, exact
 
 ### 14.2 License
 
-**CC BY-NC-SA 4.0 — non-commercial, share-alike.**
-- No commercial use.
-- Derivative work MUST be licensed under the same terms (attribution required).
+**Apache-2.0.**
 - Do not introduce code that imposes a different/additional license without human approval.
 
 ### 14.3 Preset Regeneration
@@ -706,7 +704,7 @@ When this file changes, `.ai/instructions.yaml` MUST be regenerated (token-optim
 | **Presets** | Generated via `hoval_data_processing` | Never hand-edited |
 | **Blocking** | Throttled non-blocking `loop()` | Never `delay()` in `loop()`/callback |
 | **File encoding** | LF, UTF-8, no trailing WS, EOF newline | Non-ASCII allowed (UTF-8) |
-| **License** | CC BY-NC-SA 4.0 (non-commercial) | Derivative work must stay BY-NC-SA |
+| **License** | Apache-2.0 | Do not change without human approval |
 
 ---
 
