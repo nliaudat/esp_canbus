@@ -253,7 +253,9 @@ class TopTronic : public Component {
   void set_max_pending_age_ms(uint32_t max_pending_age_ms) { this->max_pending_age_ms_ = max_pending_age_ms; }
   void set_cleanup_interval_ms(uint32_t cleanup_interval_ms) { this->cleanup_interval_ms_ = cleanup_interval_ms; }
   void set_max_refresh_per_loop(size_t max_refresh_per_loop) { this->max_refresh_per_loop_ = max_refresh_per_loop; }
-  void set_max_frames_per_message(uint8_t max_frames_per_message) { this->max_frames_per_message_ = max_frames_per_message; }
+  void set_max_frames_per_message(uint8_t max_frames_per_message) {
+    this->max_frames_per_message_ = max_frames_per_message;
+  }
 
   // Debug frame logging (candump / find-can_id). This is build-wide shared state,
   // so the callbacks are deduplicated across all hubs and the mode resets to OFF

@@ -11,7 +11,7 @@ substitutions:
   can_rx_pin: "GPIO21"  # GPIO4
 
   ### board
-  board_type: az-delivery-devkit-v4 #nodemcu-32s #esp-wrover-kit
+  board_type: az-delivery-devkit-v4  # nodemcu-32s, esp-wrover-kit
 
   ### time
   TZ: "Europe/Zurich"  # timezone

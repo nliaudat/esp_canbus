@@ -32,9 +32,24 @@ static bool s_debug_callback_registered = false;
 // toptronic output so the candump lines (tag "candump") are the only thing on
 // the bus/log path. The debug-mode transition messages in cycle_debug_mode()
 // and dump_config() intentionally use raw ESP_LOG* so they always appear.
-#define TT_LOGD(...) do { if (s_debug_mode != DEBUG_MODE_CANDUMP) { ESP_LOGD(TAG, __VA_ARGS__); } } while (0)
-#define TT_LOGI(...) do { if (s_debug_mode != DEBUG_MODE_CANDUMP) { ESP_LOGI(TAG, __VA_ARGS__); } } while (0)
-#define TT_LOGW(...) do { if (s_debug_mode != DEBUG_MODE_CANDUMP) { ESP_LOGW(TAG, __VA_ARGS__); } } while (0)
+#define TT_LOGD(...) \
+  do { \
+    if (s_debug_mode != DEBUG_MODE_CANDUMP) { \
+      ESP_LOGD(TAG, __VA_ARGS__); \
+    } \
+  } while (0)
+#define TT_LOGI(...) \
+  do { \
+    if (s_debug_mode != DEBUG_MODE_CANDUMP) { \
+      ESP_LOGI(TAG, __VA_ARGS__); \
+    } \
+  } while (0)
+#define TT_LOGW(...) \
+  do { \
+    if (s_debug_mode != DEBUG_MODE_CANDUMP) { \
+      ESP_LOGW(TAG, __VA_ARGS__); \
+    } \
+  } while (0)
 
 // Forward declaration: defined after TopTronic::setup() but referenced by the
 // deduplicated debug callback registered there.
@@ -516,9 +531,8 @@ void TopTronic::setup() {
   // The callback is a no-op unless a debug mode was enabled via cycle_debug_mode().
   if (!s_debug_callback_registered) {
     s_debug_callback_registered = true;
-    this->canbus_->add_callback([](uint32_t can_id, bool, bool, const std::vector<uint8_t> &data) {
-      debug_log_frame(data, can_id);
-    });
+    this->canbus_->add_callback(
+        [](uint32_t can_id, bool, bool, const std::vector<uint8_t> &data) { debug_log_frame(data, can_id); });
   }
 }
 
@@ -760,20 +774,19 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
     if (it == this->pending_messages_.end()) {
       // Continuation for an unknown/expired message (evicted, purged, or the start
       // frame never arrived). Logged at DEBUG so lost reassemblies are visible.
-      TT_LOGD("[DROP] Continuation for unknown/expired message (node 0x%03X, header 0x%02X)",
-              (unsigned) device_id, msg_header);
+      TT_LOGD("[DROP] Continuation for unknown/expired message (node 0x%03X, header 0x%02X)", (unsigned) device_id,
+              msg_header);
       return;
     }
     PendingMessage &pending = it->second;
     if (pending.remaining_frames == 0) {
       // Duplicate/extra continuation for an already-complete message — discard.
-      TT_LOGD("[DROP] Extra continuation for complete message (node 0x%03X, header 0x%02X)",
-              (unsigned) device_id, msg_header);
+      TT_LOGD("[DROP] Extra continuation for complete message (node 0x%03X, header 0x%02X)", (unsigned) device_id,
+              msg_header);
       this->pending_messages_.erase(it);
       return;
     }
-    TT_LOGD("     - Part of message with id: %d with remaining length %d", msg_header,
-            pending.remaining_frames - 1);
+    TT_LOGD("     - Part of message with id: %d with remaining length %d", msg_header, pending.remaining_frames - 1);
     pending.data.insert(pending.data.end(), data.begin() + 1, data.end());
     pending.last_update_ms = millis();
     pending.remaining_frames--;
@@ -867,8 +880,8 @@ void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_
     // Unregistered datapoint for a known device. Logged at DEBUG so preset key
     // mismatches (fg/fn/dp vs. what the device actually emits) are visible
     // instead of silently dropping the response.
-    TT_LOGD("[DROP] No sensor for key 0x%08X on node 0x%03X (fg=%u fn=%u dp=%u)",
-            (unsigned) id, (unsigned) rx_device_id, data[1], data[2], (unsigned) datapoint);
+    TT_LOGD("[DROP] No sensor for key 0x%08X on node 0x%03X (fg=%u fn=%u dp=%u)", (unsigned) id,
+            (unsigned) rx_device_id, data[1], data[2], (unsigned) datapoint);
     return;
   }
   TopTronicBase *sensor_base = sensor_it->second;
