@@ -19,7 +19,7 @@ substitutions:
   ### toptronic hubs — used by board.yaml OTA pause/resume and button.yaml refresh all
   toptronic_hubs:
     - toptronic_HV
-    # - toptronic_BM
+    - toptronic_BM
 
 toptronic:
   - id: toptronic_HV  # HomeVent
@@ -28,11 +28,11 @@ toptronic:
     device_addr: 8  # defaults are : HV=8, BM=8, WEZ=1
     language: en  # de, en, fr, it
 
-  # - id: toptronic_BM  # display
-    # canbus_id: cbus  # the canbus bit_rate must be 50kbps
-    # device_type: BM
-    # device_addr: 8
-    # language: en
+  - id: toptronic_BM  # display
+    canbus_id: cbus  # the canbus bit_rate must be 50kbps
+    device_type: BM
+    device_addr: 8
+    language: en
 
 external_components:
   - source:
@@ -58,6 +58,13 @@ logger:
     number: ERROR
     sensor: INFO
     toptronic: INFO  # DEBUG for full frame details: [RES]/[SET]/[GET]/[UNK] + reassembly
+  on_message:
+    - level: WARN  # capture only WARN + ERROR messages from the toptronic component
+      then:
+        - lambda: |-
+            if (strcmp(tag, "toptronic") == 0) {
+              id(main_logs).publish_state(std::string(message));
+            }
 
 packages:
   wifi: !include packages/wifi.yaml

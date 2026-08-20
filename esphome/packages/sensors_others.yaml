@@ -34,8 +34,11 @@ sensor:
     entity_category: "diagnostic"
     update_interval: 60s
 
-# text_sensor:
-#   - platform: template
-#     name: "${friendly_name} uptime"
-#     id: uptime_human
-#     icon: mdi:clock-start
+text_sensor:
+  - platform: template
+    name: "${friendly_name} main logs"
+    entity_category: diagnostic
+    icon: mdi:math-log
+    id: main_logs
+    lambda: |-
+      return {};
