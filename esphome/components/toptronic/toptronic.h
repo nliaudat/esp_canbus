@@ -246,6 +246,15 @@ class TopTronic : public Component {
   // Delay before the one-shot post-boot refresh; 0 disables it.
   void set_boot_refresh_delay(uint32_t ms) { this->boot_refresh_delay_ms_ = ms; }
 
+  // Tuning knobs for the multi-frame reassembly buffer, stale-fragment sweep,
+  // refresh burst throttle, and start-frame count guard. All optional in YAML;
+  // the defaults match the historical built-in constants.
+  void set_max_pending_messages(size_t max_pending_messages) { this->max_pending_messages_ = max_pending_messages; }
+  void set_max_pending_age_ms(uint32_t max_pending_age_ms) { this->max_pending_age_ms_ = max_pending_age_ms; }
+  void set_cleanup_interval_ms(uint32_t cleanup_interval_ms) { this->cleanup_interval_ms_ = cleanup_interval_ms; }
+  void set_max_refresh_per_loop(size_t max_refresh_per_loop) { this->max_refresh_per_loop_ = max_refresh_per_loop; }
+  void set_max_frames_per_message(uint8_t max_frames_per_message) { this->max_frames_per_message_ = max_frames_per_message; }
+
   // Pause/resume CAN frame processing. Used during OTA to free the main loop
   // and logging path so the update connection is not starved.
   void pause() { this->paused_ = true; }
@@ -300,6 +309,17 @@ class TopTronic : public Component {
 
   // Delay (ms) for the one-shot post-boot refresh; 0 disables it.
   uint32_t boot_refresh_delay_ms_{30000};
+
+  // Multi-frame reassembly buffer cap (default 32).
+  size_t max_pending_messages_{32};
+  // A pending message with no continuation frame for this long is considered lost (default 5000 ms).
+  uint32_t max_pending_age_ms_{5000};
+  // Throttle interval for the stale-fragment sweep in loop() (default 5000 ms).
+  uint32_t cleanup_interval_ms_{5000};
+  // Max number of sensors refreshed per loop() tick in a throttled update_all() burst (default 8).
+  size_t max_refresh_per_loop_{8};
+  // Largest sane multi-frame message in total frames (default 8).
+  uint8_t max_frames_per_message_{8};
 
   // Sensors still waiting in a throttled update_all() burst. Drained a few per
   // loop() tick to avoid saturating the 50 kbps bus. Empty = no burst pending.

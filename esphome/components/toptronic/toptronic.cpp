@@ -15,27 +15,8 @@ static const uint8_t RESPONSE_EXT = 0x56;
 static const uint8_t GET_REQ = 0x40;
 static const uint8_t SET_REQ = 0x46;
 
-// Maximum number of concurrently reassembled multi-frame messages to keep.
-// Raised to 32 for multi-hub setups: every TopTronic hub reassembles ALL
-// multi-frame messages on the bus (no per-address filtering), so a 3-hub
-// WEZ+HV+BM bus can legitimately see ~6+ concurrent reassemblies.
-static constexpr size_t MAX_PENDING_MESSAGES = 32;
-// A pending message with no continuation frame for this long is considered lost.
-// Raised to 5000 ms: at 50 kbps a burst of GETs across 3 hubs can delay
-// continuation frames beyond the old 2 s window (bus contention).
-static constexpr uint32_t MAX_PENDING_AGE_MS = 5000;
 // Minimum decodable TopTronic message: cmd | function_group | function_number | dp_hi | dp_lo.
 static constexpr size_t MIN_MESSAGE_LEN = 5;
-// Throttle interval for the stale-fragment sweep in loop().
-static constexpr uint32_t CLEANUP_INTERVAL_MS = 5000;
-// Max number of sensors refreshed per loop() tick in a throttled update_all() burst.
-static constexpr size_t MAX_REFRESH_PER_LOOP = 8;
-// Largest sane multi-frame message: U32/S32 take 2 frames, S64 takes 3. The
-// first-frame header field only encodes up to 31 frames, so anything above 8
-// is a corrupted/bogus header (candump_base.log §7 shows a 20-frame message
-// that never completes). Reject such headers instead of reserving buffer space
-// and waiting for a stale-sweep eviction.
-static constexpr uint8_t MAX_FRAMES_PER_MESSAGE = 8;
 
 // Format a byte buffer as a zero-padded hex string for log output (e.g. "4001001a").
 // Uses a plain std::string (no std::stringstream) — common short messages fit in the
@@ -399,7 +380,7 @@ void TopTronic::register_input_callbacks() {
 // select) follow automatically through the linked sensors set up in link_inputs().
 //
 // The refresh is THROTTLED: sensors are queued into pending_refresh_ and released
-// a few per loop() tick (MAX_REFRESH_PER_LOOP) so a large preset does not saturate
+// a few per loop() tick (max_refresh_per_loop_) so a large preset does not saturate
 // the 50 kbps bus with a burst of GET frames.
 void TopTronic::update_all() {
   if (!this->pending_refresh_.empty()) {
@@ -542,9 +523,9 @@ void TopTronic::loop() {
     }
   }
 
-  // Throttled refresh burst: release at most MAX_REFRESH_PER_LOOP sensors per tick.
+  // Throttled refresh burst: release at most this->max_refresh_per_loop_ sensors per tick.
   size_t sent = 0;
-  while (!this->pending_refresh_.empty() && sent < MAX_REFRESH_PER_LOOP) {
+  while (!this->pending_refresh_.empty() && sent < this->max_refresh_per_loop_) {
     TopTronicBase *sensor = this->pending_refresh_.front();
     this->pending_refresh_.pop_front();
     sensor->update();
@@ -553,14 +534,14 @@ void TopTronic::loop() {
 
   // Periodically evict stale multi-frame reassembly buffers so a lost fragment (or a
   // device going offline mid-message) cannot pin an entry forever. The map is tiny
-  // (capped at MAX_PENDING_MESSAGES), so the sweep is throttled to avoid per-loop work.
+  // (capped at this->max_pending_messages_), so the sweep is throttled to avoid per-loop work.
   const uint32_t now = millis();
-  if (now - this->last_cleanup_ms_ < CLEANUP_INTERVAL_MS)
+  if (now - this->last_cleanup_ms_ < this->cleanup_interval_ms_)
     return;
   this->last_cleanup_ms_ = now;
 
   for (auto it = this->pending_messages_.begin(); it != this->pending_messages_.end();) {
-    if (now - it->second.last_update_ms > MAX_PENDING_AGE_MS) {
+    if (now - it->second.last_update_ms > this->max_pending_age_ms_) {
       ESP_LOGD(TAG, "Expiring stale pending message 0x%08X (%zu bytes, %u frames remaining)", (unsigned int) it->first,
                it->second.data.size(), it->second.remaining_frames);
       it = this->pending_messages_.erase(it);
@@ -624,9 +605,9 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
     uint8_t num_remaining = data[0] >> 3;
     // The first-frame header holds the TOTAL frame count (first frame +
     // continuations). A legit U32/S32 response uses 2, S64 uses 3 — anything
-    // claiming more than MAX_FRAMES_PER_MESSAGE is a corrupted header. Reject it
+    // claiming more than this->max_frames_per_message_ is a corrupted header. Reject it
     // immediately instead of reserving buffer space for up to 31 continuations.
-    if (num_remaining > MAX_FRAMES_PER_MESSAGE) {
+    if (num_remaining > this->max_frames_per_message_) {
       ESP_LOGW(TAG, "Dropping start frame with implausible frame count %u (header 0x%02X)", num_remaining, data[0]);
       return;
     }
@@ -638,7 +619,7 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       uint8_t msg_header = data[1];  // reassembly key shared across all frames of this message
       uint32_t header_key = (device_id << 8) | msg_header;
       ESP_LOGD(TAG, "     - Start of message with id: %d with length %d", msg_header, num_remaining);
-      if (this->pending_messages_.size() >= MAX_PENDING_MESSAGES &&
+      if (this->pending_messages_.size() >= this->max_pending_messages_ &&
           this->pending_messages_.find(header_key) == this->pending_messages_.end()) {
         // Buffer full: evict the SINGLE oldest entry (LRU) instead of clearing all
         // in-progress reassemblies. On a multi-hub bus every hub reassembles every

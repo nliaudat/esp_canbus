@@ -77,6 +77,11 @@ toptronic:
 | `device_addr` | yes | — | Bus address (typical defaults: `HV=8`, `BM=8`, `WEZ=1` — find it on the room control unit). |
 | `language` | no | `en` | Preset language: `de`, `en`, `fr`, `it`. |
 | `boot_refresh_delay` | no | `30s` | One-shot full refresh after boot; `0` disables it. |
+| `max_pending_messages` | no | `32` | Max concurrently reassembled multi-frame messages (per hub). Raise on a large multi-hub bus. |
+| `max_pending_age` | no | `5000ms` | A pending message with no continuation frame this long is considered lost. |
+| `cleanup_interval` | no | `5000ms` | Interval between stale-fragment sweeps in `loop()`. |
+| `max_refresh_per_loop` | no | `8` | Max sensors refreshed per `loop()` tick in a throttled `update_all()` burst. |
+| `max_frames_per_message` | no | `8` | Max total frames a start frame may claim; larger counts are rejected as corrupted headers. |
 
 `MULTI_CONF = true` — declare as many hubs as you have devices.
 
@@ -127,10 +132,11 @@ plus the platform-specific options).
   fires a one-shot `update_all()` to catch values that changed while the CAN
   gateway was settling; `0` disables it.
 - **Throttled refresh** — `update_all()` enqueues sensors and `loop()` releases at
-  most 8 per tick, so large presets do not saturate the 50 kbps bus with a burst.
+  most `max_refresh_per_loop` (default 8) per tick, so large presets do not
+  saturate the 50 kbps bus with a burst.
 - **Multi-frame reassembly** — long responses (U32/S32/S64) are reassembled with
   CRC-16 validation (lookup-table accelerated); stale fragments are evicted after
-  2 s by the throttled `loop()` sweep.
+  `max_pending_age` (default 5 s) by the throttled `loop()` sweep.
 - **OTA** — `board.yaml` calls `pause()` / `resume()` on every hub during OTA so
   frame processing does not starve the update path.
 - **Refresh button** — `button.yaml` provides a "Refresh all" button that calls
