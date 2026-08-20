@@ -18,3 +18,9 @@ toptronic:
     device_type: WEZ
     device_addr: 1
     language: en
+
+  - id: tt_bm
+    canbus_id: canbus_toptronic
+    device_type: BM
+    device_addr: 8
+    language: en
