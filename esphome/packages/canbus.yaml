@@ -8,6 +8,11 @@ canbus:
 
     ############ in debug mode only ##################
 
+    # SUPERSEDED — the toptronic component now provides the same two debug modes
+    # (candump / find can_id) enabled at runtime via the
+    # "${friendly_name} candump debug toggle" button in button.yaml. The blocks
+    # below are kept for reference only and should NOT be uncommented.
+
     # on_frame:
       # # CANDUMP (debug only) - remove or disable before production use.
       # # Size-safe: iterates x.size() so short frames (< 8 bytes) are handled.

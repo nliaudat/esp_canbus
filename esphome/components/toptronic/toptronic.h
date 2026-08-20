@@ -255,6 +255,14 @@ class TopTronic : public Component {
   void set_max_refresh_per_loop(size_t max_refresh_per_loop) { this->max_refresh_per_loop_ = max_refresh_per_loop; }
   void set_max_frames_per_message(uint8_t max_frames_per_message) { this->max_frames_per_message_ = max_frames_per_message; }
 
+  // Debug frame logging (candump / find-can_id). This is build-wide shared state,
+  // so the callbacks are deduplicated across all hubs and the mode resets to OFF
+  // on every boot. cycle_debug_mode() advances OFF -> CANDUMP -> FIND_CAN_ID -> OFF.
+  // 0 = off, 1 = candump (all frames), 2 = find can_id (requests/responses only).
+  void cycle_debug_mode();
+  void set_debug_mode(uint8_t mode);
+  uint8_t get_debug_mode();
+
   // Pause/resume CAN frame processing. Used during OTA to free the main loop
   // and logging path so the update connection is not starved.
   void pause() { this->paused_ = true; }
