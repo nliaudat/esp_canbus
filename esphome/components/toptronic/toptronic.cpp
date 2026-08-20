@@ -16,15 +16,26 @@ static const uint8_t GET_REQ = 0x40;
 static const uint8_t SET_REQ = 0x46;
 
 // Maximum number of concurrently reassembled multi-frame messages to keep.
-static constexpr size_t MAX_PENDING_MESSAGES = 16;
+// Raised to 32 for multi-hub setups: every TopTronic hub reassembles ALL
+// multi-frame messages on the bus (no per-address filtering), so a 3-hub
+// WEZ+HV+BM bus can legitimately see ~6+ concurrent reassemblies.
+static constexpr size_t MAX_PENDING_MESSAGES = 32;
 // A pending message with no continuation frame for this long is considered lost.
-static constexpr uint32_t MAX_PENDING_AGE_MS = 2000;
+// Raised to 5000 ms: at 50 kbps a burst of GETs across 3 hubs can delay
+// continuation frames beyond the old 2 s window (bus contention).
+static constexpr uint32_t MAX_PENDING_AGE_MS = 5000;
 // Minimum decodable TopTronic message: cmd | function_group | function_number | dp_hi | dp_lo.
 static constexpr size_t MIN_MESSAGE_LEN = 5;
 // Throttle interval for the stale-fragment sweep in loop().
-static constexpr uint32_t CLEANUP_INTERVAL_MS = 2000;
+static constexpr uint32_t CLEANUP_INTERVAL_MS = 5000;
 // Max number of sensors refreshed per loop() tick in a throttled update_all() burst.
 static constexpr size_t MAX_REFRESH_PER_LOOP = 8;
+// Largest sane multi-frame message: U32/S32 take 2 frames, S64 takes 3. The
+// first-frame header field only encodes up to 31 frames, so anything above 8
+// is a corrupted/bogus header (candump_base.log §7 shows a 20-frame message
+// that never completes). Reject such headers instead of reserving buffer space
+// and waiting for a stale-sweep eviction.
+static constexpr uint8_t MAX_FRAMES_PER_MESSAGE = 8;
 
 // Format a byte buffer as a zero-padded hex string for log output (e.g. "4001001a").
 // Uses a plain std::string (no std::stringstream) — common short messages fit in the
@@ -611,6 +622,14 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       return;
     }
     uint8_t num_remaining = data[0] >> 3;
+    // The first-frame header holds the TOTAL frame count (first frame +
+    // continuations). A legit U32/S32 response uses 2, S64 uses 3 — anything
+    // claiming more than MAX_FRAMES_PER_MESSAGE is a corrupted header. Reject it
+    // immediately instead of reserving buffer space for up to 31 continuations.
+    if (num_remaining > MAX_FRAMES_PER_MESSAGE) {
+      ESP_LOGW(TAG, "Dropping start frame with implausible frame count %u (header 0x%02X)", num_remaining, data[0]);
+      return;
+    }
     if (num_remaining == 0) {
       // Single-frame message: strip the length byte and dispatch directly.
       this->interpret_message(data.data() + 1, data.size() - 1, can_id, remote_transmission_request);
@@ -621,10 +640,23 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       ESP_LOGD(TAG, "     - Start of message with id: %d with length %d", msg_header, num_remaining);
       if (this->pending_messages_.size() >= MAX_PENDING_MESSAGES &&
           this->pending_messages_.find(header_key) == this->pending_messages_.end()) {
-        // A large backlog means start frames from other devices (or lost fragments) accumulated.
-        ESP_LOGW(TAG, "Pending message buffer full (%zu entries), clearing stale fragments",
-                 this->pending_messages_.size());
-        this->pending_messages_.clear();
+        // Buffer full: evict the SINGLE oldest entry (LRU) instead of clearing all
+        // in-progress reassemblies. On a multi-hub bus every hub reassembles every
+        // device's frames, so a full clear() would destroy the other hubs' pending
+        // messages too — turning a full-buffer moment into lost responses until the
+        // next 30 s poll. This map is capped and tiny (32 entries), so the linear
+        // oldest-find is cheap and only runs on the full-buffer path.
+        uint32_t oldest_key = this->pending_messages_.begin()->first;
+        uint32_t oldest_ms = this->pending_messages_.begin()->second.last_update_ms;
+        for (auto pit = this->pending_messages_.begin(); pit != this->pending_messages_.end(); ++pit) {
+          if (pit->second.last_update_ms < oldest_ms) {
+            oldest_key = pit->first;
+            oldest_ms = pit->second.last_update_ms;
+          }
+        }
+        ESP_LOGW(TAG, "Pending message buffer full (%zu entries), evicting oldest 0x%08X",
+                 this->pending_messages_.size(), (unsigned int) oldest_key);
+        this->pending_messages_.erase(oldest_key);
       }
 
       PendingMessage pending;
@@ -648,11 +680,17 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
     uint32_t header_key = (device_id << 8) | msg_header;
     auto it = this->pending_messages_.find(header_key);
     if (it == this->pending_messages_.end()) {
-      return;  // continuation for an unknown/expired message — ignore
+      // Continuation for an unknown/expired message (evicted, purged, or the start
+      // frame never arrived). Logged at DEBUG so lost reassemblies are visible.
+      ESP_LOGD(TAG, "[DROP] Continuation for unknown/expired message (node 0x%03X, header 0x%02X)",
+               (unsigned) device_id, msg_header);
+      return;
     }
     PendingMessage &pending = it->second;
     if (pending.remaining_frames == 0) {
       // Duplicate/extra continuation for an already-complete message — discard.
+      ESP_LOGD(TAG, "[DROP] Extra continuation for complete message (node 0x%03X, header 0x%02X)",
+               (unsigned) device_id, msg_header);
       this->pending_messages_.erase(it);
       return;
     }
@@ -731,7 +769,12 @@ void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_
 
   auto device_it = this->devices_.find(rx_device_id);
   if (device_it == this->devices_.end()) {
-    return;  // message from a device we have no entities registered for — ignore
+    // Message from a device we have no entities registered for. Logged at DEBUG
+    // so unknown node ids (e.g. a misconfigured device_type tag) are visible
+    // instead of silently dropping every frame from that device.
+    ESP_LOGD(TAG, "[DROP] No device registered for node id 0x%03X, cmd=0x%02X fg=%u fn=%u dp_hi=0x%02X dp_lo=0x%02X",
+             (unsigned) rx_device_id, data[0], data[1], data[2], data[3], data[4]);
+    return;
   }
   TopTronicDevice *device = device_it->second.get();
 
@@ -743,7 +786,12 @@ void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_
 
   auto sensor_it = device->sensors.find(id);
   if (sensor_it == device->sensors.end()) {
-    return;  // no sensor registered for this datapoint — ignore
+    // Unregistered datapoint for a known device. Logged at DEBUG so preset key
+    // mismatches (fg/fn/dp vs. what the device actually emits) are visible
+    // instead of silently dropping the response.
+    ESP_LOGD(TAG, "[DROP] No sensor for key 0x%08X on node 0x%03X (fg=%u fn=%u dp=%u)",
+             (unsigned) id, (unsigned) rx_device_id, data[1], data[2], (unsigned) datapoint);
+    return;
   }
   TopTronicBase *sensor_base = sensor_it->second;
 
