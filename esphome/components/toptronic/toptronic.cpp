@@ -23,10 +23,23 @@ static constexpr size_t MIN_MESSAGE_LEN = 5;
 // must be deduplicated (see the single debug callback registered in setup()).
 // The mode resets to OFF on every boot, so it can never become a permanent
 // setting. 0 = off, 1 = candump (all frames), 2 = find can_id (data[1] == 0x42
-// response or 0x40 request only).
-enum DebugMode : uint8_t { DEBUG_MODE_OFF = 0, DEBUG_MODE_CANDUMP = 1, DEBUG_MODE_FIND_CAN_ID = 2 };
+// response or 0x40 request only). Each mode also has an explicit per-switch OFF
+// target (both numerically 0 = the shared off state); the distinct names make
+// each switch's turn_off_action intent unambiguous and let set_debug_mode() log
+// which specific mode was disabled.
+enum DebugMode : uint8_t {
+  DEBUG_MODE_OFF = 0,
+  DEBUG_MODE_CANDUMP_OFF = 0,      // "candump debug" switch OFF target
+  DEBUG_MODE_FIND_CAN_ID_OFF = 0,  // "find can_id debug" switch OFF target
+  DEBUG_MODE_CANDUMP = 1,
+  DEBUG_MODE_FIND_CAN_ID = 2,
+};
 static DebugMode s_debug_mode = DEBUG_MODE_OFF;
 static bool s_debug_callback_registered = false;
+
+// Fan-out for debug-mode changes: every TopTronicDebugSwitch registers here so
+// its published switch state always mirrors the real (build-wide) s_debug_mode.
+CallbackManager<void(uint8_t)> TopTronic::debug_mode_update_callbacks_;
 
 // Runtime-gated logging: when CANDUMP debug mode is active, silence ALL normal
 // toptronic output so the candump lines (tag "candump") are the only thing on
@@ -689,15 +702,84 @@ void TopTronic::cycle_debug_mode() {
       ESP_LOGI(TAG, "Debug frame logging disabled");
       break;
   }
+  debug_mode_update_callbacks_.call(static_cast<uint8_t>(s_debug_mode));
 }
 
 void TopTronic::set_debug_mode(uint8_t mode) {
   if (mode > DEBUG_MODE_FIND_CAN_ID)
     mode = DEBUG_MODE_OFF;
+  const DebugMode previous = s_debug_mode;
+
+  // Disabling path (mode == 0 — shared off, reached by either switch's
+  // turn_off_action via DEBUG_MODE_CANDUMP_OFF / DEBUG_MODE_FIND_CAN_ID_OFF).
+  // Only the currently active mode is ever disabled, so `previous` tells us
+  // which logging mode the switch turned off.
+  if (mode == DEBUG_MODE_OFF) {
+    if (previous == DEBUG_MODE_OFF)
+      return;  // already off — no log spam
+    s_debug_mode = DEBUG_MODE_OFF;
+    switch (previous) {
+      case DEBUG_MODE_CANDUMP:
+        ESP_LOGW(TAG, "CANDUMP debug DISABLED");
+        break;
+      case DEBUG_MODE_FIND_CAN_ID:
+        ESP_LOGW(TAG, "FIND CAN-ID debug DISABLED");
+        break;
+      default:
+        ESP_LOGW(TAG, "Debug frame logging disabled");
+        break;
+    }
+    debug_mode_update_callbacks_.call(static_cast<uint8_t>(s_debug_mode));
+    return;
+  }
+
+  if (mode == static_cast<uint8_t>(previous))
+    return;  // no change — avoid log spam on repeated toggles
   s_debug_mode = static_cast<DebugMode>(mode);
+  debug_mode_update_callbacks_.call(static_cast<uint8_t>(s_debug_mode));
+  // Raw ESP_LOGW (NOT TT_LOGW) so the announcement is always visible in the
+  // serial log AND flows into the "main logs" text sensor, even while candump
+  // suppresses normal toptronic output.
+  switch (s_debug_mode) {
+    case DEBUG_MODE_CANDUMP:
+      ESP_LOGW(TAG, "CANDUMP debug ENABLED — logging every CAN frame (reset to OFF on reboot, do not leave on)");
+      break;
+    case DEBUG_MODE_FIND_CAN_ID:
+      ESP_LOGW(TAG, "FIND CAN-ID debug ENABLED — logging 0x42/0x40 frames (reset to OFF on reboot, do not leave on)");
+      break;
+    default:
+      ESP_LOGW(TAG, "Debug frame logging disabled");
+      break;
+  }
 }
 
 uint8_t TopTronic::get_debug_mode() { return static_cast<uint8_t>(s_debug_mode); }
+
+void TopTronic::add_debug_mode_update_callback(CallbackManager<void(uint8_t)>::Callback &&callback) {
+  debug_mode_update_callbacks_.add(std::move(callback));
+}
+
+#ifdef USE_SWITCH
+void TopTronicDebugSwitch::setup() {
+  // Mirror the real (build-wide) debug mode both now and on every future change,
+  // so this switch's state always reflects what the component is actually doing.
+  this->parent_->add_debug_mode_update_callback([this](uint8_t mode) { this->publish_state(mode == this->mode_); });
+  this->publish_state(this->parent_->get_debug_mode() == this->mode_);
+}
+
+void TopTronicDebugSwitch::write_state(bool state) {
+  // state=true → enable this switch's debug mode; state=false → shared OFF (mode 0).
+  // The cross switch.turn_off action that the old YAML template switches needed is
+  // implicit: turning one debug switch on sets a single shared mode, so the other
+  // switch's mirror callback turns it off automatically.
+  this->parent_->set_debug_mode(state ? this->mode_ : 0);
+}
+
+void TopTronicDebugSwitch::dump_config() {
+  LOG_SWITCH("", "TopTronic Debug Switch", this);
+  ESP_LOGCONFIG(TAG, "  Debug mode: %u", (unsigned) this->mode_);
+}
+#endif
 
 // Handle a raw CAN frame from the bus.
 //

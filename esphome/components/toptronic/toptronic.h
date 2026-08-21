@@ -19,6 +19,9 @@
 #ifdef USE_BUTTON
 #include "esphome/components/button/button.h"
 #endif
+#ifdef USE_SWITCH
+#include "esphome/components/switch/switch.h"
+#endif
 
 #include <deque>
 #include <map>
@@ -29,6 +32,8 @@
 #include "freertos/queue.h"
 
 namespace esphome::toptronic {
+
+class TopTronic;
 
 // Byte width / signedness of a TopTronic datapoint value.
 // Determines how raw CAN bytes are interpreted as a numeric type.
@@ -199,6 +204,32 @@ class TopTronicButton : public button::Button, public TopTronicBase {
 };
 #endif
 
+#ifdef USE_SWITCH
+// Debug-mode switch: mirrors the build-wide s_debug_mode (0 = off, 1 = candump,
+// 2 = find can_id). write_state() forwards to TopTronic::set_debug_mode(), and a
+// callback registered on the hub keeps every instance in sync with the actual
+// logging mode — so the two debug switches are mutually exclusive without any
+// YAML cross-turn-off automation. State always reflects the real s_debug_mode,
+// so Home Assistant never reverts the switch (no assumed-state confusion).
+class TopTronicDebugSwitch : public switch_::Switch, public Component {
+ public:
+  void set_parent(TopTronic *parent) { this->parent_ = parent; }
+  // The debug mode this switch controls (DEBUG_MODE_CANDUMP or DEBUG_MODE_FIND_CAN_ID).
+  void set_debug_mode(uint8_t mode) { this->mode_ = mode; }
+
+  void setup() override;
+  void dump_config() override;
+
+ protected:
+  // Switch base class hook: state=true → enable this switch's debug mode,
+  // state=false → disable logging entirely (shared OFF, mode 0).
+  void write_state(bool state) override;
+
+  TopTronic *parent_{nullptr};
+  uint8_t mode_{0};
+};
+#endif
+
 // Groups all sensors and writable inputs that belong to a single CAN device (device_type | device_addr).
 // Lifetime of sensors/inputs is managed by the ESPHome component registry — these are non-owning pointers.
 class TopTronicDevice {
@@ -264,6 +295,13 @@ class TopTronic : public Component {
   void cycle_debug_mode();
   void set_debug_mode(uint8_t mode);
   uint8_t get_debug_mode();
+
+  // Register a callback fired whenever the build-wide debug mode changes, so
+  // TopTronicDebugSwitch instances stay in sync with the real logging state.
+  // (Instantiated by the debug switches themselves — no user-facing API.)
+  void add_debug_mode_update_callback(std::function<void(uint8_t)> &&callback);
+  // Build-wide fan-out for debug-mode changes (see s_debug_mode semantics).
+  static CallbackManager<void(uint8_t)> debug_mode_update_callbacks_;
 
   // Pause/resume CAN frame processing. Used during OTA to free the main loop
   // and logging path so the update connection is not starved.

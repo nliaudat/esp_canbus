@@ -4,7 +4,7 @@ switch:
     icon: "mdi:restart"
     id: canbus_controller_reboot
 
-  - platform: template
+  - platform: toptronic
     # Warning: candump logs EVERY CAN frame with a per-frame string build on the
     # loop task — it adds noticeable bus/log latency (see docs/candump.md §8).
     # Use only for short debug sessions; the mode resets to off on every reboot.
@@ -12,18 +12,10 @@ switch:
     id: candump_debug_switch
     icon: "mdi:bug"
     entity_category: "diagnostic"
-    restore_mode: ALWAYS_OFF
-    turn_on_action:
-      then:
-        - switch.turn_off: find_can_id_debug_switch
-        - lambda: |-
-            <% for h in toptronic_hubs %><% if loop.first %>id(${ h }).set_debug_mode(1);<% endif %><% endfor %>
-    turn_off_action:
-      then:
-        - lambda: |-
-            <% for h in toptronic_hubs %><% if loop.first %>id(${ h }).set_debug_mode(0);<% endif %><% endfor %>
+    toptronic_id: toptronic_HV
+    debug_mode: CANDUMP
 
-  - platform: template
+  - platform: toptronic
     # Warning: find can_id logs only 0x42/0x40 frames as WARN lines that also
     # land in the "main logs" text sensor. Use only for short debug sessions;
     # the mode resets to off on every reboot.
@@ -31,13 +23,5 @@ switch:
     id: find_can_id_debug_switch
     icon: "mdi:magnify"
     entity_category: "diagnostic"
-    restore_mode: ALWAYS_OFF
-    turn_on_action:
-      then:
-        - switch.turn_off: candump_debug_switch
-        - lambda: |-
-            <% for h in toptronic_hubs %><% if loop.first %>id(${ h }).set_debug_mode(2);<% endif %><% endfor %>
-    turn_off_action:
-      then:
-        - lambda: |-
-            <% for h in toptronic_hubs %><% if loop.first %>id(${ h }).set_debug_mode(0);<% endif %><% endfor %>
+    toptronic_id: toptronic_HV
+    debug_mode: FIND_CAN_ID
