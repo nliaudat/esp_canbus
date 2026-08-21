@@ -719,7 +719,11 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
     // claiming more than this->max_frames_per_message_ is a corrupted header. Reject it
     // immediately instead of reserving buffer space for up to 31 continuations.
     if (num_remaining > this->max_frames_per_message_) {
-      TT_LOGW("Dropping start frame with implausible frame count %u (header 0x%02X)", num_remaining, data[0]);
+      // This frame is the documented benign "bogus 20-frame" boiler broadcast
+      // (header 0xA1, see docs/candump_base.log §7) — not a TopTronic datapoint
+      // response, and it never sends continuations. Rejection is correct, but
+      // logged at DEBUG so it stays out of the WARN→main_logs path.
+      TT_LOGD("Dropping start frame with implausible frame count %u (header 0x%02X)", num_remaining, data[0]);
       return;
     }
     if (num_remaining == 0) {
