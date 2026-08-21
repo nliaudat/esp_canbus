@@ -205,24 +205,26 @@ class TopTronicButton : public button::Button, public TopTronicBase {
 #endif
 
 #ifdef USE_SWITCH
-// Debug-mode switch: mirrors the build-wide s_debug_mode (0 = off, 1 = candump,
-// 2 = find can_id). write_state() forwards to TopTronic::set_debug_mode(), and a
-// callback registered on the hub keeps every instance in sync with the actual
-// logging mode — so the two debug switches are mutually exclusive without any
-// YAML cross-turn-off automation. State always reflects the real s_debug_mode,
-// so Home Assistant never reverts the switch (no assumed-state confusion).
+// Debug switches, one per independent debug feature. Each switch controls its
+// own build-wide boolean flag (s_candump_enabled / s_find_can_id_enabled) and
+// registers on its own per-feature callback manager, so the two switches are
+// fully independent — turning one ON never affects the other, and both can be
+// active simultaneously. State always reflects the real flag, so Home Assistant
+// never reverts the switch (no assumed-state confusion).
 class TopTronicDebugSwitch : public switch_::Switch, public Component {
  public:
   void set_parent(TopTronic *parent) { this->parent_ = parent; }
-  // The debug mode this switch controls (DEBUG_MODE_CANDUMP or DEBUG_MODE_FIND_CAN_ID).
+  // The debug feature this switch controls (1 = candump, 2 = find can_id).
+  // This is only a discriminator — the actual enable/disable path uses the
+  // dedicated set_candump_enabled() / set_find_can_id_enabled() setters.
   void set_debug_mode(uint8_t mode) { this->mode_ = mode; }
 
   void setup() override;
   void dump_config() override;
 
  protected:
-  // Switch base class hook: state=true → enable this switch's debug mode,
-  // state=false → disable logging entirely (shared OFF, mode 0).
+  // Switch base class hook: state=true → enable this switch's debug feature,
+  // state=false → disable it. Only the feature selected by mode_ is touched.
   void write_state(bool state) override;
 
   TopTronic *parent_{nullptr};
@@ -288,20 +290,23 @@ class TopTronic : public Component {
     this->max_frames_per_message_ = max_frames_per_message;
   }
 
-  // Debug frame logging (candump / find-can_id). This is build-wide shared state,
-  // so the callbacks are deduplicated across all hubs and the mode resets to OFF
-  // on every boot. cycle_debug_mode() advances OFF -> CANDUMP -> FIND_CAN_ID -> OFF.
-  // 0 = off, 1 = candump (all frames), 2 = find can_id (requests/responses only).
-  void cycle_debug_mode();
-  void set_debug_mode(uint8_t mode);
-  uint8_t get_debug_mode();
+  // Debug frame logging (candump / find-can_id). Each feature is an independent
+  // build-wide boolean flag, so the two debug switches never interfere with each
+  // other and can even both be active at the same time. Both flags reset to OFF
+  // on every boot. Logging callbacks are deduplicated across hubs (see setup()).
+  void set_candump_enabled(bool enabled);
+  void set_find_can_id_enabled(bool enabled);
+  bool get_candump_enabled();
+  bool get_find_can_id_enabled();
 
-  // Register a callback fired whenever the build-wide debug mode changes, so
-  // TopTronicDebugSwitch instances stay in sync with the real logging state.
+  // Register a callback fired whenever a specific debug flag changes, so the
+  // matching TopTronicDebugSwitch stays in sync with the real logging state.
   // (Instantiated by the debug switches themselves — no user-facing API.)
-  void add_debug_mode_update_callback(std::function<void(uint8_t)> &&callback);
-  // Build-wide fan-out for debug-mode changes (see s_debug_mode semantics).
-  static CallbackManager<void(uint8_t)> debug_mode_update_callbacks_;
+  void add_candump_update_callback(std::function<void(bool)> &&callback);
+  void add_find_can_id_update_callback(std::function<void(bool)> &&callback);
+  // Build-wide fan-out for each debug flag (see s_candump_enabled semantics).
+  static CallbackManager<void(bool)> candump_update_callbacks_;
+  static CallbackManager<void(bool)> find_can_id_update_callbacks_;
 
   // Pause/resume CAN frame processing. Used during OTA to free the main loop
   // and logging path so the update connection is not starved.
