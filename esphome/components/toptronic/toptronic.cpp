@@ -755,7 +755,7 @@ void TopTronic::set_debug_mode(uint8_t mode) {
 
 uint8_t TopTronic::get_debug_mode() { return static_cast<uint8_t>(s_debug_mode); }
 
-void TopTronic::add_debug_mode_update_callback(CallbackManager<void(uint8_t)>::Callback &&callback) {
+void TopTronic::add_debug_mode_update_callback(std::function<void(uint8_t)> &&callback) {
   debug_mode_update_callbacks_.add(std::move(callback));
 }
 
