@@ -9,29 +9,3 @@ button:
         - lambda: |-
             <% for h in toptronic_hubs %>id(${ h }).update_all();
             <% endfor %>
-
-  - platform: template
-    # Warning: candump logs EVERY CAN frame with a per-frame string build on the
-    # loop task — it adds noticeable bus/log latency (see docs/candump.md §8).
-    # Use only for short debug sessions; the mode resets to off on every reboot.
-    name: "${friendly_name} candump debug"
-    id: candump_debug_toggle
-    icon: "mdi:bug"
-    entity_category: "diagnostic"
-    on_press:
-      then:
-        - lambda: |-
-            <% for h in toptronic_hubs %><% if loop.first %>if (id(${ h }).get_debug_mode() == 1) { id(${ h }).set_debug_mode(0); } else { id(${ h }).set_debug_mode(1); }<% endif %><% endfor %>
-
-  - platform: template
-    # Warning: find can_id logs only 0x42/0x40 frames as WARN lines that also
-    # land in the "main logs" text sensor. Use only for short debug sessions;
-    # the mode resets to off on every reboot.
-    name: "${friendly_name} find can_id debug"
-    id: find_can_id_debug_toggle
-    icon: "mdi:magnify"
-    entity_category: "diagnostic"
-    on_press:
-      then:
-        - lambda: |-
-            <% for h in toptronic_hubs %><% if loop.first %>if (id(${ h }).get_debug_mode() == 2) { id(${ h }).set_debug_mode(0); } else { id(${ h }).set_debug_mode(2); }<% endif %><% endfor %>
