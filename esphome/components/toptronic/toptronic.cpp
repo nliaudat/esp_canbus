@@ -517,8 +517,13 @@ void TopTronic::setup() {
 
   // One-shot full refresh shortly after boot (configurable, default 30 s, 0 = off).
   // Fires on the ESPHome loop task via the scheduler — non-blocking and thread-safe.
+  // Keyed by the hub's unique numeric device id (NUMERIC_ID overload) so each hub's
+  // post-boot refresh is scheduled independently of any other TopTronic instance —
+  // string keys are scoped per-component, but the numeric id makes it unambiguous.
   if (this->boot_refresh_delay_ms_ != 0) {
-    this->set_timeout("update_all_initial", this->boot_refresh_delay_ms_, [this]() { this->update_all(); });
+    this->set_timeout(this->get_device_id(), this->boot_refresh_delay_ms_, [this]() { this->update_all(); });
+    TT_LOGI("Boot refresh scheduled for device 0x%04X in %u ms", (unsigned) this->get_device_id(),
+            (unsigned) this->boot_refresh_delay_ms_);
   }
 
   // Producer/consumer bridge for commands issued from other FreeRTOS tasks.
