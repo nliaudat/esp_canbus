@@ -33,6 +33,8 @@ toptronic:
     # cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
     # max_refresh_per_loop: 8  # optional; sensors refreshed per loop() tick in an update_all() burst
     # max_frames_per_message: 8  # optional; max total frames a start frame may claim
+    # NOTE: read-only entities (sensor/text_sensor) poll at update_interval (default 30s, set in the presets).
+    #       This is an entity-level key, not a hub key - write entities (number/select/button) never poll.
 
   - id: toptronic_BM  # display
     canbus_id: cbus  # the canbus bit_rate must be 50kbps
@@ -45,6 +47,8 @@ toptronic:
     # cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
     # max_refresh_per_loop: 8  # optional; sensors refreshed per loop() tick in an update_all() burst
     # max_frames_per_message: 8  # optional; max total frames a start frame may claim
+    # NOTE: read-only entities (sensor/text_sensor) poll at update_interval (default 30s, set in the presets).
+    #       This is an entity-level key, not a hub key - write entities (number/select/button) never poll.
 
 external_components:
   - source:

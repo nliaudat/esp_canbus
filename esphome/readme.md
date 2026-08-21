@@ -82,6 +82,7 @@ toptronic:
 | `cleanup_interval` | no | `5000ms` | Interval between stale-fragment sweeps in `loop()`. |
 | `max_refresh_per_loop` | no | `8` | Max sensors refreshed per `loop()` tick in a throttled `update_all()` burst. |
 | `max_frames_per_message` | no | `8` | Max total frames a start frame may claim; larger counts are rejected as corrupted headers. |
+| `update_interval` | no | `30s` | Polling interval for the read-only entities (`sensor`/`text_sensor`) generated from this hub's presets; each poll sends a GET_REQUEST. Entity-level key (configured in the preset files), not a hub configuration key — write entities never poll. |
 
 `MULTI_CONF = true` — declare as many hubs as you have devices.
 
@@ -120,14 +121,18 @@ python hoval_data_processing/generate_presets.py esphome/components/toptronic/pr
 
 You can also declare entities manually instead of relying on a preset, using the
 same keys as the preset files (`function_group`, `function_number`, `datapoint`,
-plus the platform-specific options).
+plus the platform-specific options). Read-only entities accept the standard
+`update_interval` key (default `30s`); write entities ignore it.
 
 ---
 
 ## Runtime behaviour
 
-- **Polling** — every entity extends `PollingComponent` (default `30s`); each poll
-  sends a `GET_REQUEST` frame for its datapoint.
+- **Polling** — read-only entities (`sensor`/`text_sensor`) extend `PollingComponent`
+  and poll at `update_interval` (default `30s`); each poll sends a `GET_REQUEST`
+  frame for its datapoint. Write entities (`number`/`select`/`button`) never poll
+  — they only send SET_REQUEST frames on user action (and mirror their linked
+  read sensor), so they carry no scheduler tick.
 - **Post-boot refresh** — `boot_refresh_delay` (default `30s`) after setup the hub
   fires a one-shot `update_all()` to catch values that changed while the CAN
   gateway was settling; `0` disables it.

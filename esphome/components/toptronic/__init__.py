@@ -118,7 +118,21 @@ CONFIG_SCHEMA_BASE = cv.Schema(
         cv.Required(CONF_FUNCTION_NUMBER): cv.uint8_t,
         cv.Required(CONF_DATAPOINT): cv.uint16_t,
     }
-).extend(cv.polling_component_schema("30s"))
+)
+
+
+def config_schema_polling(update_interval: str = "30s"):
+    """Return CONFIG_SCHEMA_BASE extended with a configurable polling interval.
+
+    Read-only entities (sensor/text_sensor) poll the bus via their inherited
+    PollingComponent update() at this interval. Write-only entities (number,
+    select, button) use plain CONFIG_SCHEMA_BASE instead — they have no update
+    callback, so polling them every interval would only wake the scheduler for a
+    no-op. Without the polling schema, register_component() does not emit
+    set_update_interval(), leaving the PollingComponent default SCHEDULER_DONT_RUN.
+    """
+    return CONFIG_SCHEMA_BASE.extend(cv.polling_component_schema(update_interval))
+
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(

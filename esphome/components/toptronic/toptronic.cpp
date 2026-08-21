@@ -28,6 +28,9 @@ static constexpr size_t MIN_MESSAGE_LEN = 5;
 static bool s_candump_enabled = false;
 static bool s_find_can_id_enabled = false;
 static bool s_debug_callback_registered = false;
+static uint32_t s_candump_start_ms = 0;
+static uint32_t s_find_can_id_start_ms = 0;
+static uint32_t s_last_candump_log_ms = 0;
 
 // Fan-out for each debug flag: the matching TopTronicDebugSwitch registers here
 // so its published switch state always mirrors the real (build-wide) flag.
@@ -596,10 +599,19 @@ void TopTronic::loop() {
     ++sent;
   }
 
+  const uint32_t now = millis();
+
+  // Auto-disable debug modes if left on to protect network/log buffers.
+  if (s_candump_enabled && (now - s_candump_start_ms > 60000)) {
+    this->set_candump_enabled(false);
+  }
+  if (s_find_can_id_enabled && (now - s_find_can_id_start_ms > 120000)) {
+    this->set_find_can_id_enabled(false);
+  }
+
   // Periodically evict stale multi-frame reassembly buffers so a lost fragment (or a
   // device going offline mid-message) cannot pin an entry forever. The map is tiny
   // (capped at this->max_pending_messages_), so the sweep is throttled to avoid per-loop work.
-  const uint32_t now = millis();
   if (now - this->last_cleanup_ms_ < this->cleanup_interval_ms_)
     return;
   this->last_cleanup_ms_ = now;
@@ -648,20 +660,30 @@ static void log_response_frame(const uint8_t *data, size_t len, uint32_t can_id,
 // logged once instead of once per hub. Each feature is an independent flag:
 //   CANDUMP      — log every frame as "0x%08X : %02X %02X ..."
 //   FIND_CAN_ID  — log only frames whose data[1] is a 0x42 response or 0x40 request
-// Both may be active at the same time (candump floods the output; find_can_id
+// Both may be active at the same time (candump logs frames; find_can_id
 // still emits its WARN lines). Uses the same tags as the old canbus.yaml debug
 // blocks (candump / can_id_find).
 static void debug_log_frame(const std::vector<uint8_t> &data, uint32_t can_id) {
+  const uint32_t now = millis();
+
   if (s_candump_enabled) {
-    std::string line;
-    line.reserve(data.size() * 3);
-    for (size_t i = 0; i < data.size(); ++i) {
-      char tmp[4];
-      snprintf(tmp, sizeof(tmp), "%02X ", static_cast<unsigned int>(data[i]));
-      line += tmp;
+    // Rate limit to max 30 frames/sec (33ms minimum gap) to prevent saturating
+    // the ESPHome API logger socket and causing TCP disconnects in Home Assistant.
+    if (now - s_last_candump_log_ms >= 33) {
+      s_last_candump_log_ms = now;
+      static const char *const HEX = "0123456789ABCDEF";
+      char hex_payload[32];
+      size_t pos = 0;
+      for (size_t i = 0; i < data.size() && pos + 3 < sizeof(hex_payload); ++i) {
+        hex_payload[pos++] = HEX[(data[i] >> 4) & 0x0F];
+        hex_payload[pos++] = HEX[data[i] & 0x0F];
+        hex_payload[pos++] = ' ';
+      }
+      hex_payload[pos] = '\0';
+      ESP_LOGI("candump", "0x%08X : %s", (unsigned int) can_id, hex_payload);
     }
-    ESP_LOGI("candump", "0x%08X : %s", (unsigned int) can_id, line.c_str());
   }
+
   if (s_find_can_id_enabled && data.size() >= 2) {
     if (data[1] == RESPONSE) {
       // Logged with the toptronic tag at WARN so the message also reaches the
@@ -679,27 +701,26 @@ void TopTronic::set_candump_enabled(bool enabled) {
   if (s_candump_enabled == enabled)
     return;  // no change — avoid log spam on repeated toggles
   s_candump_enabled = enabled;
-  candump_update_callbacks_.call(s_candump_enabled);
-  // Raw ESP_LOGW (NOT TT_LOGW) so the announcement is always visible in the
-  // serial log AND flows into the "main logs" text sensor, even while candump
-  // suppresses normal toptronic output.
   if (enabled) {
-    ESP_LOGW(TAG, "CANDUMP debug ENABLED — logging every CAN frame (reset to OFF on reboot, do not leave on)");
+    s_candump_start_ms = millis();
+    ESP_LOGW(TAG, "CANDUMP debug ENABLED — logging CAN frames (auto-off in 60s, or turn off switch)");
   } else {
     ESP_LOGW(TAG, "CANDUMP debug DISABLED");
   }
+  candump_update_callbacks_.call(s_candump_enabled);
 }
 
 void TopTronic::set_find_can_id_enabled(bool enabled) {
   if (s_find_can_id_enabled == enabled)
     return;  // no change — avoid log spam on repeated toggles
   s_find_can_id_enabled = enabled;
-  find_can_id_update_callbacks_.call(s_find_can_id_enabled);
   if (enabled) {
-    ESP_LOGW(TAG, "FIND CAN-ID debug ENABLED — logging 0x42/0x40 frames (reset to OFF on reboot, do not leave on)");
+    s_find_can_id_start_ms = millis();
+    ESP_LOGW(TAG, "FIND CAN-ID debug ENABLED — logging 0x42/0x40 frames (auto-off in 120s, or turn off switch)");
   } else {
     ESP_LOGW(TAG, "FIND CAN-ID debug DISABLED");
   }
+  find_can_id_update_callbacks_.call(s_find_can_id_enabled);
 }
 
 bool TopTronic::get_candump_enabled() { return s_candump_enabled; }

@@ -7,7 +7,7 @@ from . import (
     toptronic,
     CONF_TT_ID,
     TopTronicComponent,
-    CONFIG_SCHEMA_BASE,
+    config_schema_polling,
     CONF_FUNCTION_GROUP,
     CONF_FUNCTION_NUMBER,
     CONF_DATAPOINT,
@@ -30,7 +30,7 @@ CONFIG_SCHEMA = cv.All(
         ),
     }).extend(text_sensor.text_sensor_schema(
         TopTronicTextSensor
-    )).extend(CONFIG_SCHEMA_BASE),
+    )).extend(config_schema_polling("30s")),
     _validate_options_values_lengths,
 )
 

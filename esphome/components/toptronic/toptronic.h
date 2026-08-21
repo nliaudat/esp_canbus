@@ -124,6 +124,10 @@ class TopTronicSensor : public sensor::Sensor, public TopTronicBase {
 // The multiplier converts between the HA-facing value (e.g. °C) and the raw boiler integer.
 class TopTronicNumber : public number::Number, public TopTronicBase {
  public:
+  // Write-only entity: never polls (no update callback registered). The schema
+  // no longer emits set_update_interval(), so this guards against any future
+  // codegen change that would re-enable the no-op polling tick.
+  TopTronicNumber() { this->set_update_interval(SCHEDULER_DONT_RUN); }
   void set_type(TypeName type) { this->type_ = type; }
   void set_multiplier(float multiplier) { this->multiplier_ = multiplier; }
   float get_multiplier() { return this->multiplier_; }
@@ -166,6 +170,9 @@ class TopTronicTextSensor : public text_sensor::TextSensor, public TopTronicBase
 // Mirrors TopTronicTextSensor but exposes a dropdown in Home Assistant.
 class TopTronicSelect : public select::Select, public TopTronicBase {
  public:
+  // Write-only entity: never polls (no update callback registered). See
+  // TopTronicNumber for the SCHEDULER_DONT_RUN rationale.
+  TopTronicSelect() { this->set_update_interval(SCHEDULER_DONT_RUN); }
   void set_type(TypeName type) { this->type_ = type; }
   SensorType type() override { return TEXTSENSOR; }
   TypeName get_value_type() { return this->type_; }
@@ -191,6 +198,9 @@ class TopTronicSelect : public select::Select, public TopTronicBase {
 // The value is configured in YAML (e.g. an acknowledgment or reset command).
 class TopTronicButton : public button::Button, public TopTronicBase {
  public:
+  // Fire-and-forget: never polls (no update callback registered). See
+  // TopTronicNumber for the SCHEDULER_DONT_RUN rationale.
+  TopTronicButton() { this->set_update_interval(SCHEDULER_DONT_RUN); }
   void set_type(TypeName type) { this->type_ = type; }
   void set_value(float value) { this->value_ = value; }
   SensorType type() override { return BUTTON; }
