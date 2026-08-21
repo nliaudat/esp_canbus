@@ -130,29 +130,32 @@ toptronic:
     device_addr: 8  # defaults are : HV=8, BM=8, WEZ=1
     language: en  # de, en, fr, it
     boot_refresh_delay: 30s  # optional; one-shot full refresh after boot; 0 disables it
-    max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
-    max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
-    cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
-    max_refresh_per_loop: 8  # optional; sensors refreshed per loop() tick in an update_all() burst
-    max_frames_per_message: 8  # optional; max total frames a start frame may claim
+    # max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
+    # max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
+    # cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
+    # max_refresh_per_loop: 8  # optional; sensors refreshed per loop() tick in an update_all() burst
+    # max_frames_per_message: 8  # optional; max total frames a start frame may claim
 
   - id: toptronic_BM  # display
     canbus_id: cbus  # the canbus bit_rate must be 50kbps
     device_type: BM
     device_addr: 8
     language: en
-    boot_refresh_delay: 30s  # optional; one-shot full refresh after boot; 0 disables it
-    max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
-    max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
-    cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
-    max_refresh_per_loop: 8  # optional; sensors refreshed per loop() tick in an update_all() burst
-    max_frames_per_message: 8  # optional; max total frames a start frame may claim
+    # boot_refresh_delay: 30s  # optional; one-shot full refresh after boot; 0 disables it
+    # max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
+    # max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
+    # cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
+    # max_refresh_per_loop: 8  # optional; sensors refreshed per loop() tick in an update_all() burst
+    # max_frames_per_message: 8  # optional; max total frames a start frame may claim
 ```
 
-All six options are optional; the values above are the defaults. They tune the
-multi-frame reassembly buffer, the stale-fragment sweep, the throttled refresh
-burst, and the bogus-frame-count guard. See the component reference
-(`esphome/readme.md` — hub configuration table) for the full description of each.
+All six options are optional. Their defaults are: `boot_refresh_delay: 30s`,
+`max_pending_messages: 32`, `max_pending_age: 5000ms`,
+`cleanup_interval: 5000ms`, `max_refresh_per_loop: 8`,
+`max_frames_per_message: 8`. They tune the multi-frame reassembly buffer, the
+stale-fragment sweep, the throttled refresh burst, and the bogus-frame-count
+guard. See the component reference (`esphome/readme.md` — hub configuration
+table) for the full description of each.
 
 > ⚠️ Every hub id in `toptronic_hubs` MUST match an `id:` in a `toptronic:` block —
 > otherwise `esphome config` fails with an unknown-id error.
@@ -182,8 +185,12 @@ internal temperature), `switch.yaml` (restart), `button.yaml` (refresh-all), and
 `canbus.yaml` (50 kbps `esp32_can` platform). `debug.yaml` is **opt-in** — it
 injects synthetic frames for testing and must be enabled manually in `config.yaml`.
 
-> ℹ️ The `canbus.yaml` file also contains a commented-out **candump** `on_frame`
-> trigger for debugging the raw bus — uncomment it temporarily to log every frame.
+> ℹ️ Candump and "find can_id" bus debugging are now available at runtime as two
+> switches (see `esphome/packages/switch.yaml`): **"candump debug"** logs every CAN
+> frame and **"find can_id debug"** logs only 0x42/0x40 frames (results also land
+> in the "main logs" text sensor). Turn them on for a short debug session only —
+> they add bus/log latency and reset to off on every reboot. The old commented-out
+> `on_frame` blocks in `canbus.yaml` are kept for reference only and are superseded.
 
 If you want to create your own preset or need other datapoints, have a look at
 [`hoval_data_processing`](hoval_data_processing/).

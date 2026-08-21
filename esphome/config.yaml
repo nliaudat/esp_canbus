@@ -27,24 +27,24 @@ toptronic:
     device_type: HV  # WEZ, HV, BM (BD is an alias for BM and BM must be used)
     device_addr: 8  # defaults are : HV=8, BM=8, WEZ=1
     language: en  # de, en, fr, it
-    boot_refresh_delay: 30s  # optional; one-shot full refresh after boot; 0 disables it
-    max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
-    max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
-    cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
-    max_refresh_per_loop: 8  # optional; sensors refreshed per loop() tick in an update_all() burst
-    max_frames_per_message: 8  # optional; max total frames a start frame may claim
+    # boot_refresh_delay: 30s  # optional; one-shot full refresh after boot; 0 disables it
+    # max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
+    # max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
+    # cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
+    # max_refresh_per_loop: 8  # optional; sensors refreshed per loop() tick in an update_all() burst
+    # max_frames_per_message: 8  # optional; max total frames a start frame may claim
 
   - id: toptronic_BM  # display
     canbus_id: cbus  # the canbus bit_rate must be 50kbps
     device_type: BM
     device_addr: 8
     language: en
-    boot_refresh_delay: 30s  # optional; one-shot full refresh after boot; 0 disables it
-    max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
-    max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
-    cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
-    max_refresh_per_loop: 8  # optional; sensors refreshed per loop() tick in an update_all() burst
-    max_frames_per_message: 8  # optional; max total frames a start frame may claim
+    # boot_refresh_delay: 30s  # optional; one-shot full refresh after boot; 0 disables it
+    # max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
+    # max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
+    # cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
+    # max_refresh_per_loop: 8  # optional; sensors refreshed per loop() tick in an update_all() burst
+    # max_frames_per_message: 8  # optional; max total frames a start frame may claim
 
 external_components:
   - source:

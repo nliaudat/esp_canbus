@@ -23,7 +23,7 @@ files in the `esphome/` folder (full checklist in the root
 | `config.yaml` | `substitutions:` (`name`, `can_tx_pin`, `can_rx_pin`, `board_type`, `TZ`, `toptronic_hubs`) + `toptronic:` hub blocks | **Always** |
 | `packages/wifi.yaml` | WiFi network list (`!secret` references) | Almost always |
 | `packages/board.yaml` | ESP-IDF, watchdog/sdkconfig, API/OTA | Rarely |
-| `packages/canbus.yaml` | 50 kbps `esp32_can` bus + debug candump `on_frame` | Rarely (debug only) |
+| `packages/canbus.yaml` | 50 kbps `esp32_can` bus | Rarely |
 | `packages/debug.yaml` | Opt-in synthetic-frame test buttons + CRC logging | Only for reverse-engineering |
 
 > ⚠️ Every hub id listed under `toptronic_hubs` must match an `id:` in a
@@ -141,6 +141,11 @@ plus the platform-specific options).
   frame processing does not starve the update path.
 - **Refresh button** — `button.yaml` provides a "Refresh all" button that calls
   `update_all()` on every hub.
+- **Debug switches** — `switch.yaml` provides two on/off toggles: **"candump
+  debug"** logs every CAN frame (tag `candump`) and **"find can_id debug"** logs
+  only 0x42/0x40 frames (tag `toptronic` WARN, also routed to the `main_logs`
+  text sensor). Both reset to OFF on reboot and must not be left on permanently;
+  they supersede the old commented `on_frame` blocks in `canbus.yaml`.
 - **Thread-safe command bridge** — `request_refresh()`, `request_pause()`,
   `request_resume()` may be called from any FreeRTOS task; they enqueue a command
   that the main loop task executes (no blocking, no data races).
