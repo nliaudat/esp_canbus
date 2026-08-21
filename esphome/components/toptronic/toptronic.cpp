@@ -279,10 +279,13 @@ void TopTronic::register_sensor_callbacks() {
       auto *canbus = this->canbus_;
       uint32_t can_id = build_can_id(GATEWAY_DEVICE_TYPE | this->device_addr_, this->get_device_id());
 
-      sensor->add_on_update_callback([canbus, sensor, can_id]() -> void {
+      // Capture the receiver device id (e.g. 0x208 for HV+8, 0x408 for BM+8) so the
+      // [GET] log shows exactly which bus device is being polled.
+      uint16_t receiver_dev = this->get_device_id();
+      sensor->add_on_update_callback([canbus, sensor, can_id, receiver_dev]() -> void {
         const auto &data = sensor->get_request_data();
         canbus->send_data(can_id, true, data);
-        TT_LOGD("[GET] Data: 0x%s", hex_str(data.data(), data.size()).c_str());
+        TT_LOGD("[GET] dev 0x%04X Data: 0x%s", receiver_dev, hex_str(data.data(), data.size()).c_str());
       });
     }
   }
@@ -423,13 +426,15 @@ void TopTronic::update_all() {
     TT_LOGI("Refresh already in progress (%zu sensors pending), request ignored", this->pending_refresh_.size());
     return;  // a burst is already in progress
   }
+  size_t sensor_count = 0;
   for (const auto &d : this->devices_) {
     auto *device = d.second.get();
+    sensor_count += device->sensors.size();
     for (const auto &s : device->sensors) {
       this->pending_refresh_.push_back(s.second);
     }
   }
-  TT_LOGI("Refresh requested for all registered sensors");
+  TT_LOGI("Refresh requested for device 0x%04X (%zu sensors)", (unsigned) this->get_device_id(), sensor_count);
 }
 
 // Thread-safe producers. Safe to call from any FreeRTOS task: they only enqueue a
