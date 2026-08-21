@@ -738,12 +738,18 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
         // messages too — turning a full-buffer moment into lost responses until the
         // next 30 s poll. This map is capped and tiny (32 entries), so the linear
         // oldest-find is cheap and only runs on the full-buffer path.
+        // Evict the single OLDEST entry. Compare wrap-safe unsigned AGE
+        // (now - last_update_ms) instead of raw timestamps: raw comparisons are
+        // wrong across the 32-bit millis() rollover and could erase a freshly
+        // updated entry. Entries older than max_pending_age were already evicted
+        // by the loop() sweep, so all ages here are far below the wrap window.
+        const uint32_t now = millis();
         uint32_t oldest_key = this->pending_messages_.begin()->first;
-        uint32_t oldest_ms = this->pending_messages_.begin()->second.last_update_ms;
+        uint32_t oldest_age = now - this->pending_messages_.begin()->second.last_update_ms;
         for (auto pit = this->pending_messages_.begin(); pit != this->pending_messages_.end(); ++pit) {
-          if (pit->second.last_update_ms < oldest_ms) {
+          if (now - pit->second.last_update_ms > oldest_age) {
             oldest_key = pit->first;
-            oldest_ms = pit->second.last_update_ms;
+            oldest_age = now - pit->second.last_update_ms;
           }
         }
         TT_LOGW("Pending message buffer full (%zu entries), evicting oldest 0x%08X", this->pending_messages_.size(),

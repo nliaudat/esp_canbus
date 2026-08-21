@@ -146,7 +146,7 @@ CONFIG_SCHEMA = cv.All(
                 min=1, max=255
             ),
             cv.Optional(CONF_MAX_FRAMES_PER_MESSAGE, default=8): cv.int_range(
-                min=1, max=31
+                min=3, max=31
             ),
         }
     ).extend(cv.COMPONENT_SCHEMA),
