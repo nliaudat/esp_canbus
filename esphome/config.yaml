@@ -37,7 +37,6 @@ toptronic:
     # NOTE: read-only entities (sensor/text_sensor) poll at update_interval (default 30s, set in the presets).
     #       This is an entity-level key, not a hub key - write entities (number/select/button) never poll.
 
-
   - id: toptronic_HV  # HomeVent
     canbus_id: cbus  # the canbus bit_rate must be 50kbps. do not change name as it used in canbus.yaml
     device_type: HV  # WEZ, HV, BM (BD is an alias for BM and BM must be used)
@@ -51,8 +50,6 @@ toptronic:
     # max_frames_per_message: 8  # optional; max total frames a start frame may claim
     # NOTE: read-only entities (sensor/text_sensor) poll at update_interval (default 30s, set in the presets).
     #       This is an entity-level key, not a hub key - write entities (number/select/button) never poll.
-
-
 
 external_components:
   - source:
