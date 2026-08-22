@@ -6,6 +6,8 @@ button:
     entity_category: "config"
     on_press:
       then:
+        # refresh_all() fans out to EVERY registered toptronic hub (HV, BM, …),
+        # staggering each hub's batch by 15 s so the 50 kbps bus is not spammed.
+        # Calling it on any one hub covers all of them.
         - lambda: |-
-            <% for h in toptronic_hubs %>id(${ h }).update_all();
-            <% endfor %>
+            id(${ toptronic_hubs[0] }).refresh_all();

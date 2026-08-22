@@ -284,6 +284,12 @@ class TopTronic : public Component {
   // Can be called from a template button or automation to force an update.
   void update_all();
 
+  // Refresh EVERY registered TopTronic hub's sensors, staggering each hub's
+  // batch by REFRESH_STAGGER_MS so the 50 kbps bus is not spammed with a burst
+  // of GET frames. Fans out to all hubs, so calling it on any one hub covers
+  // every hub (HV, BM, WEZ …). Also used by the one-shot boot refresh.
+  void refresh_all();
+
   // Thread-safe requests callable from any FreeRTOS task. They only enqueue a
   // command; the main loop task drains the queue and does the real work, so all
   // component state stays single-threaded. Non-blocking (not ISR-safe).

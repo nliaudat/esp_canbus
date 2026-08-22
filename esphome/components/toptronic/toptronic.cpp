@@ -45,6 +45,23 @@ static constexpr uint32_t FIND_CAN_ID_AUTO_OFF_MS = 120000;
 CallbackManager<void(bool)> TopTronic::candump_update_callbacks_;
 CallbackManager<void(bool)> TopTronic::find_can_id_update_callbacks_;
 
+// ---------------------------------------------------------------------------
+// Build-wide multi-hub refresh coordination.
+//
+// Every TopTronic hub registers itself in s_all_instances during setup(), so a
+// single refresh_all() call (button or boot) can fan out to ALL hubs. Each hub's
+// update_all() batch is staggered by REFRESH_STAGGER_MS so the 50 kbps bus is
+// not hit with a simultaneous burst of GET frames. The stagger is scheduled on
+// the ESPHome main-loop task via set_timeout(), so this is non-blocking and
+// thread-safe.
+// ---------------------------------------------------------------------------
+static std::vector<TopTronic *> s_all_instances;
+static constexpr uint32_t REFRESH_STAGGER_MS = 15000;
+// Prevents the one-shot post-boot refresh from being scheduled once per hub
+// (which would fire them all at the same time). Only set true by the FIRST hub
+// to schedule a boot refresh.
+static bool s_boot_refresh_scheduled = false;
+
 // Runtime-gated logging: when CANDUMP debug is active, silence ALL normal
 // toptronic output so the candump lines (tag "candump") are the only thing on
 // the bus/log path. FIND CAN-ID mode does NOT suppress normal output (it only
@@ -456,6 +473,39 @@ void TopTronic::update_all() {
   TT_LOGI("Refresh requested for device 0x%04X (%zu sensors)", (unsigned) this->get_device_id(), sensor_count);
 }
 
+// Refresh EVERY registered hub, staggering each hub's batch by REFRESH_STAGGER_MS
+// so the 50 kbps bus is not spammed. Called from the "Refresh all" button and by
+// the (single) one-shot boot refresh. Rapid repeated presses simply push later
+// batches further out via absolute cumulative delays — the bus still only sees
+// one hub's batch at a time.
+void TopTronic::refresh_all() {
+  size_t total_sensors = 0;
+  size_t hubs = 0;
+  for (TopTronic *hub : s_all_instances) {
+    size_t count = 0;
+    for (const auto &d : hub->devices_) {
+      count += d.second->sensors.size();
+    }
+    total_sensors += count;
+    ++hubs;
+  }
+  TT_LOGI("Refresh-all scheduled for %zu hub(s), %zu sensors (stagger %u s)", hubs, total_sensors,
+          (unsigned) (REFRESH_STAGGER_MS / 1000));
+
+  uint32_t offset = 0;
+  for (TopTronic *hub : s_all_instances) {
+    if (offset > 0) {
+      // Stagger: schedule this hub's batch after the previous ones. Keyed by the
+      // hub's unique device id so batches never collide with each other or with
+      // this hub's own boot-refresh timeout.
+      hub->set_timeout(hub->get_device_id(), offset, [hub]() { hub->update_all(); });
+    } else {
+      hub->update_all();  // first hub runs immediately
+    }
+    offset += REFRESH_STAGGER_MS;
+  }
+}
+
 // Thread-safe producers. Safe to call from any FreeRTOS task: they only enqueue a
 // command (non-blocking). The main loop task drains the queue in loop() and performs
 // the actual work, so component state is never touched from other tasks.
@@ -534,15 +584,19 @@ void TopTronic::setup() {
   this->register_sensor_callbacks();
   this->register_input_callbacks();
 
+  // Register this hub so a single refresh_all() call covers every hub.
+  s_all_instances.push_back(this);
+
   // One-shot full refresh shortly after boot (configurable, default 30 s, 0 = off).
   // Fires on the ESPHome loop task via the scheduler — non-blocking and thread-safe.
-  // Keyed by the hub's unique numeric device id (NUMERIC_ID overload) so each hub's
-  // post-boot refresh is scheduled independently of any other TopTronic instance —
-  // string keys are scoped per-component, but the numeric id makes it unambiguous.
-  if (this->boot_refresh_delay_ms_ != 0) {
-    this->set_timeout(this->get_device_id(), this->boot_refresh_delay_ms_, [this]() { this->update_all(); });
-    TT_LOGI("Boot refresh scheduled for device 0x%04X in %u ms", (unsigned) this->get_device_id(),
-            (unsigned) this->boot_refresh_delay_ms_);
+  // Only the FIRST hub schedules this: instead of per-hub update_all() (which
+  // would fire every hub at the same time), we schedule refresh_all() which fans
+  // out to all hubs with a 15 s stagger between each hub's batch.
+  if (!s_boot_refresh_scheduled && this->boot_refresh_delay_ms_ != 0) {
+    s_boot_refresh_scheduled = true;
+    this->set_timeout(this->get_device_id(), this->boot_refresh_delay_ms_, [this]() { this->refresh_all(); });
+    TT_LOGI("Boot refresh scheduled for all %zu hub(s) in %u ms",
+            s_all_instances.size() ? s_all_instances.size() : 1, (unsigned) this->boot_refresh_delay_ms_);
   }
 
   // Producer/consumer bridge for commands issued from other FreeRTOS tasks.
