@@ -1,51 +1,63 @@
 button:
   - platform: template
-    name: Raum-Ist 21
+    name: "Force request BM 83-0-0 (Room actual)"
+    icon: "mdi:refresh"
     on_press:
-      - lambda: !lambda |-
-          int16_t value = 210;
-          uint16_t datapoint = 1;
+      then:
+        - lambda: |-
+            // Raw GET (0x40) to BM device 0x400 | 8 = 0x408.
+            // can_id = (0x7F << 22) | ((GW 0x481 | 8) << 11) | 0x408
+            std::vector<uint8_t> data = {0x01, 0x40, 0x53, 0x00, 0x00, 0x00};
+            id(cbus).send_data(0x1FE44C08, true, data);
 
-          std::vector<uint8_t> x = {
-              0x00,
-              0x42,   // operation
-              0x01,   // function group
-              0x00,   // function number
-              (uint8_t)(datapoint >> 8),  // datapoint-HI
-              (uint8_t)datapoint,         // datapoint-LO
-              (uint8_t)value,             // S16-LO
-              (uint8_t)(value >> 8),      // S16-HI
-          };
+# button:
+#   - platform: template
+#     name: Raum-Ist 21
+#     on_press:
+#       - lambda: !lambda |-
+#           int16_t value = 210;
+#           uint16_t datapoint = 1;
 
-          uint8_t device_type = 0;
-          uint8_t device_addr = 0;
-          uint32_t can_id = (device_type << 8) | device_addr;
+#           std::vector<uint8_t> x = {
+#               0x00,
+#               0x42,   // operation
+#               0x01,   // function group
+#               0x00,   // function number
+#               (uint8_t)(datapoint >> 8),  // datapoint-HI
+#               (uint8_t)datapoint,         // datapoint-LO
+#               (uint8_t)value,             // S16-LO
+#               (uint8_t)(value >> 8),      // S16-HI
+#           };
 
-          id(toptronic_HV).parse_frame(x, can_id, false); // id(toptronic_HV) must correspond to you toptronic id
+#           uint8_t device_type = 0;
+#           uint8_t device_addr = 0;
+#           uint32_t can_id = (device_type << 8) | device_addr;
 
-  - platform: template
-    name: Betriebswahl Woche1
-    on_press:
-      - lambda: !lambda |-
-          int16_t value = 1;
-          uint16_t datapoint = 3050;
+#           id(toptronic_HV).parse_frame(x, can_id, false); // id(toptronic_HV) must correspond to you toptronic id
 
-          std::vector<uint8_t> x = {
-              0x00,
-              0x42,   // operation
-              0x01,   // function group
-              0x00,   // function number
-              (uint8_t)(datapoint >> 8),  // datapoint-HI
-              (uint8_t)datapoint,         // datapoint-LO
-              (uint8_t)value,             // S16-LO
-              (uint8_t)(value >> 8),      // S16-HI
-          };
+#   - platform: template
+#     name: Betriebswahl Woche1
+#     on_press:
+#       - lambda: !lambda |-
+#           int16_t value = 1;
+#           uint16_t datapoint = 3050;
 
-          uint8_t device_type = 0;
-          uint8_t device_addr = 0;
-          uint32_t can_id = (device_type << 8) | device_addr;
+#           std::vector<uint8_t> x = {
+#               0x00,
+#               0x42,   // operation
+#               0x01,   // function group
+#               0x00,   // function number
+#               (uint8_t)(datapoint >> 8),  // datapoint-HI
+#               (uint8_t)datapoint,         // datapoint-LO
+#               (uint8_t)value,             // S16-LO
+#               (uint8_t)(value >> 8),      // S16-HI
+#           };
 
-          id(toptronic_HV).parse_frame(x, can_id, false); // id(toptronic_HV) must correspond to you toptronic id
+#           uint8_t device_type = 0;
+#           uint8_t device_addr = 0;
+#           uint32_t can_id = (device_type << 8) | device_addr;
+
+#           id(toptronic_HV).parse_frame(x, can_id, false); // id(toptronic_HV) must correspond to you toptronic id
 
 # ---------------------------------------------------------------------------
 # CRC reverse-engineering helper

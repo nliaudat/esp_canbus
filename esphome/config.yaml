@@ -90,7 +90,7 @@ packages:
   sensors_others: !include packages/sensors_others.yaml
   switch: !include packages/switch.yaml
   button: !include packages/button.yaml
-  # debug: !include packages/debug.yaml
+  debug: !include packages/debug.yaml
 
 # web_server:
 #   port: 80
