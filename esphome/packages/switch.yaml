@@ -3,3 +3,34 @@ switch:
     name: "${friendly_name} restart"
     icon: "mdi:restart"
     id: canbus_controller_reboot
+
+  - platform: toptronic
+    # Warning: candump logs EVERY CAN frame with a per-frame string build on the
+    # loop task — it adds noticeable bus/log latency (see docs/candump.md §8).
+    # Use only for short debug sessions.
+    #
+    # Soft momentary control: optimistic (assumed-state) in Home Assistant and
+    # backed by a build-wide flag that self-disables after 120 s (the deadline
+    # is checked on every received frame, so it fires even while the flood
+    # starves the loop task). The flag also resets to OFF on every reboot.
+    # Turning the switch OFF always works — publishing the requested state keeps
+    # the HA entity in sync even when the flag was already off.
+    name: "${friendly_name} candump debug"
+    id: candump_debug_switch
+    icon: "mdi:bug"
+    entity_category: "diagnostic"
+    toptronic_id: toptronic_HV
+    debug_mode: CANDUMP
+
+  - platform: toptronic
+    # Warning: find can_id logs only 0x42/0x40 frames as WARN lines that also
+    # land in the "main logs" text sensor. Use only for short debug sessions.
+    #
+    # Same soft momentary control as candump, with a 120 s self-disable (checked
+    # per received frame) and OFF on reboot. Turning the switch OFF always works.
+    name: "${friendly_name} find can_id debug"
+    id: find_can_id_debug_switch
+    icon: "mdi:magnify"
+    entity_category: "diagnostic"
+    toptronic_id: toptronic_HV
+    debug_mode: FIND_CAN_ID

@@ -9,7 +9,7 @@ esphome:
           timeout: 15s
 
 esp32:
-  board: ${board_type} #az-delivery-devkit-v4  # nodemcu-32s / esp-wrover-kit
+  board: ${board_type}  # nodemcu-32s / esp-wrover-kit (default: az-delivery-devkit-v4)
   framework:
     type: esp-idf  # arduino / esp-idf — not ready missing json and async_tcp
     version: recommended  # latest

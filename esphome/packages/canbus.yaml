@@ -8,30 +8,35 @@ canbus:
 
     ############ in debug mode only ##################
 
+    # SUPERSEDED — the toptronic component now provides the same two debug modes
+    # (candump / find can_id) enabled at runtime via the
+    # "${friendly_name} candump debug toggle" button in button.yaml. The blocks
+    # below are kept for reference only and should NOT be uncommented.
+
     # on_frame:
-      # # CANDUMP (debug only) - remove or disable before production use.
-      # # Size-safe: iterates x.size() so short frames (< 8 bytes) are handled.
-      # - can_id: 0
-        # can_id_mask: 0
-        # use_extended_id: true
-        # then:
-          # - lambda: |-
-              # std::string line = "";
-              # for (size_t i = 0; i < x.size(); i++) {
-                # char tmp[4];
-                # snprintf(tmp, sizeof(tmp), "%02X ", static_cast<unsigned int>(x[i]));
-                # line += tmp;
-              # }
-              # ESP_LOGI("candump", "0x%08X : %s", can_id, line.c_str());
+    #   CANDUMP (debug only) - remove or disable before production use.
+    #   Size-safe: iterates x.size() so short frames (< 8 bytes) are handled.
+    #   - can_id: 0
+    #     can_id_mask: 0
+    #     use_extended_id: true
+    #     then:
+    #       - lambda: |-
+    #           std::string line = "";
+    #           for (size_t i = 0; i < x.size(); i++) {
+    #             char tmp[4];
+    #             snprintf(tmp, sizeof(tmp), "%02X ", static_cast<unsigned int>(x[i]));
+    #             line += tmp;
+    #           }
+    #           ESP_LOGI("candump", "0x%08X : %s", can_id, line.c_str());
 
     # Find can_id
-    # - can_id: 0  # listen to all messages
-    #   can_id_mask: 0
-    #   use_extended_id: true
-    #   then:
-    #     - lambda: |-
-    #         if(x[1] == 0x42) { // response frame
-    #             ESP_LOGI("can_id_find", "Response frame : hoval_homevent_can_Addr is probably : %x", can_id);
-    #         }else if(x[1] == 0x40) { // request frame
-    #             ESP_LOGI("can_id_find", "Request frame : hoval_toptronic_can_Addr is probably : %x", can_id);
-    #         }
+    #   - can_id: 0  # listen to all messages
+    #     can_id_mask: 0
+    #     use_extended_id: true
+    #     then:
+    #       - lambda: |-
+    #           if(x[1] == 0x42) { // response frame
+    #               ESP_LOGI("can_id_find", "Response frame : hoval_homevent_can_Addr is probably : %x", can_id);
+    #           }else if(x[1] == 0x40) { // request frame
+    #               ESP_LOGI("can_id_find", "Request frame : hoval_toptronic_can_Addr is probably : %x", can_id);
+    #           }

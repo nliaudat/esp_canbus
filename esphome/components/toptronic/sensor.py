@@ -7,7 +7,7 @@ from . import (
     toptronic,
     CONF_TT_ID,
     TopTronicComponent,
-    CONFIG_SCHEMA_BASE,
+    config_schema_polling,
     CONF_FUNCTION_GROUP,
     CONF_FUNCTION_NUMBER,
     CONF_DATAPOINT,
@@ -23,7 +23,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Required(CONF_TYPE): cv.enum(TT_TYPE_OPTIONS),
 }).extend(sensor.sensor_schema(
     TopTronicSensor
-)).extend(CONFIG_SCHEMA_BASE)
+)).extend(config_schema_polling("30s"))
 
 
 async def to_code(config):

@@ -1,7 +1,8 @@
 # Capturing a CAN bus dump (candump)
 
 How to capture every CAN frame on the Hoval TopTronic bus to the ESPHome device
-log, using the debug `on_frame` handler in `esphome/packages/canbus.yaml`.
+log, using the **"candump debug"** switch in Home Assistant (supersedes the old
+`on_frame` handler that lived in `esphome/packages/canbus.yaml`).
 
 The resulting log is what the reference captures in
 [`candump_base.log`](candump_base.log) and
@@ -11,59 +12,26 @@ multi-frame reassembly.
 
 ---
 
-## Step 1 — Enable the candump `on_frame` handler
+## Step 1 — Turn on the "candump debug" switch
 
-Open `esphome/packages/canbus.yaml`. The candump block is commented out under
-`############ in debug mode only ##################`:
+Flash the firmware, then enable the **"candump debug"** switch (see
+`esphome/packages/switch.yaml`) from Home Assistant. While it is ON, every CAN
+frame is logged with the `candump` tag and normal toptronic frame noise is
+suppressed. The mode resets to OFF on every reboot and also self-disables
+automatically after 120 s — the timeout is checked on every received frame, so it
+fires even when the candump flood would otherwise starve the main loop task.
+The switch is optimistic (assumed-state) in Home Assistant: you can always turn
+it back OFF, even after the auto-disable already cleared the flag.
 
-```yaml
-    # on_frame:
-      # # CANDUMP (debug only) - remove or disable before production use.
-      # # Size-safe: iterates x.size() so short frames (< 8 bytes) are handled.
-      # - can_id: 0
-        # can_id_mask: 0
-        # use_extended_id: true
-        # then:
-          # - lambda: |-
-              # std::string line = "";
-              # for (size_t i = 0; i < x.size(); i++) {
-                # char tmp[4];
-                # snprintf(tmp, sizeof(tmp), "%02X ", static_cast<unsigned int>(x[i]));
-                # line += tmp;
-              # }
-              # ESP_LOGI("candump", "0x%08X : %s", can_id, line.c_str());
-```
+> Keep the old `on_frame` blocks commented out: they are superseded by the
+> switch and would double every candump line if re-enabled.
 
-Uncomment it so it looks like:
+### Tuning the accompanying toptronic log detail
 
-```yaml
-    on_frame:
-      # CANDUMP (debug only) - remove or disable before production use.
-      # Size-safe: iterates x.size() so short frames (< 8 bytes) are handled.
-      - can_id: 0
-        can_id_mask: 0
-        use_extended_id: true
-        then:
-          - lambda: |-
-              std::string line = "";
-              for (size_t i = 0; i < x.size(); i++) {
-                char tmp[4];
-                snprintf(tmp, sizeof(tmp), "%02X ", static_cast<unsigned int>(x[i]));
-                line += tmp;
-              }
-              ESP_LOGI("candump", "0x%08X : %s", can_id, line.c_str());
-```
-
-Notes:
-
-- `can_id: 0` + `can_id_mask: 0` means **listen to all messages** on the bus.
-- `use_extended_id: true` is required — the protocol uses CAN 2.0B extended
-  29-bit identifiers.
-- The loop iterates `x.size()` instead of hard-coding 8, so short frames
-  (< 8 bytes) are printed correctly.
-
-Optionally, enable `toptronic` DEBUG logging in `esphome/packages/debug.yaml`
-to interleave `[GET]` / `[RES]` / `[CRC]` lines with the raw frames:
+While candump is ON, normal toptronic frame noise (`[GET]`/`[SET]`/`[RES]`) is
+suppressed so the raw frames are easy to read. If you also want toptronic's own
+decoded lines interleaved, set `toptronic` to DEBUG **after** turning candump
+off:
 
 ```yaml
 logger:
@@ -136,26 +104,13 @@ Stop it after enough traffic, then trim/annotate the file like the existing
 
 ## Step 4 — (Optional) Find a device CAN id
 
-`canbus.yaml` also contains a second commented block that only logs frames
-carrying a `0x42` (response) or `0x40` (request) command, to identify the
-device address:
-
-```yaml
-    # Find can_id
-    # - can_id: 0  # listen to all messages
-    #   can_id_mask: 0
-    #   use_extended_id: true
-    #   then:
-    #     - lambda: |-
-    #         if(x[1] == 0x42) { // response frame
-    #             ESP_LOGI("can_id_find", "Response frame : hoval_homevent_can_Addr is probably : %x", can_id);
-    #         }else if(x[1] == 0x40) { // request frame
-    #             ESP_LOGI("can_id_find", "Request frame : hoval_toptronic_can_Addr is probably : %x", can_id);
-    #         }
-```
-
-If you don't know the bus address of a device, replace the candump block with
-this one and watch the `can_id_find` lines.
+To identify the bus address of a device, turn **candump debug** off and the
+**"find can_id debug"** switch on instead (`esphome/packages/switch.yaml`). It
+logs only frames carrying a `0x42` (response) or `0x40` (request) command with
+the `toptronic` tag at WARN — the results also appear in the **"main logs"**
+text sensor. Like candump, this mode resets to OFF on every reboot and
+self-disables after 120 s (checked per received frame), and the switch can
+always be turned back OFF.
 
 ---
 
@@ -163,12 +118,13 @@ this one and watch the `can_id_find` lines.
 
 Candump is **debug only**:
 
-1. Re-comment the `on_frame:` block in `esphome/packages/canbus.yaml`
-   (or replace it with the "Find can_id" block if still needed).
+1. Turn the **"candump debug"** switch **off** in Home Assistant (the mode
+   also resets to OFF automatically on every reboot and after 120 s of
+   operation, like find can_id).
 2. Remove the `logger:` / `toptronic: DEBUG` override from
-   `esphome/packages/debug.yaml` (the file notes this too).
-3. Re-flash the normal firmware.
+   `esphome/packages/debug.yaml` if you enabled it (the file notes this too).
+3. No re-flash is required to disable it.
 
 Full-traffic logging adds noticeable loop-latency (the `canbus took a long
-time` warning in `candump_base.log` section 8) and should never ship in a
-production build.
+time` warning in `candump_base.log` section 8) and should never be left on in
+a production build.

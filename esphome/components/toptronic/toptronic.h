@@ -19,6 +19,9 @@
 #ifdef USE_BUTTON
 #include "esphome/components/button/button.h"
 #endif
+#ifdef USE_SWITCH
+#include "esphome/components/switch/switch.h"
+#endif
 
 #include <deque>
 #include <map>
@@ -29,6 +32,8 @@
 #include "freertos/queue.h"
 
 namespace esphome::toptronic {
+
+class TopTronic;
 
 // Byte width / signedness of a TopTronic datapoint value.
 // Determines how raw CAN bytes are interpreted as a numeric type.
@@ -119,6 +124,10 @@ class TopTronicSensor : public sensor::Sensor, public TopTronicBase {
 // The multiplier converts between the HA-facing value (e.g. °C) and the raw boiler integer.
 class TopTronicNumber : public number::Number, public TopTronicBase {
  public:
+  // Write-only entity: never polls (no update callback registered). The schema
+  // no longer emits set_update_interval(), so this guards against any future
+  // codegen change that would re-enable the no-op polling tick.
+  TopTronicNumber() { this->set_update_interval(SCHEDULER_DONT_RUN); }
   void set_type(TypeName type) { this->type_ = type; }
   void set_multiplier(float multiplier) { this->multiplier_ = multiplier; }
   float get_multiplier() { return this->multiplier_; }
@@ -161,6 +170,9 @@ class TopTronicTextSensor : public text_sensor::TextSensor, public TopTronicBase
 // Mirrors TopTronicTextSensor but exposes a dropdown in Home Assistant.
 class TopTronicSelect : public select::Select, public TopTronicBase {
  public:
+  // Write-only entity: never polls (no update callback registered). See
+  // TopTronicNumber for the SCHEDULER_DONT_RUN rationale.
+  TopTronicSelect() { this->set_update_interval(SCHEDULER_DONT_RUN); }
   void set_type(TypeName type) { this->type_ = type; }
   SensorType type() override { return TEXTSENSOR; }
   TypeName get_value_type() { return this->type_; }
@@ -186,6 +198,9 @@ class TopTronicSelect : public select::Select, public TopTronicBase {
 // The value is configured in YAML (e.g. an acknowledgment or reset command).
 class TopTronicButton : public button::Button, public TopTronicBase {
  public:
+  // Fire-and-forget: never polls (no update callback registered). See
+  // TopTronicNumber for the SCHEDULER_DONT_RUN rationale.
+  TopTronicButton() { this->set_update_interval(SCHEDULER_DONT_RUN); }
   void set_type(TypeName type) { this->type_ = type; }
   void set_value(float value) { this->value_ = value; }
   SensorType type() override { return BUTTON; }
@@ -196,6 +211,43 @@ class TopTronicButton : public button::Button, public TopTronicBase {
 
   // Called by ESPHome when the user presses the button from Home Assistant.
   void press_action() override;
+};
+#endif
+
+#ifdef USE_SWITCH
+// Debug switches, one per independent debug feature. Each switch controls its
+// own build-wide boolean flag (s_candump_enabled / s_find_can_id_enabled) and
+// registers on its own per-feature callback manager, so the two switches are
+// fully independent — turning one ON never affects the other, and both can be
+// active simultaneously. The switches are assumed-state (optimistic): HA applies
+// the user's toggle immediately, and the component mirrors the real flag via
+// publish_state on every change, so the UI can never get stuck ON.
+class TopTronicDebugSwitch : public switch_::Switch, public Component {
+ public:
+  void set_parent(TopTronic *parent) { this->parent_ = parent; }
+  // The debug feature this switch controls (1 = candump, 2 = find can_id).
+  // This is only a discriminator — the actual enable/disable path uses the
+  // dedicated set_candump_enabled() / set_find_can_id_enabled() setters.
+  void set_debug_mode(uint8_t mode) { this->mode_ = mode; }
+
+  void setup() override;
+  void dump_config() override;
+
+  // Debug switches are "soft" momentary controls: the real logging state is a
+  // build-wide flag that can also be turned OFF by the runtime auto-off timer,
+  // so the front-end must not assume it can predict the device state. Marking
+  // the switch as assumed-state puts Home Assistant in optimistic mode — the
+  // toggle responds immediately and never fights the state pushed back from
+  // the device.
+  bool assumed_state() override { return true; }
+
+ protected:
+  // Switch base class hook: state=true → enable this switch's debug feature,
+  // state=false → disable it. Only the feature selected by mode_ is touched.
+  void write_state(bool state) override;
+
+  TopTronic *parent_{nullptr};
+  uint8_t mode_{0};
 };
 #endif
 
@@ -213,7 +265,11 @@ class TopTronicDevice {
 // canbus callback registered in setup()).
 class TopTronic : public Component {
  public:
-  explicit TopTronic(canbus::Canbus *canbus) : canbus_(canbus) {}
+  // Registers this hub in the build-wide registry immediately, so refresh_all()
+  // always covers every hub even if setup() has not run yet (e.g. during a slow
+  // App.setup() stall). All hubs are constructed in generated main.cpp before
+  // App.setup() runs.
+  explicit TopTronic(canbus::Canbus *canbus);
 
   // Register sensors and inputs (called from generated YAML code).
   void add_sensor(TopTronicBase *sensor);
@@ -232,6 +288,12 @@ class TopTronic : public Component {
   // Can be called from a template button or automation to force an update.
   void update_all();
 
+  // Refresh EVERY registered TopTronic hub's sensors, staggering each hub's
+  // batch by REFRESH_STAGGER_MS so the 50 kbps bus is not spammed with a burst
+  // of GET frames. Fans out to all hubs, so calling it on any one hub covers
+  // every hub (HV, BM, WEZ …). Also used by the one-shot boot refresh.
+  void refresh_all();
+
   // Thread-safe requests callable from any FreeRTOS task. They only enqueue a
   // command; the main loop task drains the queue and does the real work, so all
   // component state stays single-threaded. Non-blocking (not ISR-safe).
@@ -245,6 +307,35 @@ class TopTronic : public Component {
 
   // Delay before the one-shot post-boot refresh; 0 disables it.
   void set_boot_refresh_delay(uint32_t ms) { this->boot_refresh_delay_ms_ = ms; }
+
+  // Tuning knobs for the multi-frame reassembly buffer, stale-fragment sweep,
+  // refresh burst throttle, and start-frame count guard. All optional in YAML;
+  // the defaults match the historical built-in constants.
+  void set_max_pending_messages(size_t max_pending_messages) { this->max_pending_messages_ = max_pending_messages; }
+  void set_max_pending_age_ms(uint32_t max_pending_age_ms) { this->max_pending_age_ms_ = max_pending_age_ms; }
+  void set_cleanup_interval_ms(uint32_t cleanup_interval_ms) { this->cleanup_interval_ms_ = cleanup_interval_ms; }
+  void set_max_refresh_per_loop(size_t max_refresh_per_loop) { this->max_refresh_per_loop_ = max_refresh_per_loop; }
+  void set_max_frames_per_message(uint8_t max_frames_per_message) {
+    this->max_frames_per_message_ = max_frames_per_message;
+  }
+
+  // Debug frame logging (candump / find-can_id). Each feature is an independent
+  // build-wide boolean flag, so the two debug switches never interfere with each
+  // other and can even both be active at the same time. Both flags reset to OFF
+  // on every boot. Logging callbacks are deduplicated across hubs (see setup()).
+  void set_candump_enabled(bool enabled);
+  void set_find_can_id_enabled(bool enabled);
+  bool get_candump_enabled();
+  bool get_find_can_id_enabled();
+
+  // Register a callback fired whenever a specific debug flag changes, so the
+  // matching TopTronicDebugSwitch stays in sync with the real logging state.
+  // (Instantiated by the debug switches themselves — no user-facing API.)
+  void add_candump_update_callback(std::function<void(bool)> &&callback);
+  void add_find_can_id_update_callback(std::function<void(bool)> &&callback);
+  // Build-wide fan-out for each debug flag (see s_candump_enabled semantics).
+  static CallbackManager<void(bool)> candump_update_callbacks_;
+  static CallbackManager<void(bool)> find_can_id_update_callbacks_;
 
   // Pause/resume CAN frame processing. Used during OTA to free the main loop
   // and logging path so the update connection is not starved.
@@ -300,6 +391,17 @@ class TopTronic : public Component {
 
   // Delay (ms) for the one-shot post-boot refresh; 0 disables it.
   uint32_t boot_refresh_delay_ms_{30000};
+
+  // Multi-frame reassembly buffer cap (default 32).
+  size_t max_pending_messages_{32};
+  // A pending message with no continuation frame for this long is considered lost (default 5000 ms).
+  uint32_t max_pending_age_ms_{5000};
+  // Throttle interval for the stale-fragment sweep in loop() (default 5000 ms).
+  uint32_t cleanup_interval_ms_{5000};
+  // Max number of sensors refreshed per loop() tick in a throttled update_all() burst (default 8).
+  size_t max_refresh_per_loop_{8};
+  // Largest sane multi-frame message in total frames (default 8).
+  uint8_t max_frames_per_message_{8};
 
   // Sensors still waiting in a throttled update_all() burst. Drained a few per
   // loop() tick to avoid saturating the 50 kbps bus. Empty = no burst pending.

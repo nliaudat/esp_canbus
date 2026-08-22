@@ -23,7 +23,7 @@ files in the `esphome/` folder (full checklist in the root
 | `config.yaml` | `substitutions:` (`name`, `can_tx_pin`, `can_rx_pin`, `board_type`, `TZ`, `toptronic_hubs`) + `toptronic:` hub blocks | **Always** |
 | `packages/wifi.yaml` | WiFi network list (`!secret` references) | Almost always |
 | `packages/board.yaml` | ESP-IDF, watchdog/sdkconfig, API/OTA | Rarely |
-| `packages/canbus.yaml` | 50 kbps `esp32_can` bus + debug candump `on_frame` | Rarely (debug only) |
+| `packages/canbus.yaml` | 50 kbps `esp32_can` bus | Rarely |
 | `packages/debug.yaml` | Opt-in synthetic-frame test buttons + CRC logging | Only for reverse-engineering |
 
 > ⚠️ Every hub id listed under `toptronic_hubs` must match an `id:` in a
@@ -77,6 +77,12 @@ toptronic:
 | `device_addr` | yes | — | Bus address (typical defaults: `HV=8`, `BM=8`, `WEZ=1` — find it on the room control unit). |
 | `language` | no | `en` | Preset language: `de`, `en`, `fr`, `it`. |
 | `boot_refresh_delay` | no | `30s` | One-shot full refresh after boot; `0` disables it. |
+| `max_pending_messages` | no | `32` | Max concurrently reassembled multi-frame messages (per hub). Raise on a large multi-hub bus. |
+| `max_pending_age` | no | `5000ms` | A pending message with no continuation frame this long is considered lost. |
+| `cleanup_interval` | no | `5000ms` | Interval between stale-fragment sweeps in `loop()`. |
+| `max_refresh_per_loop` | no | `8` | Max sensors refreshed per `loop()` tick in a throttled `update_all()` burst. |
+| `max_frames_per_message` | no | `8` | Max total frames a start frame may claim; larger counts are rejected as corrupted headers. |
+| `update_interval` | no | `30s` | Polling interval for the read-only entities (`sensor`/`text_sensor`) generated from this hub's presets; each poll sends a GET_REQUEST. Entity-level key (configured in the preset files), not a hub configuration key — write entities never poll. |
 
 `MULTI_CONF = true` — declare as many hubs as you have devices.
 
@@ -115,26 +121,36 @@ python hoval_data_processing/generate_presets.py esphome/components/toptronic/pr
 
 You can also declare entities manually instead of relying on a preset, using the
 same keys as the preset files (`function_group`, `function_number`, `datapoint`,
-plus the platform-specific options).
+plus the platform-specific options). Read-only entities accept the standard
+`update_interval` key (default `30s`); write entities ignore it.
 
 ---
 
 ## Runtime behaviour
 
-- **Polling** — every entity extends `PollingComponent` (default `30s`); each poll
-  sends a `GET_REQUEST` frame for its datapoint.
+- **Polling** — read-only entities (`sensor`/`text_sensor`) extend `PollingComponent`
+  and poll at `update_interval` (default `30s`); each poll sends a `GET_REQUEST`
+  frame for its datapoint. Write entities (`number`/`select`/`button`) never poll
+  — they only send SET_REQUEST frames on user action (and mirror their linked
+  read sensor), so they carry no scheduler tick.
 - **Post-boot refresh** — `boot_refresh_delay` (default `30s`) after setup the hub
   fires a one-shot `update_all()` to catch values that changed while the CAN
   gateway was settling; `0` disables it.
 - **Throttled refresh** — `update_all()` enqueues sensors and `loop()` releases at
-  most 8 per tick, so large presets do not saturate the 50 kbps bus with a burst.
+  most `max_refresh_per_loop` (default 8) per tick, so large presets do not
+  saturate the 50 kbps bus with a burst.
 - **Multi-frame reassembly** — long responses (U32/S32/S64) are reassembled with
   CRC-16 validation (lookup-table accelerated); stale fragments are evicted after
-  2 s by the throttled `loop()` sweep.
+  `max_pending_age` (default 5 s) by the throttled `loop()` sweep.
 - **OTA** — `board.yaml` calls `pause()` / `resume()` on every hub during OTA so
   frame processing does not starve the update path.
 - **Refresh button** — `button.yaml` provides a "Refresh all" button that calls
   `update_all()` on every hub.
+- **Debug switches** — `switch.yaml` provides two on/off toggles: **"candump
+  debug"** logs every CAN frame (tag `candump`) and **"find can_id debug"** logs
+  only 0x42/0x40 frames (tag `toptronic` WARN, also routed to the `main_logs`
+  text sensor). Both reset to OFF on reboot and must not be left on permanently;
+  they supersede the old commented `on_frame` blocks in `canbus.yaml`.
 - **Thread-safe command bridge** — `request_refresh()`, `request_pause()`,
   `request_resume()` may be called from any FreeRTOS task; they enqueue a command
   that the main loop task executes (no blocking, no data races).

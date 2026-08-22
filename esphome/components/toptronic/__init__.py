@@ -12,7 +12,7 @@ from esphome.cpp_types import Component
 
 CODEOWNERS = ["@nliaudat"]
 DEPENDENCIES = ["canbus"]
-AUTO_LOAD = ["sensor", "number", "select", "text_sensor", "button"]
+AUTO_LOAD = ["sensor", "number", "select", "text_sensor", "button", "switch"]
 MULTI_CONF = True
 
 CONF_TT_ID = "toptronic_id"
@@ -26,6 +26,11 @@ CONF_DECIMAL = "decimal"
 CONF_VALUES = "values"
 CONF_LANGUAGE = "language"
 CONF_BOOT_REFRESH_DELAY = "boot_refresh_delay"
+CONF_MAX_PENDING_MESSAGES = "max_pending_messages"
+CONF_MAX_PENDING_AGE = "max_pending_age"
+CONF_CLEANUP_INTERVAL = "cleanup_interval"
+CONF_MAX_REFRESH_PER_LOOP = "max_refresh_per_loop"
+CONF_MAX_FRAMES_PER_MESSAGE = "max_frames_per_message"
 
 LANGS = ("de", "en", "fr", "it")
 
@@ -113,7 +118,21 @@ CONFIG_SCHEMA_BASE = cv.Schema(
         cv.Required(CONF_FUNCTION_NUMBER): cv.uint8_t,
         cv.Required(CONF_DATAPOINT): cv.uint16_t,
     }
-).extend(cv.polling_component_schema("30s"))
+)
+
+
+def config_schema_polling(update_interval: str = "30s"):
+    """Return CONFIG_SCHEMA_BASE extended with a configurable polling interval.
+
+    Read-only entities (sensor/text_sensor) poll the bus via their inherited
+    PollingComponent update() at this interval. Write-only entities (number,
+    select, button) use plain CONFIG_SCHEMA_BASE instead — they have no update
+    callback, so polling them every interval would only wake the scheduler for a
+    no-op. Without the polling schema, register_component() does not emit
+    set_update_interval(), leaving the PollingComponent default SCHEDULER_DONT_RUN.
+    """
+    return CONFIG_SCHEMA_BASE.extend(cv.polling_component_schema(update_interval))
+
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
@@ -128,6 +147,21 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(
                 CONF_BOOT_REFRESH_DELAY, default="30s"
             ): cv.positive_time_period_milliseconds,
+            cv.Optional(CONF_MAX_PENDING_MESSAGES, default=32): cv.int_range(
+                min=1, max=512
+            ),
+            cv.Optional(
+                CONF_MAX_PENDING_AGE, default="5000ms"
+            ): cv.positive_time_period_milliseconds,
+            cv.Optional(
+                CONF_CLEANUP_INTERVAL, default="5000ms"
+            ): cv.positive_time_period_milliseconds,
+            cv.Optional(CONF_MAX_REFRESH_PER_LOOP, default=8): cv.int_range(
+                min=1, max=255
+            ),
+            cv.Optional(CONF_MAX_FRAMES_PER_MESSAGE, default=8): cv.int_range(
+                min=3, max=31
+            ),
         }
     ).extend(cv.COMPONENT_SCHEMA),
     _validate_preset,
@@ -216,5 +250,10 @@ async def to_code(config):
     cg.add(var.set_device_type(device_type))
     cg.add(var.set_device_addr(config[CONF_DEVICE_ADDR]))
     cg.add(var.set_boot_refresh_delay(config[CONF_BOOT_REFRESH_DELAY]))
+    cg.add(var.set_max_pending_messages(config[CONF_MAX_PENDING_MESSAGES]))
+    cg.add(var.set_max_pending_age_ms(config[CONF_MAX_PENDING_AGE]))
+    cg.add(var.set_cleanup_interval_ms(config[CONF_CLEANUP_INTERVAL]))
+    cg.add(var.set_max_refresh_per_loop(config[CONF_MAX_REFRESH_PER_LOOP]))
+    cg.add(var.set_max_frames_per_message(config[CONF_MAX_FRAMES_PER_MESSAGE]))
 
     await _generate_entities(var, config)
