@@ -57,10 +57,14 @@ CallbackManager<void(bool)> TopTronic::find_can_id_update_callbacks_;
 // ---------------------------------------------------------------------------
 static std::vector<TopTronic *> s_all_instances;
 static constexpr uint32_t REFRESH_STAGGER_MS = 15000;
-// Prevents the one-shot post-boot refresh from being scheduled once per hub
-// (which would fire them all at the same time). Only set true by the FIRST hub
-// to schedule a boot refresh.
-static bool s_boot_refresh_scheduled = false;
+// One-shot post-boot refresh state. The deadline is captured from the FIRST hub
+// that has a non-zero boot_refresh_delay, and fired once from loop() (which only
+// runs after App.setup() has fully completed — so every hub has registered). The
+// boot refresh must NOT be scheduled from setup(): App.setup() can stall on a
+// slow component while the scheduler still ticks, which would let an early
+// timeout fire while s_all_instances is incomplete (e.g. only HV registered).
+static uint32_t s_boot_refresh_delay_ms = 0;
+static uint32_t s_boot_refresh_start_ms = 0;
 
 // Runtime-gated logging: when CANDUMP debug is active, silence ALL normal
 // toptronic output so the candump lines (tag "candump") are the only thing on
@@ -587,16 +591,13 @@ void TopTronic::setup() {
   // Register this hub so a single refresh_all() call covers every hub.
   s_all_instances.push_back(this);
 
-  // One-shot full refresh shortly after boot (configurable, default 30 s, 0 = off).
-  // Fires on the ESPHome loop task via the scheduler — non-blocking and thread-safe.
-  // Only the FIRST hub schedules this: instead of per-hub update_all() (which
-  // would fire every hub at the same time), we schedule refresh_all() which fans
-  // out to all hubs with a 15 s stagger between each hub's batch.
-  if (!s_boot_refresh_scheduled && this->boot_refresh_delay_ms_ != 0) {
-    s_boot_refresh_scheduled = true;
-    this->set_timeout(this->get_device_id(), this->boot_refresh_delay_ms_, [this]() { this->refresh_all(); });
-    TT_LOGI("Boot refresh scheduled for all %zu hub(s) in %u ms",
-            s_all_instances.size() ? s_all_instances.size() : 1, (unsigned) this->boot_refresh_delay_ms_);
+  // Capture the one-shot post-boot refresh deadline from the FIRST hub that has
+  // boot_refresh_delay != 0. The refresh itself is fired from loop() (see loop()
+  // below) — NOT from a set_timeout here, so App.setup() stalls on other slow
+  // components can never trigger the refresh while the registry is incomplete.
+  if (s_boot_refresh_delay_ms == 0 && this->boot_refresh_delay_ms_ != 0) {
+    s_boot_refresh_delay_ms = this->boot_refresh_delay_ms_;
+    s_boot_refresh_start_ms = millis();
   }
 
   // Producer/consumer bridge for commands issued from other FreeRTOS tasks.
@@ -662,6 +663,14 @@ void TopTronic::loop() {
   }
 
   const uint32_t now = millis();
+
+  // One-shot post-boot refresh. loop() only runs after App.setup() has fully
+  // completed, so by now every hub is registered in s_all_instances — firing
+  // refresh_all() from here always covers all hubs (HV, BM, …, staggered 15 s).
+  if (s_boot_refresh_delay_ms != 0 && now - s_boot_refresh_start_ms >= s_boot_refresh_delay_ms) {
+    s_boot_refresh_delay_ms = 0;  // fire exactly once
+    this->refresh_all();
+  }
 
   // Auto-disable debug modes if left on to protect network/log buffers. This is
   // the FALLBACK for a quiet bus: under candump/find-can-id frame flood the loop
