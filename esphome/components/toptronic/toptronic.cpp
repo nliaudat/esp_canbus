@@ -32,6 +32,14 @@ static uint32_t s_candump_start_ms = 0;
 static uint32_t s_find_can_id_start_ms = 0;
 static uint32_t s_last_candump_log_ms = 0;
 
+// Auto-off deadlines: debug modes are intended to be temporary. Both candump
+// and find can_id self-disable after 120 s to protect network/log buffers. The
+// deadline is checked BOTH in loop() (fallback when the bus is quiet) and on
+// every received frame inside debug_log_frame() (primary path when the flood
+// starves the loop task).
+static constexpr uint32_t CANDUMP_AUTO_OFF_MS = 120000;
+static constexpr uint32_t FIND_CAN_ID_AUTO_OFF_MS = 120000;
+
 // Fan-out for each debug flag: the matching TopTronicDebugSwitch registers here
 // so its published switch state always mirrors the real (build-wide) flag.
 CallbackManager<void(bool)> TopTronic::candump_update_callbacks_;
@@ -601,11 +609,14 @@ void TopTronic::loop() {
 
   const uint32_t now = millis();
 
-  // Auto-disable debug modes if left on to protect network/log buffers.
-  if (s_candump_enabled && (now - s_candump_start_ms > 60000)) {
+  // Auto-disable debug modes if left on to protect network/log buffers. This is
+  // the FALLBACK for a quiet bus: under candump/find-can-id frame flood the loop
+  // task can be starved, so debug_log_frame() also checks the deadline on every
+  // received frame (that is the primary path).
+  if (s_candump_enabled && (now - s_candump_start_ms > CANDUMP_AUTO_OFF_MS)) {
     this->set_candump_enabled(false);
   }
-  if (s_find_can_id_enabled && (now - s_find_can_id_start_ms > 120000)) {
+  if (s_find_can_id_enabled && (now - s_find_can_id_start_ms > FIND_CAN_ID_AUTO_OFF_MS)) {
     this->set_find_can_id_enabled(false);
   }
 
@@ -654,6 +665,44 @@ static void log_response_frame(const uint8_t *data, size_t len, uint32_t can_id,
           hex_str(data, len).c_str());
 }
 
+// ---------------------------------------------------------------------------
+// Debug flags — single source of truth for enabling/disabling a debug feature.
+//
+// The state lives in build-wide static booleans; the fan-out to the matching
+// TopTronicDebugSwitch goes through the per-feature static callback manager.
+// Both the public TopTronic setters and the per-frame auto-off inside
+// debug_log_frame() go through these helpers, so the switch state always ends
+// up mirroring the real flag regardless of WHO disabled the feature (user
+// toggle, auto-off timer, boot).
+// ---------------------------------------------------------------------------
+static void set_candump_flag(bool enabled) {
+  if (s_candump_enabled == enabled)
+    return;  // no change — avoid log spam on repeated toggles
+  s_candump_enabled = enabled;
+  if (enabled) {
+    s_candump_start_ms = millis();
+    ESP_LOGW(TAG, "CANDUMP debug ENABLED — logging CAN frames (auto-off in %us, or turn off switch)",
+             (unsigned) (CANDUMP_AUTO_OFF_MS / 1000));
+  } else {
+    ESP_LOGW(TAG, "CANDUMP debug DISABLED");
+  }
+  TopTronic::candump_update_callbacks_.call(s_candump_enabled);
+}
+
+static void set_find_can_id_flag(bool enabled) {
+  if (s_find_can_id_enabled == enabled)
+    return;  // no change — avoid log spam on repeated toggles
+  s_find_can_id_enabled = enabled;
+  if (enabled) {
+    s_find_can_id_start_ms = millis();
+    ESP_LOGW(TAG, "FIND CAN-ID debug ENABLED — logging 0x42/0x40 frames (auto-off in %us, or turn off switch)",
+             (unsigned) (FIND_CAN_ID_AUTO_OFF_MS / 1000));
+  } else {
+    ESP_LOGW(TAG, "FIND CAN-ID debug DISABLED");
+  }
+  TopTronic::find_can_id_update_callbacks_.call(s_find_can_id_enabled);
+}
+
 // Optional per-frame debug logging (canbus.yaml candump / Find can_id blocks).
 // Registered exactly ONCE across all hubs (build-wide flags/s_debug_callback_registered);
 // called from a dedicated canbus callback, not from parse_frame(), so a frame is
@@ -663,65 +712,56 @@ static void log_response_frame(const uint8_t *data, size_t len, uint32_t can_id,
 // Both may be active at the same time (candump logs frames; find_can_id
 // still emits its WARN lines). Uses the same tags as the old canbus.yaml debug
 // blocks (candump / can_id_find).
+//
+// The auto-off check runs HERE on every frame, NOT only in loop(): candump turns
+// the loop task into a bottleneck (per-frame string builds + logging), so loop()
+// may be starved while frames still arrive. Checking the deadline per frame
+// guarantees a debug mode always self-disables even under full flood.
 static void debug_log_frame(const std::vector<uint8_t> &data, uint32_t can_id) {
   const uint32_t now = millis();
 
   if (s_candump_enabled) {
-    // Rate limit to max 30 frames/sec (33ms minimum gap) to prevent saturating
-    // the ESPHome API logger socket and causing TCP disconnects in Home Assistant.
-    if (now - s_last_candump_log_ms >= 33) {
-      s_last_candump_log_ms = now;
-      static const char *const HEX = "0123456789ABCDEF";
-      char hex_payload[32];
-      size_t pos = 0;
-      for (size_t i = 0; i < data.size() && pos + 3 < sizeof(hex_payload); ++i) {
-        hex_payload[pos++] = HEX[(data[i] >> 4) & 0x0F];
-        hex_payload[pos++] = HEX[data[i] & 0x0F];
-        hex_payload[pos++] = ' ';
+    if (now - s_candump_start_ms > CANDUMP_AUTO_OFF_MS) {
+      set_candump_flag(false);
+    } else {
+      // Rate limit to max 30 frames/sec (33ms minimum gap) to prevent saturating
+      // the ESPHome API logger socket and causing TCP disconnects in Home Assistant.
+      if (now - s_last_candump_log_ms >= 33) {
+        s_last_candump_log_ms = now;
+        static const char *const HEX = "0123456789ABCDEF";
+        char hex_payload[32];
+        size_t pos = 0;
+        for (size_t i = 0; i < data.size() && pos + 3 < sizeof(hex_payload); ++i) {
+          hex_payload[pos++] = HEX[(data[i] >> 4) & 0x0F];
+          hex_payload[pos++] = HEX[data[i] & 0x0F];
+          hex_payload[pos++] = ' ';
+        }
+        hex_payload[pos] = '\0';
+        ESP_LOGI("candump", "0x%08X : %s", (unsigned int) can_id, hex_payload);
       }
-      hex_payload[pos] = '\0';
-      ESP_LOGI("candump", "0x%08X : %s", (unsigned int) can_id, hex_payload);
     }
   }
 
-  if (s_find_can_id_enabled && data.size() >= 2) {
-    if (data[1] == RESPONSE) {
-      // Logged with the toptronic tag at WARN so the message also reaches the
-      // "main logs" text sensor via the logger.on_message WARN trigger.
-      ESP_LOGW(TAG, "Find can_id: response frame, node 0x%03X (CAN-ID 0x%08X)", (unsigned) ((can_id >> 11) & 0x7FF),
-               (unsigned) can_id);
-    } else if (data[1] == GET_REQ) {
-      ESP_LOGW(TAG, "Find can_id: request frame, node 0x%03X (CAN-ID 0x%08X)", (unsigned) ((can_id >> 11) & 0x7FF),
-               (unsigned) can_id);
+  if (s_find_can_id_enabled) {
+    if (now - s_find_can_id_start_ms > FIND_CAN_ID_AUTO_OFF_MS) {
+      set_find_can_id_flag(false);
+    } else if (data.size() >= 2) {
+      if (data[1] == RESPONSE) {
+        // Logged with the toptronic tag at WARN so the message also reaches the
+        // "main logs" text sensor via the logger.on_message WARN trigger.
+        ESP_LOGW(TAG, "Find can_id: response frame, node 0x%03X (CAN-ID 0x%08X)", (unsigned) ((can_id >> 11) & 0x7FF),
+                 (unsigned) can_id);
+      } else if (data[1] == GET_REQ) {
+        ESP_LOGW(TAG, "Find can_id: request frame, node 0x%03X (CAN-ID 0x%08X)", (unsigned) ((can_id >> 11) & 0x7FF),
+                 (unsigned) can_id);
+      }
     }
   }
 }
 
-void TopTronic::set_candump_enabled(bool enabled) {
-  if (s_candump_enabled == enabled)
-    return;  // no change — avoid log spam on repeated toggles
-  s_candump_enabled = enabled;
-  if (enabled) {
-    s_candump_start_ms = millis();
-    ESP_LOGW(TAG, "CANDUMP debug ENABLED — logging CAN frames (auto-off in 60s, or turn off switch)");
-  } else {
-    ESP_LOGW(TAG, "CANDUMP debug DISABLED");
-  }
-  candump_update_callbacks_.call(s_candump_enabled);
-}
+void TopTronic::set_candump_enabled(bool enabled) { set_candump_flag(enabled); }
 
-void TopTronic::set_find_can_id_enabled(bool enabled) {
-  if (s_find_can_id_enabled == enabled)
-    return;  // no change — avoid log spam on repeated toggles
-  s_find_can_id_enabled = enabled;
-  if (enabled) {
-    s_find_can_id_start_ms = millis();
-    ESP_LOGW(TAG, "FIND CAN-ID debug ENABLED — logging 0x42/0x40 frames (auto-off in 120s, or turn off switch)");
-  } else {
-    ESP_LOGW(TAG, "FIND CAN-ID debug DISABLED");
-  }
-  find_can_id_update_callbacks_.call(s_find_can_id_enabled);
-}
+void TopTronic::set_find_can_id_enabled(bool enabled) { set_find_can_id_flag(enabled); }
 
 bool TopTronic::get_candump_enabled() { return s_candump_enabled; }
 
@@ -763,6 +803,12 @@ void TopTronicDebugSwitch::write_state(bool state) {
   } else {
     this->parent_->set_find_can_id_enabled(state);
   }
+  // With assumed_state() the toggle is applied optimistically by HA, but the
+  // underlying flag may already be in the requested state (e.g. re-disabling
+  // after an auto-off), in which case the setter above emits no state change.
+  // Publishing here guarantees the device-side entity always tracks the user's
+  // action, so the switch can always be turned back off again.
+  this->publish_state(state);
 }
 
 void TopTronicDebugSwitch::dump_config() {

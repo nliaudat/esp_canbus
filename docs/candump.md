@@ -17,7 +17,11 @@ multi-frame reassembly.
 Flash the firmware, then enable the **"candump debug"** switch (see
 `esphome/packages/switch.yaml`) from Home Assistant. While it is ON, every CAN
 frame is logged with the `candump` tag and normal toptronic frame noise is
-suppressed. The mode resets to OFF on every reboot.
+suppressed. The mode resets to OFF on every reboot and also self-disables
+automatically after 120 s — the timeout is checked on every received frame, so it
+fires even when the candump flood would otherwise starve the main loop task.
+The switch is optimistic (assumed-state) in Home Assistant: you can always turn
+it back OFF, even after the auto-disable already cleared the flag.
 
 > Keep the old `on_frame` blocks commented out: they are superseded by the
 > switch and would double every candump line if re-enabled.
@@ -104,7 +108,9 @@ To identify the bus address of a device, turn **candump debug** off and the
 **"find can_id debug"** switch on instead (`esphome/packages/switch.yaml`). It
 logs only frames carrying a `0x42` (response) or `0x40` (request) command with
 the `toptronic` tag at WARN — the results also appear in the **"main logs"**
-text sensor.
+text sensor. Like candump, this mode resets to OFF on every reboot and
+self-disables after 120 s (checked per received frame), and the switch can
+always be turned back OFF.
 
 ---
 
@@ -113,7 +119,8 @@ text sensor.
 Candump is **debug only**:
 
 1. Turn the **"candump debug"** switch **off** in Home Assistant (the mode
-   also resets to OFF automatically on every reboot).
+   also resets to OFF automatically on every reboot and after 120 s of
+   operation, like find can_id).
 2. Remove the `logger:` / `toptronic: DEBUG` override from
    `esphome/packages/debug.yaml` if you enabled it (the file notes this too).
 3. No re-flash is required to disable it.

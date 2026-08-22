@@ -219,8 +219,9 @@ class TopTronicButton : public button::Button, public TopTronicBase {
 // own build-wide boolean flag (s_candump_enabled / s_find_can_id_enabled) and
 // registers on its own per-feature callback manager, so the two switches are
 // fully independent — turning one ON never affects the other, and both can be
-// active simultaneously. State always reflects the real flag, so Home Assistant
-// never reverts the switch (no assumed-state confusion).
+// active simultaneously. The switches are assumed-state (optimistic): HA applies
+// the user's toggle immediately, and the component mirrors the real flag via
+// publish_state on every change, so the UI can never get stuck ON.
 class TopTronicDebugSwitch : public switch_::Switch, public Component {
  public:
   void set_parent(TopTronic *parent) { this->parent_ = parent; }
@@ -231,6 +232,14 @@ class TopTronicDebugSwitch : public switch_::Switch, public Component {
 
   void setup() override;
   void dump_config() override;
+
+  // Debug switches are "soft" momentary controls: the real logging state is a
+  // build-wide flag that can also be turned OFF by the runtime auto-off timer,
+  // so the front-end must not assume it can predict the device state. Marking
+  // the switch as assumed-state puts Home Assistant in optimistic mode — the
+  // toggle responds immediately and never fights the state pushed back from
+  // the device.
+  bool assumed_state() override { return true; }
 
  protected:
   // Switch base class hook: state=true → enable this switch's debug feature,

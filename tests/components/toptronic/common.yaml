@@ -24,3 +24,13 @@ toptronic:
     device_type: BM
     device_addr: 8
     language: en
+
+switch:
+  - platform: toptronic
+    name: "TT candump debug"
+    toptronic_id: tt_hv
+    debug_mode: CANDUMP
+  - platform: toptronic
+    name: "TT find can_id debug"
+    toptronic_id: tt_hv
+    debug_mode: FIND_CAN_ID

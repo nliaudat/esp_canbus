@@ -5,10 +5,97 @@ button:
     on_press:
       then:
         - lambda: |-
-            // Raw GET (0x40) to BM device 0x400 | 8 = 0x408.
-            // can_id = (0x7F << 22) | ((GW 0x481 | 8) << 11) | 0x408
-            std::vector<uint8_t> data = {0x01, 0x40, 0x53, 0x00, 0x00, 0x00};
-            id(cbus).send_data(0x1FE44C08, true, data);
+            /**
+             * Force request for BM device at address 8
+             * Device: BM (0x83), Function Group: 83 (0x53), Function: 0, Datapoint: 0
+             * Corresponds to sensor: BM_83_0_0
+             */
+            
+            // ============================================================
+            // STEP 1: Construct the CAN ID (Extended 29-bit identifier)
+            // ============================================================
+            // Format: [Priority 11-bit] [Source/Gateway 11-bit] [Destination 11-bit]
+            // 
+            // Priority: 0x7F (127) - High priority for requests
+            // Gateway: 0x481 (1153) - Standard CBUS gateway
+            // Destination: 0x408 (1032) - BM device base (0x400) + device_addr (8)
+            //
+            // CAN ID = (Priority << 22) | (Gateway << 11) | Destination
+            //        = (0x7F << 22) | (0x481 << 11) | (0x408)
+            //        = 0x1FC00000 | 0x240800 | 0x408
+            //        = 0x1FE44C08
+            // ============================================================
+            
+            uint32_t priority = 0x7F;        // Priority class (127)
+            uint32_t gateway = 0x481;        // CBUS gateway address
+            uint32_t device_base = 0x400;    // BM device base address
+            uint32_t device_addr = 8;        // Device address
+            uint32_t destination = device_base | device_addr; // 0x408
+            
+            // Build the CAN ID
+            uint32_t can_id = (priority << 22) | (gateway << 11) | destination;
+            // Result: 0x1FE44C08
+            
+            // ============================================================
+            // STEP 2: Construct the Data Payload (6 bytes)
+            // ============================================================
+            // Format: [Priority] [Command] [Function Group] [Function] [Datapoint-HI] [Datapoint-LO]
+            //
+            // Byte 0: 0x7F - Priority (matches CAN ID priority)
+            // Byte 1: 0x40 - GET command (Read request)
+            // Byte 2: 0x53 - Function Group (83 decimal) - from sensor config
+            // Byte 3: 0x00 - Function Number (0) - from sensor config  
+            // Byte 4: 0x00 - Datapoint High Byte (0) - from sensor config
+            // Byte 5: 0x00 - Datapoint Low Byte (0) - from sensor config
+            // ============================================================
+            
+            // Alternative: Build data dynamically from sensor config
+            uint8_t priority_byte = 0x7F;           // Request priority (matches CAN ID)
+            uint8_t command = 0x40;                 // GET command (0x40 = read)
+            uint8_t function_group = 0x53;          // 83 decimal = 0x53
+            uint8_t function_number = 0x00;         // Function 0
+            uint16_t datapoint = 0x0000;            // Datapoint 0
+            
+            // Construct the data vector
+            std::vector<uint8_t> data = {
+                priority_byte,                      // Byte 0: 0x7F
+                command,                           // Byte 1: 0x40
+                function_group,                    // Byte 2: 0x53
+                function_number,                   // Byte 3: 0x00
+                (uint8_t)(datapoint >> 8),         // Byte 4: Datapoint HI (0x00)
+                (uint8_t)(datapoint & 0xFF)        // Byte 5: Datapoint LO (0x00)
+            };
+            
+            // ============================================================
+            // STEP 3: Send the Request
+            // ============================================================
+            // send_data(can_id, extended_frame, data)
+            // - can_id: 29-bit extended CAN identifier
+            // - true: Use extended frame format (29-bit)
+            // - data: Payload vector
+            // ============================================================
+            
+            id(cbus).send_data(can_id, true, data);
+            
+            // Log the request for debugging
+            ESP_LOGD("button", "Sending GET request:");
+            ESP_LOGD("button", "  CAN ID: 0x%08X (Priority: 0x%02X, Gateway: 0x%03X, Dest: 0x%03X)", 
+                     (unsigned) can_id, (unsigned) priority, (unsigned) gateway, (unsigned) destination);
+            ESP_LOGD("button", "  Data: %02X %02X %02X %02X %02X %02X",
+                     data[0], data[1], data[2], data[3], data[4], data[5]);
+
+
+# button:
+#   - platform: template
+#     name: "Force request BM 83-0-0 (Room actual)"
+#     icon: "mdi:refresh"
+#     on_press:
+#       then:
+#         - lambda: |-
+#             // Raw GET (0x40) to BM device 0x400 | 8 = 0x408.
+#             // can_id = (0x7F << 22) | ((GW 0x481 | 8) << 11) | 0x408
+#             std::vector<uint8_t> data = {0x01, 0x40, 0x53, 0x00, 0x00, 0x00};
+#             id(cbus).send_data(0x1FE44C08, true, data);
 
 # button:
 #   - platform: template
