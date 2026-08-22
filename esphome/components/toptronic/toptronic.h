@@ -265,7 +265,11 @@ class TopTronicDevice {
 // canbus callback registered in setup()).
 class TopTronic : public Component {
  public:
-  explicit TopTronic(canbus::Canbus *canbus) : canbus_(canbus) {}
+  // Registers this hub in the build-wide registry immediately, so refresh_all()
+  // always covers every hub even if setup() has not run yet (e.g. during a slow
+  // App.setup() stall). All hubs are constructed in generated main.cpp before
+  // App.setup() runs.
+  explicit TopTronic(canbus::Canbus *canbus);
 
   // Register sensors and inputs (called from generated YAML code).
   void add_sensor(TopTronicBase *sensor);

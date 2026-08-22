@@ -66,6 +66,12 @@ static constexpr uint32_t REFRESH_STAGGER_MS = 15000;
 static uint32_t s_boot_refresh_delay_ms = 0;
 static uint32_t s_boot_refresh_start_ms = 0;
 
+// Constructor: register this hub in the build-wide registry IMMEDIATELY. All
+// hubs are constructed in generated main.cpp before App.setup() runs, so the
+// registry is complete from the very first moment — even during a slow
+// App.setup() stall, refresh_all() always sees every hub.
+TopTronic::TopTronic(canbus::Canbus *canbus) : canbus_(canbus) { s_all_instances.push_back(this); }
+
 // Runtime-gated logging: when CANDUMP debug is active, silence ALL normal
 // toptronic output so the candump lines (tag "candump") are the only thing on
 // the bus/log path. FIND CAN-ID mode does NOT suppress normal output (it only
@@ -588,8 +594,8 @@ void TopTronic::setup() {
   this->register_sensor_callbacks();
   this->register_input_callbacks();
 
-  // Register this hub so a single refresh_all() call covers every hub.
-  s_all_instances.push_back(this);
+  // Registration happened in the constructor (s_all_instances), so a single
+  // refresh_all() call covers every hub from the very first moment.
 
   // Capture the one-shot post-boot refresh deadline from the FIRST hub that has
   // boot_refresh_delay != 0. The refresh itself is fired from loop() (see loop()
@@ -599,6 +605,7 @@ void TopTronic::setup() {
     s_boot_refresh_delay_ms = this->boot_refresh_delay_ms_;
     s_boot_refresh_start_ms = millis();
   }
+  TT_LOGI("Hub 0x%04X registered, total hubs: %zu", (unsigned) this->get_device_id(), s_all_instances.size());
 
   // Producer/consumer bridge for commands issued from other FreeRTOS tasks.
   // Producers only enqueue; the main loop task drains and executes in loop().
