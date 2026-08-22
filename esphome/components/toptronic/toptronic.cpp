@@ -57,6 +57,9 @@ CallbackManager<void(bool)> TopTronic::find_can_id_update_callbacks_;
 // ---------------------------------------------------------------------------
 static std::vector<TopTronic *> s_all_instances;
 static constexpr uint32_t REFRESH_STAGGER_MS = 15000;
+// Forward declaration: referenced by the deduplicated debug callback installed
+// in the constructor below (defined later in this file, next to the debug flags).
+static void debug_log_frame(const std::vector<uint8_t> &data, uint32_t can_id);
 // One-shot post-boot refresh state. The deadline is captured from the FIRST hub
 // that has a non-zero boot_refresh_delay, and fired once from loop() (which only
 // runs after App.setup() has fully completed — so every hub has registered). The
@@ -66,11 +69,30 @@ static constexpr uint32_t REFRESH_STAGGER_MS = 15000;
 static uint32_t s_boot_refresh_delay_ms = 0;
 static uint32_t s_boot_refresh_start_ms = 0;
 
-// Constructor: register this hub in the build-wide registry IMMEDIATELY. All
-// hubs are constructed in generated main.cpp before App.setup() runs, so the
-// registry is complete from the very first moment — even during a slow
-// App.setup() stall, refresh_all() always sees every hub.
-TopTronic::TopTronic(canbus::Canbus *canbus) : canbus_(canbus) { s_all_instances.push_back(this); }
+// Constructor: register this hub in the build-wide registry and arm the RECEIVE
+// path immediately. All hubs are constructed in generated main.cpp before
+// App.setup() runs, so even if a hub's setup() is deferred/stalled by another
+// slow component, it can still receive and parse frames and is already known to
+// refresh_all(). (Sensor GET/set wiring stays in setup(): at construction time
+// device_addr_/device_type_ are not yet set and devices_ is still empty.)
+TopTronic::TopTronic(canbus::Canbus *canbus) : canbus_(canbus) {
+  s_all_instances.push_back(this);
+
+  // Receive path: route every CAN frame to parse_frame(). This does NOT depend
+  // on device_/sensor configuration (frames are matched at receipt time), so it
+  // is safe to install before setup().
+  this->canbus_->add_callback([this](uint32_t can_id, bool, bool rtr, const std::vector<uint8_t> &data) {
+    this->parse_frame(data, can_id, rtr);
+  });
+
+  // Deduplicated optional debug logging (candump / find can_id). Installed here
+  // (once, build-wide) so it is also armed from the very first moment.
+  if (!s_debug_callback_registered) {
+    s_debug_callback_registered = true;
+    this->canbus_->add_callback(
+        [](uint32_t can_id, bool, bool, const std::vector<uint8_t> &data) { debug_log_frame(data, can_id); });
+  }
+}
 
 // Runtime-gated logging: when CANDUMP debug is active, silence ALL normal
 // toptronic output so the candump lines (tag "candump") are the only thing on
@@ -96,10 +118,6 @@ TopTronic::TopTronic(canbus::Canbus *canbus) : canbus_(canbus) { s_all_instances
       ESP_LOGW(TAG, __VA_ARGS__); \
     } \
   } while (0)
-
-// Forward declaration: defined after TopTronic::setup() but referenced by the
-// deduplicated debug callback registered there.
-static void debug_log_frame(const std::vector<uint8_t> &data, uint32_t can_id);
 
 // Format a byte buffer as a zero-padded hex string for log output (e.g. "4001001a").
 // Uses a plain std::string (no std::stringstream) — common short messages fit in the
@@ -594,8 +612,9 @@ void TopTronic::setup() {
   this->register_sensor_callbacks();
   this->register_input_callbacks();
 
-  // Registration happened in the constructor (s_all_instances), so a single
-  // refresh_all() call covers every hub from the very first moment.
+  // Registration + receive-path wiring happened in the constructor (s_all_instances,
+  // parse_frame callback, dedup debug callback), so a single refresh_all() call
+  // covers every hub and every hub can already receive frames from the first moment.
 
   // Capture the one-shot post-boot refresh deadline from the FIRST hub that has
   // boot_refresh_delay != 0. The refresh itself is fired from loop() (see loop()
@@ -610,21 +629,6 @@ void TopTronic::setup() {
   // Producer/consumer bridge for commands issued from other FreeRTOS tasks.
   // Producers only enqueue; the main loop task drains and executes in loop().
   this->cmd_queue_ = xQueueCreate(8, sizeof(Command));
-
-  // Register with the CAN bus so all received frames are routed to parse_frame().
-  this->canbus_->add_callback([this](uint32_t can_id, bool, bool rtr, const std::vector<uint8_t> &data) {
-    this->parse_frame(data, can_id, rtr);
-  });
-
-  // Deduplicated optional debug logging (candump / find can_id). Only the first
-  // hub installs this callback — with multiple hubs every hub receives every
-  // frame anyway, so logging from each hub's parse_frame() would print N copies.
-  // The callback is a no-op unless a debug flag was enabled via the switches.
-  if (!s_debug_callback_registered) {
-    s_debug_callback_registered = true;
-    this->canbus_->add_callback(
-        [](uint32_t can_id, bool, bool, const std::vector<uint8_t> &data) { debug_log_frame(data, can_id); });
-  }
 }
 
 void TopTronic::loop() {
