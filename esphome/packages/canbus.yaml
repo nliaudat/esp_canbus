@@ -5,6 +5,9 @@ canbus:
     rx_pin: ${can_rx_pin}  # GPIO21
     can_id: 0  # unused
     bit_rate: 50kbps  # hoval canbus speed
+    rx_queue_len: 256
+    tx_queue_len: 32
+
 
     ############ in debug mode only ##################
 
