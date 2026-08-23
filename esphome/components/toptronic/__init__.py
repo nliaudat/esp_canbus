@@ -31,6 +31,7 @@ CONF_MAX_PENDING_AGE = "max_pending_age"
 CONF_CLEANUP_INTERVAL = "cleanup_interval"
 CONF_MAX_REFRESH_PER_LOOP = "max_refresh_per_loop"
 CONF_MAX_FRAMES_PER_MESSAGE = "max_frames_per_message"
+CONF_REFRESH_GAP_MS = "refresh_gap_ms"
 
 LANGS = ("de", "en", "fr", "it")
 
@@ -162,6 +163,9 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_MAX_FRAMES_PER_MESSAGE, default=8): cv.int_range(
                 min=3, max=31
             ),
+            cv.Optional(
+                CONF_REFRESH_GAP_MS, default="50ms"
+            ): cv.positive_time_period_milliseconds,
         }
     ).extend(cv.COMPONENT_SCHEMA),
     _validate_preset,
@@ -255,5 +259,6 @@ async def to_code(config):
     cg.add(var.set_cleanup_interval_ms(config[CONF_CLEANUP_INTERVAL]))
     cg.add(var.set_max_refresh_per_loop(config[CONF_MAX_REFRESH_PER_LOOP]))
     cg.add(var.set_max_frames_per_message(config[CONF_MAX_FRAMES_PER_MESSAGE]))
+    cg.add(var.set_refresh_gap_ms(config[CONF_REFRESH_GAP_MS]))
 
     await _generate_entities(var, config)
