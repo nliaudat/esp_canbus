@@ -694,7 +694,8 @@ void TopTronic::loop() {
   // colliding with boiler broadcasts) is retried instead of leaving the sensor
   // unknown until the next 30 s poll.
   const uint32_t refresh_burst = (this->max_refresh_per_loop_ == 0) ? 1 : this->max_refresh_per_loop_;
-  const uint32_t effective_gap_ms = this->refresh_gap_ms_ / refresh_burst;
+  const uint32_t effective_gap_ms =
+      (this->refresh_gap_ms_ / refresh_burst == 0) ? 1 : this->refresh_gap_ms_ / refresh_burst;
   if (!this->pending_refresh_.empty()) {
     const uint32_t now = millis();
     if (now - this->last_refresh_send_ms_ >= effective_gap_ms) {

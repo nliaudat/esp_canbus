@@ -219,6 +219,18 @@ def answer_sensor(burst, sensor_id):
     burst["entries"] = [e for e in burst["entries"] if e["sensor"] != sensor_id]
 
 
+def effective_gap(refresh_gap_ms, max_refresh_per_loop):
+    """Mirror of TopTronic::loop()'s effective per-GET spacing computation.
+
+    Clamps the integer division to a minimum of 1 ms so that a config with
+    refresh_gap_ms < max_refresh_per_loop never drives the time gate to zero
+    (which would emit a GET on every main-loop iteration).
+    """
+    burst = max_refresh_per_loop if max_refresh_per_loop else 1
+    div = refresh_gap_ms // burst
+    return div if div != 0 else 1
+
+
 def drain_tick(burst, now, gap_ms, retry_interval_ms, max_retries):
     """Process one loop() tick of the refresh burst drain.
 
@@ -246,6 +258,31 @@ def drain_tick(burst, now, gap_ms, retry_interval_ms, max_retries):
                 burst["entries"].append(entry)  # re-queue behind the others
             sent = 1
     return sent
+
+
+def test_effective_gap_clamped_to_one():
+    # Default config: 50ms / 8 -> 6 ms per GET.
+    assert effective_gap(50, 8) == 6
+    assert effective_gap(40, 8) == 5
+    assert effective_gap(8, 8) == 1
+    # Degenerate but schema-valid config (refresh_gap_ms < max_refresh_per_loop):
+    # integer division would be 0; it must clamp to 1 ms so the time gate is
+    # never "always true". Regression for the Greptile P1 review comment.
+    assert effective_gap(5, 8) == 1
+    assert effective_gap(1, 1) == 1
+    assert effective_gap(0, 0) == 1  # refresh_burst fallback to 1
+
+    # With a 1 ms floor, the drain never sends two GETs in the same millisecond.
+    gap, retry_interval, max_retries = effective_gap(5, 8), 200, 3
+    burst = new_burst()
+    for sensor in ("A", "B", "C"):
+        queue_sensor(burst, sensor)
+    assert drain_tick(burst, 30000, gap, retry_interval, max_retries) == 1
+    # Same-tick retry of the front entry is gated by the 1 ms gap.
+    assert drain_tick(burst, 30000, gap, retry_interval, max_retries) == 0
+    # After 1 ms elapses, another GET may go out (still spaced).
+    assert drain_tick(burst, 30001, gap, retry_interval, max_retries) == 1
+    print("OK  effective_gap is clamped to >= 1 ms; GETs never collapse to zero spacing")
 
 
 def test_refresh_retry_answered_removed():
@@ -336,6 +373,7 @@ if __name__ == "__main__":
     test_build_set_request()
     test_continuation_count_semantics()
     test_reassembly_wait_count()
+    test_effective_gap_clamped_to_one()
     test_refresh_retry_answered_removed()
     test_refresh_retry_unanswered_get_retried_then_give_up()
     test_refresh_coalesce_during_burst()
