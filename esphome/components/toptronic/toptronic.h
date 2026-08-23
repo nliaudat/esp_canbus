@@ -441,8 +441,8 @@ class TopTronic : public Component {
   // Empty = no burst pending.
   struct RefreshEntry {
     TopTronicBase *sensor;
-    uint32_t last_send_ms;   // millis() when this GET was last sent
-    uint32_t attempts;       // GETs sent so far for this sensor this burst
+    uint32_t last_send_ms;  // millis() when this GET was last sent
+    uint32_t attempts;      // GETs sent so far for this sensor this burst
   };
   std::deque<RefreshEntry> pending_refresh_;
 

@@ -702,8 +702,9 @@ void TopTronic::loop() {
       const uint32_t since_last = now - entry.last_send_ms;
       if (entry.attempts == 0 || since_last >= this->refresh_retry_interval_ms_) {
         if (entry.attempts > 0) {
-          TT_LOGD("[GET] Retry %u/%u device 0x%04X sensor 0x%08X", entry.attempts, (unsigned) this->max_refresh_retries_,
-                  (unsigned) this->get_device_id(), (unsigned) entry.sensor->get_id());
+          TT_LOGD("[GET] Retry %u/%u device 0x%04X sensor 0x%08X", (unsigned) entry.attempts,
+                  (unsigned) this->max_refresh_retries_, (unsigned) this->get_device_id(),
+                  (unsigned) entry.sensor->get_id());
         }
         entry.sensor->update();
         entry.last_send_ms = now;
