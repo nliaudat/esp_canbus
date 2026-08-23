@@ -28,6 +28,7 @@ static constexpr size_t MIN_MESSAGE_LEN = 5;
 static bool s_candump_enabled = false;
 static bool s_find_can_id_enabled = false;
 static bool s_debug_callback_registered = false;
+static bool s_receive_callback_registered = false;
 static uint32_t s_candump_start_ms = 0;
 static uint32_t s_find_can_id_start_ms = 0;
 static uint32_t s_last_candump_log_ms = 0;
@@ -78,12 +79,23 @@ static uint32_t s_boot_refresh_start_ms = 0;
 TopTronic::TopTronic(canbus::Canbus *canbus) : canbus_(canbus) {
   s_all_instances.push_back(this);
 
-  // Receive path: route every CAN frame to parse_frame(). This does NOT depend
-  // on device_/sensor configuration (frames are matched at receipt time), so it
-  // is safe to install before setup().
-  this->canbus_->add_callback([this](uint32_t can_id, bool, bool rtr, const std::vector<uint8_t> &data) {
-    this->parse_frame(data, can_id, rtr);
-  });
+  // Receive path: one build-wide callback routes every CAN frame to the hub(s)
+  // that registered the sender node. This does NOT depend on device_/sensor
+  // configuration (frames are matched at receipt time), so it is safe to install
+  // before setup(). A single dispatch point (instead of one callback per hub)
+  // keeps the per-frame cost of foreign traffic to a single hash lookup.
+  if (!s_receive_callback_registered) {
+    s_receive_callback_registered = true;
+    this->canbus_->add_callback([](uint32_t can_id, bool, bool rtr, const std::vector<uint8_t> &data) {
+      uint32_t device_id = (can_id >> 11) & 0x7FF;
+      for (TopTronic *hub : s_all_instances) {
+        // owns_device() checks the hub's full devices_ map (every device it has
+        // registered), so the sender is never limited to a single address.
+        if (hub->owns_device(device_id))
+          hub->parse_frame(data, can_id, rtr);
+      }
+    });
+  }
 
   // Deduplicated optional debug logging (candump / find can_id). Installed here
   // (once, build-wide) so it is also armed from the very first moment.
@@ -978,6 +990,17 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
 
   uint8_t msg_id = can_id >> 24;
   uint32_t device_id = (can_id >> 11) & 0x7FF;
+  const uint32_t now = millis();
+
+  // Fast path: this hub only cares about frames sent BY one of its own devices
+  // (responses to its GETs). The sender node id is exactly the devices_ map key,
+  // so a single lookup decides membership — everything else (other hubs' traffic,
+  // boiler broadcasts from unregistered nodes) is skipped before any reassembly
+  // or dispatch work (the same decision interpret_message() would make later).
+  // owns_device() covers EVERY device registered on this hub, not one address.
+  if (!this->owns_device(device_id)) {
+    return;
+  }
 
   if (msg_id == 0x1f) {
     // First frame of a message. data[0] upper 5 bits = number of remaining frames.
@@ -1019,7 +1042,6 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
         // wrong across the 32-bit millis() rollover and could erase a freshly
         // updated entry. Entries older than max_pending_age were already evicted
         // by the loop() sweep, so all ages here are far below the wrap window.
-        const uint32_t now = millis();
         uint32_t oldest_key = this->pending_messages_.begin()->first;
         uint32_t oldest_age = now - this->pending_messages_.begin()->second.last_update_ms;
         for (auto pit = this->pending_messages_.begin(); pit != this->pending_messages_.end(); ++pit) {
@@ -1041,7 +1063,7 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       // only num_remaining - 1 continuation frames are expected. Verified against
       // captured bus traffic (command 0x42 responses to register 0x74).
       pending.remaining_frames = num_remaining - 1;
-      pending.last_update_ms = millis();
+      pending.last_update_ms = now;
       this->pending_messages_[header_key] = std::move(pending);
     }
   } else {
@@ -1070,7 +1092,7 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
     }
     TT_LOGD("     - Part of message with id: %d with remaining length %d", msg_header, pending.remaining_frames - 1);
     pending.data.insert(pending.data.end(), data.begin() + 1, data.end());
-    pending.last_update_ms = millis();
+    pending.last_update_ms = now;
     pending.remaining_frames--;
 
     if (pending.remaining_frames == 0) {

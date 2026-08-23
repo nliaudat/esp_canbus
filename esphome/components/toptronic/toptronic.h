@@ -380,6 +380,12 @@ class TopTronic : public Component {
   // data/len reference the reassembly buffer directly — no per-frame heap copies.
   void interpret_message(const uint8_t *data, size_t len, uint32_t can_id, bool remote_transmission_request);
 
+  // True if a device with this sender node id is registered on this hub. The
+  // sender node id (bits 21-11 of a CAN id) is exactly the devices_ map key, so
+  // membership is a single O(1) lookup — it covers EVERY device this hub owns,
+  // not a single hardcoded address.
+  bool owns_device(uint32_t device_id) const { return this->devices_.find(device_id) != this->devices_.end(); }
+
   canbus::Canbus *canbus_;
 
   // Devices are owned here — unique_ptr guarantees cleanup when TopTronic is destroyed.

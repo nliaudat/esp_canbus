@@ -115,9 +115,11 @@
 #               (uint8_t)(value >> 8),      // S16-HI
 #           };
 
-#           uint8_t device_type = 0;
-#           uint8_t device_addr = 0;
-#           uint32_t can_id = (device_type << 8) | device_addr;
+#           // Sender = this hub's registered device id (device_type | device_addr),
+#           // e.g. HV+8 = 0x200 | 8 = 0x208, BM+8 = 0x400 | 8 = 0x408. The fast-path
+#           // filter accepts ANY sender id present in the hub's devices_ map, so use
+#           // the id of the hub you inject into (here toptronic_HV -> 0x208).
+#           uint32_t can_id = (0x7F << 22) | (0x208 << 11) | 0x408;  // sender = HV+8
 
 #           id(toptronic_HV).parse_frame(x, can_id, false); // id(toptronic_HV) must correspond to you toptronic id
 
@@ -139,9 +141,11 @@
 #               (uint8_t)(value >> 8),      // S16-HI
 #           };
 
-#           uint8_t device_type = 0;
-#           uint8_t device_addr = 0;
-#           uint32_t can_id = (device_type << 8) | device_addr;
+#           // Sender = this hub's registered device id (device_type | device_addr),
+#           // e.g. HV+8 = 0x200 | 8 = 0x208, BM+8 = 0x400 | 8 = 0x408. The fast-path
+#           // filter accepts ANY sender id present in the hub's devices_ map, so use
+#           // the id of the hub you inject into (here toptronic_HV -> 0x208).
+#           uint32_t can_id = (0x7F << 22) | (0x208 << 11) | 0x408;  // sender = HV+8
 
 #           id(toptronic_HV).parse_frame(x, can_id, false); // id(toptronic_HV) must correspond to you toptronic id
 
