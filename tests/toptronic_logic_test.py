@@ -198,6 +198,137 @@ def test_reassembly_wait_count():
     print("OK  reassembly completes after num_remaining - 1 continuation frames")
 
 
+# ---------------------------------------------------------------------------
+# Retry-based refresh burst (mirror of TopTronic::loop() + update_all()
+# + interpret_message() in toptronic.cpp)
+# ---------------------------------------------------------------------------
+
+# State of the refresh burst drain. Mirrors TopTronic's pending_refresh_ deque
+# (entry = RefreshEntry {sensor, last_send_ms, attempts}) plus the global
+# last_refresh_send_ms_ timestamp that gates per-send spacing.
+def new_burst():
+    return {"entries": [], "last_send_ms": 0}
+
+
+def queue_sensor(burst, sensor_id):
+    burst["entries"].append({"sensor": sensor_id, "last_send_ms": 0, "attempts": 0})
+
+
+def answer_sensor(burst, sensor_id):
+    """Mirror of interpret_message() removing a matched sensor from the queue."""
+    burst["entries"] = [e for e in burst["entries"] if e["sensor"] != sensor_id]
+
+
+def drain_tick(burst, now, gap_ms, retry_interval_ms, max_retries):
+    """Process one loop() tick of the refresh burst drain.
+
+    Faithful mirror of TopTronic::loop()'s burst block:
+      - only a send is attempted when gap time has elapsed since the last send
+        (global last_refresh_send_ms_)
+      - the front entry is sent when it is fresh (attempts==0) OR older than
+        retry_interval_ms (so an in-flight response is not re-polled early)
+      - after a send, the entry is re-queued unless attempts exceeded
+        max_retries (then it is dropped; the normal 30 s poll is the backstop)
+    Returns the number of GETs actually sent on this tick.
+    """
+    sent = 0
+    if not burst["entries"]:
+        return sent
+    if now - burst["last_send_ms"] >= gap_ms:
+        entry = burst["entries"][0]
+        since_last = now - entry["last_send_ms"]
+        if entry["attempts"] == 0 or since_last >= retry_interval_ms:
+            entry["attempts"] += 1
+            entry["last_send_ms"] = now
+            burst["last_send_ms"] = now
+            burst["entries"].pop(0)
+            if entry["attempts"] <= max_retries:
+                burst["entries"].append(entry)  # re-queue behind the others
+            sent = 1
+    return sent
+
+
+def test_refresh_retry_answered_removed():
+    gap, retry_interval, max_retries = 50, 200, 3
+    burst = new_burst()
+    queue_sensor(burst, "BM_83_0_0")
+
+    # now is the boot millis() at which the refresh fires (always large), so
+    # the first gap is already elapsed -> fresh entry is sent immediately.
+    assert drain_tick(burst, 30000, gap, retry_interval, max_retries) == 1
+    assert len(burst["entries"]) == 1 and burst["entries"][0]["attempts"] == 1
+
+    # Response arrives -> interpret_message() removes the matched entry, so it
+    # is never re-polled.
+    answer_sensor(burst, "BM_83_0_0")
+    assert burst["entries"] == []
+
+    # Empty burst is a no-op.
+    assert drain_tick(burst, 30100, gap, retry_interval, max_retries) == 0
+    print("OK  answered GET is removed from the refresh queue")
+
+
+def test_refresh_retry_unanswered_get_retried_then_give_up():
+    gap, retry_interval = 50, 200
+    max_retries = 3  # total transmissions = 1 initial + 3 retries = 4, then give up
+
+    burst = new_burst()
+    queue_sensor(burst, "BM_83_0_0")
+
+    sends = 0
+    sends_by_attempt = []
+    now = 0
+    # Step far enough (>= retry_interval) each time so the front entry is due,
+    # and collect the total number of GETs sent until the queue empties.
+    while burst["entries"]:
+        now += 250
+        sends += drain_tick(burst, now, gap, retry_interval, max_retries)
+        if burst["entries"]:
+            sends_by_attempt.append(burst["entries"][0]["attempts"])
+
+    # initial send (1) + 3 re-sends = 4 transmissions total. The entry is
+    # re-queued with attempts 1,2,3; when attempts reaches 4 (> max_retries) it
+    # is dropped (never sent a 5th time) — the normal 30 s poll is the backstop.
+    assert sends == 4, f"expected 4 GETs total, got {sends}"
+    assert sends_by_attempt == [1, 2, 3], sends_by_attempt
+    print("OK  unanswered GET sent initially + max_refresh_retries times, then dropped")
+
+
+def test_refresh_coalesce_during_burst():
+    """A "Refresh all" press during a burst is deferred, not dropped.
+
+    Mirrors update_all() setting refresh_pending_ when pending_refresh_ is
+    non-empty, and loop() starting a fresh burst once the current one empties.
+    """
+    gap, retry_interval, max_retries = 50, 200, 3
+    burst = new_burst()
+    refresh_pending = False
+
+    # First burst starts with one sensor.
+    queue_sensor(burst, "HV_50_0_40651")
+    assert drain_tick(burst, 30000, gap, retry_interval, max_retries) == 1
+
+    # A "Refresh all" press arrives while the burst is still draining:
+    # update_all() defers it (sets refresh_pending), it does NOT queue a duplicate.
+    assert len(burst["entries"]) == 1
+    refresh_pending = True  # update_all() when pending_refresh_ non-empty
+    assert len(burst["entries"]) == 1
+
+    # Drain the current burst fully (sensor answered).
+    answer_sensor(burst, "HV_50_0_40651")
+    assert burst["entries"] == []
+
+    # loop() sees the pending request after the burst empties and starts a new one.
+    if refresh_pending and not burst["entries"]:
+        refresh_pending = False
+        queue_sensor(burst, "BM_83_0_0")
+    assert len(burst["entries"]) == 1
+    assert refresh_pending is False
+    # The deferred burst is now served.
+    assert drain_tick(burst, 30100, gap, retry_interval, max_retries) == 1
+    print("OK  refresh requested during a burst is coalesced and served afterward")
+
+
 if __name__ == "__main__":
     test_crc16_samples()
     test_build_can_id()
@@ -205,4 +336,7 @@ if __name__ == "__main__":
     test_build_set_request()
     test_continuation_count_semantics()
     test_reassembly_wait_count()
+    test_refresh_retry_answered_removed()
+    test_refresh_retry_unanswered_get_retried_then_give_up()
+    test_refresh_coalesce_during_burst()
     print("\nAll logic tests passed.")
