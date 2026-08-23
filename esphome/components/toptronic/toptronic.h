@@ -321,6 +321,15 @@ class TopTronic : public Component {
   // Length (ms) of the refresh window that max_refresh_per_loop_ GETs are spread
   // across; effective per-GET spacing = refresh_gap_ms_ / max_refresh_per_loop_.
   void set_refresh_gap_ms(uint32_t refresh_gap_ms) { this->refresh_gap_ms_ = refresh_gap_ms; }
+  // Maximum number of retransmissions for an unanswered GET during a refresh
+  // burst. Re-sent after refresh_retry_interval_ms_ of no response, so a lost
+  // GET (e.g. colliding with the boiler's own broadcast traffic) self-heals
+  // instead of leaving the sensor unknown until the next 30 s poll.
+  void set_max_refresh_retries(uint32_t max_refresh_retries) { this->max_refresh_retries_ = max_refresh_retries; }
+  // Wall-clock delay (ms) before an unanswered GET in a refresh burst is re-sent.
+  void set_refresh_retry_interval_ms(uint32_t refresh_retry_interval_ms) {
+    this->refresh_retry_interval_ms_ = refresh_retry_interval_ms;
+  }
 
   // Debug frame logging (candump / find-can_id). Each feature is an independent
   // build-wide boolean flag, so the two debug switches never interfere with each
@@ -413,15 +422,35 @@ class TopTronic : public Component {
   // (default 50 ms / 8 = 6.25 ms), which keeps the boiler's responses interleaved
   // so the main loop stays responsive during a refresh_all().
   uint32_t refresh_gap_ms_{50};
+  // Maximum number of re-sends for an unanswered GET during a refresh burst
+  // (default 3). 0 disables retries. Kept small: the normal 30 s poll is the
+  // backstop, so a burst should never hammer a dead/absent device.
+  uint32_t max_refresh_retries_{3};
+  // Wall-clock delay (ms) before an unanswered GET is re-sent during a refresh
+  // burst (default 200 ms). Longer than the worst-case multi-frame response so
+  // a slow device response is not needlessly re-polled.
+  uint32_t refresh_retry_interval_ms_{200};
   // Timestamp (millis()) of the last GET sent from a refresh burst. Starts at 0
   // so the first GET of a burst goes out immediately.
   uint32_t last_refresh_send_ms_{0};
 
-  // Sensors still waiting in a throttled update_all() burst. Drained with an
-  // effective per-GET spacing of refresh_gap_ms_ / max_refresh_per_loop_ to
-  // avoid saturating the 50 kbps bus and to spread the boiler's responses.
+  // Sensors still waiting in a throttled update_all() burst, each tracked so an
+  // unanswered GET can be re-sent (see max_refresh_retries_ /
+  // refresh_retry_interval_ms_). On a fresh send the entry is pushed back; a
+  // retry updates the in-place entry (update_all() never queues duplicates).
   // Empty = no burst pending.
-  std::deque<TopTronicBase *> pending_refresh_;
+  struct RefreshEntry {
+    TopTronicBase *sensor;
+    uint32_t last_send_ms;   // millis() when this GET was last sent
+    uint32_t attempts;       // GETs sent so far for this sensor this burst
+  };
+  std::deque<RefreshEntry> pending_refresh_;
+
+  // Coalesced refresh request: set by update_all() when a refresh is asked for
+  // while a burst is still draining. loop() starts one fresh burst once the
+  // current one empties, so a "Refresh all" press during a burst is deferred
+  // and honored rather than silently dropped.
+  bool refresh_pending_{false};
 
   // Timestamp of the last stale-fragment sweep in loop().
   uint32_t last_cleanup_ms_{0};
