@@ -41,7 +41,7 @@ ESP32 CAN bus firmware and the Hoval TopTronic integration.
 | `CLEANUP_INTERVAL_MS` | 5000 | Throttle for the stale sweep |
 | Poll default | 30 s | Entity `PollingComponent` interval |
 | Post-boot refresh | 30 000 ms | One-shot `update_all()` after `setup()` (config `boot_refresh_delay`, `0` = off) |
-| Throttled refresh | 50 ms / GET | One GET per `refresh_gap_ms` (default `50ms`); `max_refresh_per_loop` retained as a no-op |
+| Throttled refresh | 6.25 ms / GET | `max_refresh_per_loop` GETs (default 8) spread across `refresh_gap_ms` (default `50ms`); spacing = `refresh_gap_ms / max_refresh_per_loop` |
 | CRC-16 | poly `0x1021`, init `0xB006`, ref in/out `true`, xorout `0` | Multi-frame checksum (lookup-table form) |
 | `0x56` value offset | 7 | Extended RESPONSE value starts at byte 7 (2 extra `0x80 0x00` bytes) |
 

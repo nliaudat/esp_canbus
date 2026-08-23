@@ -318,9 +318,8 @@ class TopTronic : public Component {
   void set_max_frames_per_message(uint8_t max_frames_per_message) {
     this->max_frames_per_message_ = max_frames_per_message;
   }
-  // Minimum wall-clock gap (ms) between two consecutive GET sends of a refresh
-  // burst. At 50 kbps a GET + its response(s) take a few ms; spacing them keeps
-  // the boiler's response avalanche from starving the main loop.
+  // Length (ms) of the refresh window that max_refresh_per_loop_ GETs are spread
+  // across; effective per-GET spacing = refresh_gap_ms_ / max_refresh_per_loop_.
   void set_refresh_gap_ms(uint32_t refresh_gap_ms) { this->refresh_gap_ms_ = refresh_gap_ms; }
 
   // Debug frame logging (candump / find-can_id). Each feature is an independent
@@ -402,22 +401,26 @@ class TopTronic : public Component {
   uint32_t max_pending_age_ms_{5000};
   // Throttle interval for the stale-fragment sweep in loop() (default 5000 ms).
   uint32_t cleanup_interval_ms_{5000};
-  // Retained for YAML compatibility; pacing is now driven by refresh_gap_ms_
-  // (one GET sent per refresh_gap_ms_ of wall-clock time). No longer a hard cap.
+  // GET burst budget per refresh_gap_ms_ window (default 8). Combined with
+  // refresh_gap_ms_ it yields the effective per-GET spacing, so BOTH knobs
+  // drive the refresh throughput: raising it sends more GETs per window,
+  // lowering it paces harder.
   size_t max_refresh_per_loop_{8};
   // Largest sane multi-frame message in total frames (default 8).
   uint8_t max_frames_per_message_{8};
-  // Minimum wall-clock gap (ms) between two consecutive GET sends of a refresh
-  // burst. Spreads the boiler's responses so the main loop stays responsive
-  // during a refresh_all() (default 50 ms).
+  // Length (ms) of the refresh window that max_refresh_per_loop_ GETs are spread
+  // across. Effective per-GET spacing = refresh_gap_ms_ / max_refresh_per_loop_
+  // (default 50 ms / 8 = 6.25 ms), which keeps the boiler's responses interleaved
+  // so the main loop stays responsive during a refresh_all().
   uint32_t refresh_gap_ms_{50};
   // Timestamp (millis()) of the last GET sent from a refresh burst. Starts at 0
   // so the first GET of a burst goes out immediately.
   uint32_t last_refresh_send_ms_{0};
 
-  // Sensors still waiting in a throttled update_all() burst. Drained one per
-  // refresh_gap_ms_ of wall-clock time to avoid saturating the 50 kbps bus and
-  // to spread the boiler's responses. Empty = no burst pending.
+  // Sensors still waiting in a throttled update_all() burst. Drained with an
+  // effective per-GET spacing of refresh_gap_ms_ / max_refresh_per_loop_ to
+  // avoid saturating the 50 kbps bus and to spread the boiler's responses.
+  // Empty = no burst pending.
   std::deque<TopTronicBase *> pending_refresh_;
 
   // Timestamp of the last stale-fragment sweep in loop().

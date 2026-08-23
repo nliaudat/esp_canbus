@@ -211,8 +211,9 @@ The gateway presents itself on the bus as a **GW** device
 - **Post-boot refresh** — a one-shot `update_all()` fires after
   `boot_refresh_delay` (default 30 s, `0` disables it).
 - **Throttled refresh** — `update_all()` queues sensors and `loop()` releases
-  one GET per `refresh_gap_ms` (default 50 ms) to keep the 50 kbps bus and the
-  main loop responsive; `MAX_REFRESH_PER_LOOP` is now a compatibility no-op.
+  `max_refresh_per_loop` GETs (default 8) spread across each `refresh_gap_ms`
+  window (default 50 ms) to keep the 50 kbps bus and the main loop responsive;
+  effective per-GET spacing = `refresh_gap_ms / max_refresh_per_loop`.
 - **Thread safety** — `request_refresh() / request_pause() / request_resume()`
   enqueue commands on a FreeRTOS queue drained by `loop()` on the main task
   (duplicate commands are coalesced and queue overflow is logged).

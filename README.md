@@ -133,9 +133,9 @@ toptronic:
     # max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
     # max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
     # cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
-    # max_refresh_per_loop: 8  # optional; retained for compatibility (pacing now uses refresh_gap_ms)
+    # max_refresh_per_loop: 8  # optional; GET burst budget per refresh_gap_ms window
     # max_frames_per_message: 8  # optional; max total frames a start frame may claim
-    # refresh_gap_ms: 50ms  # optional; min pause between GETs in an update_all() burst (spreads responses)
+    # refresh_gap_ms: 50ms  # optional; refresh window; GET spacing = window / burst budget
 
   - id: toptronic_BM  # display
     canbus_id: cbus  # the canbus bit_rate must be 50kbps
@@ -146,20 +146,20 @@ toptronic:
     # max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
     # max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
     # cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
-    # max_refresh_per_loop: 8  # optional; retained for compatibility (pacing now uses refresh_gap_ms)
+    # max_refresh_per_loop: 8  # optional; GET burst budget per refresh_gap_ms window
     # max_frames_per_message: 8  # optional; max total frames a start frame may claim
-    # refresh_gap_ms: 50ms  # optional; min pause between GETs in an update_all() burst (spreads responses)
+    # refresh_gap_ms: 50ms  # optional; refresh window; GET spacing = window / burst budget
 ```
 
 All seven options are optional. Their defaults are: `boot_refresh_delay: 30s`,
 `max_pending_messages: 32`, `max_pending_age: 5000ms`,
 `cleanup_interval: 5000ms`, `max_frames_per_message: 8`,
-`refresh_gap_ms: 50ms` (plus `max_refresh_per_loop: 8`, retained for
-compatibility - pacing is now driven by `refresh_gap_ms`). They tune the
+`refresh_gap_ms: 50ms`, `max_refresh_per_loop: 8`. They tune the
 multi-frame reassembly buffer, the stale-fragment sweep, the throttled refresh
-burst, and the bogus-frame-count guard. See the component reference
-(`esphome/readme.md` - hub configuration table) for the full description of
-each.
+burst, and the bogus-frame-count guard. The effective per-GET spacing of a
+refresh burst is `refresh_gap_ms / max_refresh_per_loop` (default 50 ms / 8 =
+6.25 ms). See the component reference (`esphome/readme.md` - hub configuration
+table) for the full description of each.
 
 > ⚠️ Every hub id in `toptronic_hubs` MUST match an `id:` in a `toptronic:` block —
 > otherwise `esphome config` fails with an unknown-id error.

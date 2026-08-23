@@ -483,7 +483,7 @@ void TopTronic::register_input_callbacks() {
 // select) follow automatically through the linked sensors set up in link_inputs().
 //
 // The refresh is THROTTLED: sensors are queued into pending_refresh_ and released
-// at most one per loop() tick per refresh_gap_ms_ of wall-clock time, so a large
+// with an effective per-GET spacing of refresh_gap_ms_ / max_refresh_per_loop_
 // preset does not saturate the 50 kbps bus with a burst of GET frames and does
 // not compress the boiler's responses into a main-loop-stalling avalanche.
 void TopTronic::update_all() {
@@ -665,16 +665,19 @@ void TopTronic::loop() {
     }
   }
 
-  // Time-gated refresh burst: send at most ONE GET per this->refresh_gap_ms_ of
-  // wall-clock time (not per loop tick). The previous per-tick cap (up to
-  // max_refresh_per_loop_) fired the whole batch in a few loop ticks, which
-  // compressed the boiler's responses into an avalanche and starved the main
-  // loop (log showed a 356 ms canbus operation stall mid-burst). Pacing by
-  // wall-clock time spreads the GETs so the responses come back interleaved
-  // and the loop stays responsive.
+  // Time-gated refresh burst. max_refresh_per_loop_ is the GET burst budget per
+  // refresh_gap_ms_ window, so the effective per-GET spacing is
+  // refresh_gap_ms_ / max_refresh_per_loop_. Both knobs stay active: raising
+  // max_refresh_per_loop_ sends more GETs per window (faster burst), lowering it
+  // paces harder. Spreading the burst evenly across the window (rather than
+  // sending N back-to-back) keeps the boiler's responses interleaved so the
+  // main loop is not swamped with an avalanche (log showed a 356 ms canbus
+  // operation stall mid-burst).
+  const uint32_t refresh_burst = (this->max_refresh_per_loop_ == 0) ? 1 : this->max_refresh_per_loop_;
+  const uint32_t effective_gap_ms = this->refresh_gap_ms_ / refresh_burst;
   if (!this->pending_refresh_.empty()) {
     const uint32_t now = millis();
-    if (now - this->last_refresh_send_ms_ >= this->refresh_gap_ms_) {
+    if (now - this->last_refresh_send_ms_ >= effective_gap_ms) {
       TopTronicBase *sensor = this->pending_refresh_.front();
       this->pending_refresh_.pop_front();
       sensor->update();
