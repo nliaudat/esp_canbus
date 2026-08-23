@@ -635,8 +635,7 @@ void TopTronic::setup() {
 
   // Capture the earliest non‑zero post‑boot refresh delay across all hubs.
   if (this->boot_refresh_delay_ms_ != 0) {
-    if (s_boot_refresh_delay_ms == 0 ||
-        this->boot_refresh_delay_ms_ < s_boot_refresh_delay_ms) {
+    if (s_boot_refresh_delay_ms == 0 || this->boot_refresh_delay_ms_ < s_boot_refresh_delay_ms) {
       s_boot_refresh_delay_ms = this->boot_refresh_delay_ms_;
       s_boot_refresh_start_ms = millis();
     }

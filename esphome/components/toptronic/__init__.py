@@ -168,7 +168,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(
                 CONF_REFRESH_GAP_MS, default="50ms"
             ): cv.positive_time_period_milliseconds,
-            cv.Optional(CONF_MAX_REFRESH_RETRIES, default=3): cv.int_range(
+            cv.Optional(CONF_MAX_REFRESH_RETRIES, default=1): cv.int_range(
                 min=0, max=10
             ),
             cv.Optional(

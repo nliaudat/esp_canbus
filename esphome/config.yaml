@@ -36,6 +36,8 @@ toptronic:
     # max_refresh_per_loop: 8  # optional; GET burst budget per refresh_gap_ms window
     # max_frames_per_message: 8  # optional; max total frames a start frame may claim
     # refresh_gap_ms: 50ms  # optional; refresh window; GET spacing = window / burst budget
+    # max_refresh_retries: 0  # optional; re-sends of an unanswered GET per refresh burst (0 = single-pass)
+    # refresh_retry_interval_ms: 200ms  # optional; delay before an unanswered GET is re-sent
     # NOTE: read-only entities (sensor/text_sensor) poll at update_interval (default 30s, set in the presets).
     #       This is an entity-level key, not a hub key - write entities (number/select/button) never poll.
 
@@ -51,6 +53,8 @@ toptronic:
     # max_refresh_per_loop: 8  # optional; GET burst budget per refresh_gap_ms window
     # max_frames_per_message: 8  # optional; max total frames a start frame may claim
     # refresh_gap_ms: 50ms  # optional; refresh window; GET spacing = window / burst budget
+    # max_refresh_retries: 0  # optional; re-sends of an unanswered GET per refresh burst (0 = single-pass)
+    # refresh_retry_interval_ms: 200ms  # optional; delay before an unanswered GET is re-sent
     # NOTE: read-only entities (sensor/text_sensor) poll at update_interval (default 30s, set in the presets).
     #       This is an entity-level key, not a hub key - write entities (number/select/button) never poll.
 

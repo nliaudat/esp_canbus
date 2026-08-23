@@ -83,6 +83,8 @@ toptronic:
 | `max_refresh_per_loop` | no | `8` | GET burst budget per `refresh_gap_ms` window. Combined with `refresh_gap_ms` it sets the effective per-GET spacing (`refresh_gap_ms / max_refresh_per_loop`). |
 | `max_frames_per_message` | no | `8` | Max total frames a start frame may claim; larger counts are rejected as corrupted headers. |
 | `refresh_gap_ms` | no | `50ms` | Refresh window length. The burst budget (`max_refresh_per_loop`) GETs are spread across it; effective spacing = `refresh_gap_ms / max_refresh_per_loop` (default 6.25 ms), keeping responses interleaved so the main loop is not swamped. |
+| `max_refresh_retries` | no | `0` | Re-sends of an unanswered GET during a refresh burst (`0` = single-pass, no retries; the normal 30 s poll is the backstop). |
+| `refresh_retry_interval_ms` | no | `200ms` | Wall-clock delay before an unanswered GET in a burst is re-sent (only used when `max_refresh_retries` > 0). |
 | `update_interval` | no | `30s` | Polling interval for the read-only entities (`sensor`/`text_sensor`) generated from this hub's presets; each poll sends a GET_REQUEST. Entity-level key (configured in the preset files), not a hub configuration key — write entities never poll. |
 
 `MULTI_CONF = true` — declare as many hubs as you have devices.

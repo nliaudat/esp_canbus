@@ -136,6 +136,8 @@ toptronic:
     # max_refresh_per_loop: 8  # optional; GET burst budget per refresh_gap_ms window
     # max_frames_per_message: 8  # optional; max total frames a start frame may claim
     # refresh_gap_ms: 50ms  # optional; refresh window; GET spacing = window / burst budget
+    # max_refresh_retries: 0  # optional; re-sends of an unanswered GET per refresh burst (0 = single-pass)
+    # refresh_retry_interval_ms: 200ms  # optional; delay before an unanswered GET is re-sent
 
   - id: toptronic_BM  # display
     canbus_id: cbus  # the canbus bit_rate must be 50kbps
@@ -149,12 +151,15 @@ toptronic:
     # max_refresh_per_loop: 8  # optional; GET burst budget per refresh_gap_ms window
     # max_frames_per_message: 8  # optional; max total frames a start frame may claim
     # refresh_gap_ms: 50ms  # optional; refresh window; GET spacing = window / burst budget
+    # max_refresh_retries: 0  # optional; re-sends of an unanswered GET per refresh burst (0 = single-pass)
+    # refresh_retry_interval_ms: 200ms  # optional; delay before an unanswered GET is re-sent
 ```
 
-All seven options are optional. Their defaults are: `boot_refresh_delay: 30s`,
+All nine options are optional. Their defaults are: `boot_refresh_delay: 30s`,
 `max_pending_messages: 32`, `max_pending_age: 5000ms`,
 `cleanup_interval: 5000ms`, `max_frames_per_message: 8`,
-`refresh_gap_ms: 50ms`, `max_refresh_per_loop: 8`. They tune the
+`refresh_gap_ms: 50ms`, `max_refresh_per_loop: 8`,
+`max_refresh_retries: 0`, `refresh_retry_interval_ms: 200ms`. They tune the
 multi-frame reassembly buffer, the stale-fragment sweep, the throttled refresh
 burst, and the bogus-frame-count guard. The effective per-GET spacing of a
 refresh burst is `refresh_gap_ms / max_refresh_per_loop` (default 50 ms / 8 =
