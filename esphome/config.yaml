@@ -32,8 +32,9 @@ toptronic:
     # max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
     # max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
     # cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
-    # max_refresh_per_loop: 8  # optional; sensors refreshed per loop() tick in an update_all() burst
+    # max_refresh_per_loop: 8  # optional; retained for compatibility (pacing now uses refresh_gap_ms)
     # max_frames_per_message: 8  # optional; max total frames a start frame may claim
+    # refresh_gap_ms: 50ms  # optional; min pause between GETs in an update_all() burst (spreads responses)
     # NOTE: read-only entities (sensor/text_sensor) poll at update_interval (default 30s, set in the presets).
     #       This is an entity-level key, not a hub key - write entities (number/select/button) never poll.
 
@@ -46,8 +47,9 @@ toptronic:
     # max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
     # max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
     # cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
-    # max_refresh_per_loop: 8  # optional; sensors refreshed per loop() tick in an update_all() burst
+    # max_refresh_per_loop: 8  # optional; retained for compatibility (pacing now uses refresh_gap_ms)
     # max_frames_per_message: 8  # optional; max total frames a start frame may claim
+    # refresh_gap_ms: 50ms  # optional; min pause between GETs in an update_all() burst (spreads responses)
     # NOTE: read-only entities (sensor/text_sensor) poll at update_interval (default 30s, set in the presets).
     #       This is an entity-level key, not a hub key - write entities (number/select/button) never poll.
 

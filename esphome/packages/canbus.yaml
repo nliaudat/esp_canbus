@@ -8,7 +8,6 @@ canbus:
     rx_queue_len: 256
     tx_queue_len: 32
 
-
     ############ in debug mode only ##################
 
     # SUPERSEDED — the toptronic component now provides the same two debug modes

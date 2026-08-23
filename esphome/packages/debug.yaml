@@ -188,17 +188,17 @@ sensor:
       name: "CPU Frequency"
       entity_category: diagnostic
 
-  # CPU Temperature
-  # - platform: internal_temperature
-  #   name: "${id_prefix} CPU Temperature"
-  #   id: ${id_prefix}_cpu_temperature
-  #   unit_of_measurement: "degC"
-  #   accuracy_decimals: 1
-  #   device_class: temperature
-  #   state_class: measurement
-  #   icon: "mdi:thermometer"
-  #   update_interval: 5s
-  #   entity_category: diagnostic
+    # CPU Temperature
+    # - platform: internal_temperature
+    #   name: "${id_prefix} CPU Temperature"
+    #   id: ${id_prefix}_cpu_temperature
+    #   unit_of_measurement: "degC"
+    #   accuracy_decimals: 1
+    #   device_class: temperature
+    #   state_class: measurement
+    #   icon: "mdi:thermometer"
+    #   update_interval: 5s
+    #   entity_category: diagnostic
 
   # Memory sensors using correct ESP-IDF functions
   # - platform: template

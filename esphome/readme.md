@@ -80,8 +80,9 @@ toptronic:
 | `max_pending_messages` | no | `32` | Max concurrently reassembled multi-frame messages (per hub). Raise on a large multi-hub bus. |
 | `max_pending_age` | no | `5000ms` | A pending message with no continuation frame this long is considered lost. |
 | `cleanup_interval` | no | `5000ms` | Interval between stale-fragment sweeps in `loop()`. |
-| `max_refresh_per_loop` | no | `8` | Max sensors refreshed per `loop()` tick in a throttled `update_all()` burst. |
+| `max_refresh_per_loop` | no | `8` | Retained for compatibility; pacing is now driven by `refresh_gap_ms` (no longer the refresh control). |
 | `max_frames_per_message` | no | `8` | Max total frames a start frame may claim; larger counts are rejected as corrupted headers. |
+| `refresh_gap_ms` | no | `50ms` | Minimum pause between two GET sends of a throttled `update_all()` burst; spreads responses so the main loop is not swamped. |
 | `update_interval` | no | `30s` | Polling interval for the read-only entities (`sensor`/`text_sensor`) generated from this hub's presets; each poll sends a GET_REQUEST. Entity-level key (configured in the preset files), not a hub configuration key — write entities never poll. |
 
 `MULTI_CONF = true` — declare as many hubs as you have devices.
@@ -136,9 +137,11 @@ plus the platform-specific options). Read-only entities accept the standard
 - **Post-boot refresh** — `boot_refresh_delay` (default `30s`) after setup the hub
   fires a one-shot `update_all()` to catch values that changed while the CAN
   gateway was settling; `0` disables it.
-- **Throttled refresh** — `update_all()` enqueues sensors and `loop()` releases at
-  most `max_refresh_per_loop` (default 8) per tick, so large presets do not
-  saturate the 50 kbps bus with a burst.
+- **Throttled refresh** — `update_all()` enqueues sensors and `loop()` releases
+  at most one GET per `refresh_gap_ms` (default 50 ms) of wall-clock time, so
+  large presets do not saturate the 50 kbps bus and the boiler's responses come
+  back interleaved instead of as a single main-loop-stalling avalanche. (The
+  former `max_refresh_per_loop` cap is retained as a no-op for compatibility.)
 - **Multi-frame reassembly** — long responses (U32/S32/S64) are reassembled with
   CRC-16 validation (lookup-table accelerated); stale fragments are evicted after
   `max_pending_age` (default 5 s) by the throttled `loop()` sweep.
