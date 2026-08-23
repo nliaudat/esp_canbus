@@ -633,13 +633,13 @@ void TopTronic::setup() {
   // parse_frame callback, dedup debug callback), so a single refresh_all() call
   // covers every hub and every hub can already receive frames from the first moment.
 
-  // Capture the one-shot post-boot refresh deadline from the FIRST hub that has
-  // boot_refresh_delay != 0. The refresh itself is fired from loop() (see loop()
-  // below) — NOT from a set_timeout here, so App.setup() stalls on other slow
-  // components can never trigger the refresh while the registry is incomplete.
-  if (s_boot_refresh_delay_ms == 0 && this->boot_refresh_delay_ms_ != 0) {
-    s_boot_refresh_delay_ms = this->boot_refresh_delay_ms_;
-    s_boot_refresh_start_ms = millis();
+  // Capture the earliest non‑zero post‑boot refresh delay across all hubs.
+  if (this->boot_refresh_delay_ms_ != 0) {
+    if (s_boot_refresh_delay_ms == 0 ||
+        this->boot_refresh_delay_ms_ < s_boot_refresh_delay_ms) {
+      s_boot_refresh_delay_ms = this->boot_refresh_delay_ms_;
+      s_boot_refresh_start_ms = millis();
+    }
   }
   TT_LOGI("Hub 0x%04X registered, total hubs: %zu", (unsigned) this->get_device_id(), s_all_instances.size());
 
