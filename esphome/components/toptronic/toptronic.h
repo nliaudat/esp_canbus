@@ -319,7 +319,8 @@ class TopTronic : public Component {
     this->max_frames_per_message_ = max_frames_per_message;
   }
   // Length (ms) of the refresh window that max_refresh_per_loop_ GETs are spread
-  // across; effective per-GET spacing = refresh_gap_ms_ / max_refresh_per_loop_.
+  // across; effective per-GET spacing = ceil(refresh_gap_ms_ / max_refresh_per_loop_)
+  // so a burst never emits more than max_refresh_per_loop_ GETs within the window.
   void set_refresh_gap_ms(uint32_t refresh_gap_ms) { this->refresh_gap_ms_ = refresh_gap_ms; }
   // Maximum number of retransmissions for an unanswered GET during a refresh
   // burst. Re-sent after refresh_retry_interval_ms_ of no response, so a lost
@@ -418,9 +419,10 @@ class TopTronic : public Component {
   // Largest sane multi-frame message in total frames (default 8).
   uint8_t max_frames_per_message_{8};
   // Length (ms) of the refresh window that max_refresh_per_loop_ GETs are spread
-  // across. Effective per-GET spacing = refresh_gap_ms_ / max_refresh_per_loop_
-  // (default 50 ms / 8 = 6.25 ms), which keeps the boiler's responses interleaved
-  // so the main loop stays responsive during a refresh_all().
+  // across. Effective per-GET spacing = ceil(refresh_gap_ms_ / max_refresh_per_loop_)
+  // (default 50 ms / 8 = 7 ms), which keeps the boiler's responses interleaved so
+  // the main loop stays responsive during a refresh_all() and never exceeds the
+  // per-window GET budget.
   uint32_t refresh_gap_ms_{50};
   // Maximum number of re-sends for an unanswered GET during a refresh burst
   // (default 3). 0 disables retries. Kept small: the normal 30 s poll is the

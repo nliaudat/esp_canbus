@@ -222,12 +222,14 @@ def answer_sensor(burst, sensor_id):
 def effective_gap(refresh_gap_ms, max_refresh_per_loop):
     """Mirror of TopTronic::loop()'s effective per-GET spacing computation.
 
-    Clamps the integer division to a minimum of 1 ms so that a config with
-    refresh_gap_ms < max_refresh_per_loop never drives the time gate to zero
-    (which would emit a GET on every main-loop iteration).
+    Uses ceiling division so a burst never emits more than max_refresh_per_loop
+    GETs inside the refresh window (e.g. ceil(50/8)=7ms -> exactly 8 GETs at
+    0..49ms, the 9th at 56ms being outside the 50ms window). A minimum of 1 ms
+    is kept so a config with refresh_gap_ms < max_refresh_per_loop never drives
+    the time gate to zero (which would emit a GET on every main-loop iteration).
     """
     burst = max_refresh_per_loop if max_refresh_per_loop else 1
-    div = refresh_gap_ms // burst
+    div = (refresh_gap_ms + burst - 1) // burst
     return div if div != 0 else 1
 
 
@@ -260,14 +262,14 @@ def drain_tick(burst, now, gap_ms, retry_interval_ms, max_retries):
     return sent
 
 
-def test_effective_gap_clamped_to_one():
-    # Default config: 50ms / 8 -> 6 ms per GET.
-    assert effective_gap(50, 8) == 6
+def test_effective_gap_ceiling_division():
+    # ceil(50/8) = 7 ms -> exactly 8 GETs per 50 ms window (budget respected).
+    # The old floor division (6 ms) would emit 9 GETs at 0..48 ms.
+    assert effective_gap(50, 8) == 7
     assert effective_gap(40, 8) == 5
     assert effective_gap(8, 8) == 1
     # Degenerate but schema-valid config (refresh_gap_ms < max_refresh_per_loop):
-    # integer division would be 0; it must clamp to 1 ms so the time gate is
-    # never "always true". Regression for the Greptile P1 review comment.
+    # still clamped to >= 1 ms so the time gate is never "always true".
     assert effective_gap(5, 8) == 1
     assert effective_gap(1, 1) == 1
     assert effective_gap(0, 0) == 1  # refresh_burst fallback to 1
@@ -282,7 +284,43 @@ def test_effective_gap_clamped_to_one():
     assert drain_tick(burst, 30000, gap, retry_interval, max_retries) == 0
     # After 1 ms elapses, another GET may go out (still spaced).
     assert drain_tick(burst, 30001, gap, retry_interval, max_retries) == 1
-    print("OK  effective_gap is clamped to >= 1 ms; GETs never collapse to zero spacing")
+    print("OK  effective_gap uses ceiling division (budget respected, >= 1 ms floor)")
+
+
+def test_refresh_budget_not_exceeded_per_window():
+    """A burst must never emit more than max_refresh_per_loop GETs in one window.
+
+    Regression for the Greptile review: floor spacing (50/8 = 6 ms) put GETs at
+    0..48 ms = 9 requests inside the 50 ms window configured for 8. Ceiling
+    spacing (7 ms) keeps exactly 8 at 0..49 ms; the 9th would land at 56 ms.
+    """
+    refresh_gap_ms, budget = 50, 8
+    gap = effective_gap(refresh_gap_ms, budget)  # 7
+    retry_interval, max_retries = 200, 3
+
+    # Queue 8 distinct sensors (each send hits a fresh attempts==0 entry, so no
+    # early retry shortens the loop) and drain continuously over a window.
+    burst = new_burst()
+    for i in range(budget):
+        queue_sensor(burst, f"S{i}")
+
+    t0 = 30000
+    now = t0
+    sent_times = []
+    while now - t0 < refresh_gap_ms and burst["entries"]:
+        sent = drain_tick(burst, now, gap, retry_interval, max_retries)
+        if sent:
+            sent_times.append(now)
+        now += 1  # walk tick by tick
+
+    # 8 distinct sensors -> exactly 8 GETs in the window, never 9.
+    assert len(sent_times) == budget, f"expected {budget} GETs, got {len(sent_times)}: {sent_times}"
+    # And all within the window.
+    assert all(t - t0 < refresh_gap_ms for t in sent_times), sent_times
+    # Spacing is >= the effective gap.
+    diffs = [sent_times[i + 1] - sent_times[i] for i in range(len(sent_times) - 1)]
+    assert all(d >= gap for d in diffs), diffs
+    print(f"OK  {budget} GETs in {refresh_gap_ms} ms window, spacing >= {gap} ms")
 
 
 def test_refresh_retry_answered_removed():
@@ -373,7 +411,8 @@ if __name__ == "__main__":
     test_build_set_request()
     test_continuation_count_semantics()
     test_reassembly_wait_count()
-    test_effective_gap_clamped_to_one()
+    test_effective_gap_ceiling_division()
+    test_refresh_budget_not_exceeded_per_window()
     test_refresh_retry_answered_removed()
     test_refresh_retry_unanswered_get_retried_then_give_up()
     test_refresh_coalesce_during_burst()

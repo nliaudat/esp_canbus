@@ -677,12 +677,12 @@ void TopTronic::loop() {
 
   // Time-gated refresh burst with per-sensor retry. max_refresh_per_loop_ is the
   // GET burst budget per refresh_gap_ms_ window, so the effective per-GET spacing
-  // is refresh_gap_ms_ / max_refresh_per_loop_. Both knobs stay active: raising
-  // max_refresh_per_loop_ sends more GETs per window (faster burst), lowering it
-  // paces harder. Spreading the burst evenly across the window (rather than
-  // sending N back-to-back) keeps the boiler's responses interleaved so the
-  // main loop is not swamped with an avalanche (log showed a 356 ms canbus
-  // operation stall mid-burst).
+  // is ceil(refresh_gap_ms_ / max_refresh_per_loop_). Both knobs stay active:
+  // raising max_refresh_per_loop_ sends more GETs per window (faster burst),
+  // lowering it paces harder. Spreading the burst evenly across the window
+  // (rather than sending N back-to-back) keeps the boiler's responses
+  // interleaved so the main loop is not swamped with an avalanche (log showed a
+  // 356 ms canbus operation stall mid-burst).
   //
   // Each entry is a sensor whose
   // GET is still awaiting a response. Spacing between sends is effective_gap_ms_,
@@ -694,8 +694,12 @@ void TopTronic::loop() {
   // colliding with boiler broadcasts) is retried instead of leaving the sensor
   // unknown until the next 30 s poll.
   const uint32_t refresh_burst = (this->max_refresh_per_loop_ == 0) ? 1 : this->max_refresh_per_loop_;
-  const uint32_t effective_gap_ms =
-      (this->refresh_gap_ms_ / refresh_burst == 0) ? 1 : this->refresh_gap_ms_ / refresh_burst;
+  // Ceiling division: floor spacing under-delivers the budget, letting a burst
+  // emit budget+1 GETs inside the window (e.g. 50 ms / 8 floor = 6 ms -> 9 GETs
+  // at 0..48 ms). Ceil(50/8) = 7 ms -> exactly 8 GETs at 0..49 ms, the 9th at
+  // 56 ms being outside the 50 ms window. The result is always >= 1 for
+  // schema-valid configs (refresh_gap_ms >= 1 ms, max_refresh_per_loop >= 1).
+  const uint32_t effective_gap_ms = (this->refresh_gap_ms_ + refresh_burst - 1) / refresh_burst;
   if (!this->pending_refresh_.empty()) {
     const uint32_t now = millis();
     if (now - this->last_refresh_send_ms_ >= effective_gap_ms) {
