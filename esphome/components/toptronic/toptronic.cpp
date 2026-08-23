@@ -483,19 +483,30 @@ void TopTronic::register_input_callbacks() {
 // select) follow automatically through the linked sensors set up in link_inputs().
 //
 // The refresh is THROTTLED: sensors are queued into pending_refresh_ and released
-// a few per loop() tick (max_refresh_per_loop_) so a large preset does not saturate
-// the 50 kbps bus with a burst of GET frames.
+// with an effective per-GET spacing of refresh_gap_ms_ / max_refresh_per_loop_
+// preset does not saturate the 50 kbps bus with a burst of GET frames and does
+// not compress the boiler's responses into a main-loop-stalling avalanche.
 void TopTronic::update_all() {
+  // A burst is already draining. Instead of dropping the request, defer it:
+  // remember that a fresh refresh is wanted and let loop() start a new burst
+  // once the current one empties — so a "Refresh all" press during a burst is
+  // honored, never silently lost.
   if (!this->pending_refresh_.empty()) {
-    TT_LOGI("Refresh already in progress (%zu sensors pending), request ignored", this->pending_refresh_.size());
-    return;  // a burst is already in progress
+    this->refresh_pending_ = true;
+    TT_LOGI("Refresh already in progress (%zu sensors pending), will re-run after it finishes",
+            this->pending_refresh_.size());
+    return;  // loop() kicks off the deferred run when the burst empties
   }
   size_t sensor_count = 0;
   for (const auto &d : this->devices_) {
     auto *device = d.second.get();
     sensor_count += device->sensors.size();
     for (const auto &s : device->sensors) {
-      this->pending_refresh_.push_back(s.second);
+      RefreshEntry entry;
+      entry.sensor = s.second;
+      entry.last_send_ms = 0;  // attempts==0 → first send goes out immediately
+      entry.attempts = 0;
+      this->pending_refresh_.push_back(entry);
     }
   }
   TT_LOGI("Refresh requested for device 0x%04X (%zu sensors)", (unsigned) this->get_device_id(), sensor_count);
@@ -664,13 +675,67 @@ void TopTronic::loop() {
     }
   }
 
-  // Throttled refresh burst: release at most this->max_refresh_per_loop_ sensors per tick.
-  size_t sent = 0;
-  while (!this->pending_refresh_.empty() && sent < this->max_refresh_per_loop_) {
-    TopTronicBase *sensor = this->pending_refresh_.front();
-    this->pending_refresh_.pop_front();
-    sensor->update();
-    ++sent;
+  // Time-gated refresh burst with per-sensor retry. max_refresh_per_loop_ is the
+  // GET burst budget per refresh_gap_ms_ window, so the effective per-GET spacing
+  // is ceil(refresh_gap_ms_ / max_refresh_per_loop_). Both knobs stay active:
+  // raising max_refresh_per_loop_ sends more GETs per window (faster burst),
+  // lowering it paces harder. Spreading the burst evenly across the window
+  // (rather than sending N back-to-back) keeps the boiler's responses
+  // interleaved so the main loop is not swamped with an avalanche (log showed a
+  // 356 ms canbus operation stall mid-burst).
+  //
+  // Each entry is a sensor whose
+  // GET is still awaiting a response. Spacing between sends is effective_gap_ms_,
+  // exactly as before; additionally, an entry that has not been answered within
+  // refresh_retry_interval_ms_ is re-sent (up to max_refresh_retries_ attempts).
+  // interpret_message() removes an entry as soon as its response arrives, so
+  // only genuinely unanswered GETs are retried. This makes the burst self-healing
+  // and independent of bus/hub ordering — a single lost GET (e.g. BM 83-0-0
+  // colliding with boiler broadcasts) is retried instead of leaving the sensor
+  // unknown until the next 30 s poll.
+  const uint32_t refresh_burst = (this->max_refresh_per_loop_ == 0) ? 1 : this->max_refresh_per_loop_;
+  // Ceiling division: floor spacing under-delivers the budget, letting a burst
+  // emit budget+1 GETs inside the window (e.g. 50 ms / 8 floor = 6 ms -> 9 GETs
+  // at 0..48 ms). Ceil(50/8) = 7 ms -> exactly 8 GETs at 0..49 ms, the 9th at
+  // 56 ms being outside the 50 ms window. The result is always >= 1 for
+  // schema-valid configs (refresh_gap_ms >= 1 ms, max_refresh_per_loop >= 1).
+  const uint32_t effective_gap_ms = (this->refresh_gap_ms_ + refresh_burst - 1) / refresh_burst;
+  if (!this->pending_refresh_.empty()) {
+    const uint32_t now = millis();
+    if (now - this->last_refresh_send_ms_ >= effective_gap_ms) {
+      RefreshEntry entry = this->pending_refresh_.front();
+      const uint32_t since_last = now - entry.last_send_ms;
+      if (entry.attempts == 0 || since_last >= this->refresh_retry_interval_ms_) {
+        if (entry.attempts > 0) {
+          TT_LOGD("[GET] Retry %u/%u device 0x%04X sensor 0x%08X", (unsigned) entry.attempts,
+                  (unsigned) this->max_refresh_retries_, (unsigned) this->get_device_id(),
+                  (unsigned) entry.sensor->get_id());
+        }
+        entry.sensor->update();
+        entry.last_send_ms = now;
+        entry.attempts++;
+        this->pending_refresh_.pop_front();
+        if (entry.attempts > this->max_refresh_retries_) {
+          // Retries exhausted — give up on this sensor for this burst. The
+          // normal 30 s poll remains the backstop, so a dead/absent device is
+          // never hammered.
+          TT_LOGD("[GET] Giving up device 0x%04X sensor 0x%08X after %u tries", (unsigned) this->get_device_id(),
+                  (unsigned) entry.sensor->get_id(), (unsigned) entry.attempts);
+        } else {
+          // Re-queue so every other sensor is tried before this one is retried.
+          this->pending_refresh_.push_back(entry);
+        }
+        this->last_refresh_send_ms_ = now;
+      }
+    }
+  }
+
+  // The burst has finished (either drained or empty). If a refresh was requested
+  // while it was running, honor it now with a fresh burst — a "Refresh all" press
+  // during a burst is deferred, never lost.
+  if (this->refresh_pending_ && this->pending_refresh_.empty()) {
+    this->refresh_pending_ = false;
+    this->update_all();
   }
 
   const uint32_t now = millis();
@@ -1097,6 +1162,19 @@ void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_
     return;
   }
   TopTronicBase *sensor_base = sensor_it->second;
+
+  // This sensor was answered — drop it from the refresh-retry queue so loop()
+  // does not re-poll it. The deque is small (self-hub sensors) and the burst
+  // drain is O(1) at the front, so a linear erase here is cheap and only runs
+  // when a response for a pending refresh sensor actually arrives.
+  if (!this->pending_refresh_.empty()) {
+    for (auto rit = this->pending_refresh_.begin(); rit != this->pending_refresh_.end(); ++rit) {
+      if (rit->sensor == sensor_base) {
+        this->pending_refresh_.erase(rit);
+        break;
+      }
+    }
+  }
 
   // Downcast to the concrete type and publish the decoded value.
   // data[value_off..] contains the raw value bytes.

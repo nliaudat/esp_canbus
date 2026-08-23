@@ -202,14 +202,18 @@ The gateway presents itself on the bus as a **GW** device
   strips the leading `0x01` flag byte, appends the CRC, and emits
   `1 + num_cont` frames with the first-frame count in the upper 5 bits.
 - **Reassembly robustness**:
-  - `MAX_PENDING_MESSAGES = 16` guard with a full-buffer purge.
-  - Stale entries expired after `MAX_PENDING_AGE_MS = 2000` ms in `loop()`.
+  - `MAX_PENDING_MESSAGES = 32` guard; on a full buffer the single oldest entry
+    is evicted (LRU) instead of clearing all in-progress reassemblies.
+  - Stale entries expired after `MAX_PENDING_AGE_MS = 5000` ms in `loop()`.
+  - Start frames claiming an implausible frame count (> 8) are rejected outright.
   - Duplicate / extra continuation frames are discarded.
 - **OTA safety** — `pause()` / `resume()` drop frames during OTA updates.
 - **Post-boot refresh** — a one-shot `update_all()` fires after
   `boot_refresh_delay` (default 30 s, `0` disables it).
 - **Throttled refresh** — `update_all()` queues sensors and `loop()` releases
-  at most `MAX_REFRESH_PER_LOOP` (8) per tick to avoid bus saturation.
+  `max_refresh_per_loop` GETs (default 8) spread across each `refresh_gap_ms`
+  window (default 50 ms) to keep the 50 kbps bus and the main loop responsive;
+  effective per-GET spacing = `refresh_gap_ms / max_refresh_per_loop`.
 - **Thread safety** — `request_refresh() / request_pause() / request_resume()`
   enqueue commands on a FreeRTOS queue drained by `loop()` on the main task
   (duplicate commands are coalesced and queue overflow is logged).

@@ -36,12 +36,12 @@ ESP32 CAN bus firmware and the Hoval TopTronic integration.
 |---|---|---|
 | Bit rate | 50 kbps | CAN bus speed required by the protocol |
 | `GATEWAY_DEVICE_TYPE` | `1153` (GW) | Gateway node id used on outgoing frames |
-| `MAX_PENDING_MESSAGES` | 16 | Cap on concurrent multi-frame reassembly buffers |
-| `MAX_PENDING_AGE_MS` | 2000 | Stale-fragment expiry in `loop()` |
-| `CLEANUP_INTERVAL_MS` | 2000 | Throttle for the stale sweep |
+| `MAX_PENDING_MESSAGES` | 32 | Cap on concurrent multi-frame reassembly buffers |
+| `MAX_PENDING_AGE_MS` | 5000 | Stale-fragment expiry in `loop()` |
+| `CLEANUP_INTERVAL_MS` | 5000 | Throttle for the stale sweep |
 | Poll default | 30 s | Entity `PollingComponent` interval |
 | Post-boot refresh | 30 000 ms | One-shot `update_all()` after `setup()` (config `boot_refresh_delay`, `0` = off) |
-| Throttled refresh | 8 / loop tick | Max sensors released per `loop()` in an `update_all()` burst |
+| Throttled refresh | 6.25 ms / GET | `max_refresh_per_loop` GETs (default 8) spread across `refresh_gap_ms` (default `50ms`); spacing = `refresh_gap_ms / max_refresh_per_loop` |
 | CRC-16 | poly `0x1021`, init `0xB006`, ref in/out `true`, xorout `0` | Multi-frame checksum (lookup-table form) |
 | `0x56` value offset | 7 | Extended RESPONSE value starts at byte 7 (2 extra `0x80 0x00` bytes) |
 

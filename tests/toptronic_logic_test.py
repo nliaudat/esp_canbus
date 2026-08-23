@@ -198,6 +198,212 @@ def test_reassembly_wait_count():
     print("OK  reassembly completes after num_remaining - 1 continuation frames")
 
 
+# ---------------------------------------------------------------------------
+# Retry-based refresh burst (mirror of TopTronic::loop() + update_all()
+# + interpret_message() in toptronic.cpp)
+# ---------------------------------------------------------------------------
+
+# State of the refresh burst drain. Mirrors TopTronic's pending_refresh_ deque
+# (entry = RefreshEntry {sensor, last_send_ms, attempts}) plus the global
+# last_refresh_send_ms_ timestamp that gates per-send spacing.
+def new_burst():
+    return {"entries": [], "last_send_ms": 0}
+
+
+def queue_sensor(burst, sensor_id):
+    burst["entries"].append({"sensor": sensor_id, "last_send_ms": 0, "attempts": 0})
+
+
+def answer_sensor(burst, sensor_id):
+    """Mirror of interpret_message() removing a matched sensor from the queue."""
+    burst["entries"] = [e for e in burst["entries"] if e["sensor"] != sensor_id]
+
+
+def effective_gap(refresh_gap_ms, max_refresh_per_loop):
+    """Mirror of TopTronic::loop()'s effective per-GET spacing computation.
+
+    Uses ceiling division so a burst never emits more than max_refresh_per_loop
+    GETs inside the refresh window (e.g. ceil(50/8)=7ms -> exactly 8 GETs at
+    0..49ms, the 9th at 56ms being outside the 50ms window). A minimum of 1 ms
+    is kept so a config with refresh_gap_ms < max_refresh_per_loop never drives
+    the time gate to zero (which would emit a GET on every main-loop iteration).
+    """
+    burst = max_refresh_per_loop if max_refresh_per_loop else 1
+    div = (refresh_gap_ms + burst - 1) // burst
+    return div if div != 0 else 1
+
+
+def drain_tick(burst, now, gap_ms, retry_interval_ms, max_retries):
+    """Process one loop() tick of the refresh burst drain.
+
+    Faithful mirror of TopTronic::loop()'s burst block:
+      - only a send is attempted when gap time has elapsed since the last send
+        (global last_refresh_send_ms_)
+      - the front entry is sent when it is fresh (attempts==0) OR older than
+        retry_interval_ms (so an in-flight response is not re-polled early)
+      - after a send, the entry is re-queued unless attempts exceeded
+        max_retries (then it is dropped; the normal 30 s poll is the backstop)
+    Returns the number of GETs actually sent on this tick.
+    """
+    sent = 0
+    if not burst["entries"]:
+        return sent
+    if now - burst["last_send_ms"] >= gap_ms:
+        entry = burst["entries"][0]
+        since_last = now - entry["last_send_ms"]
+        if entry["attempts"] == 0 or since_last >= retry_interval_ms:
+            entry["attempts"] += 1
+            entry["last_send_ms"] = now
+            burst["last_send_ms"] = now
+            burst["entries"].pop(0)
+            if entry["attempts"] <= max_retries:
+                burst["entries"].append(entry)  # re-queue behind the others
+            sent = 1
+    return sent
+
+
+def test_effective_gap_ceiling_division():
+    # ceil(50/8) = 7 ms -> exactly 8 GETs per 50 ms window (budget respected).
+    # The old floor division (6 ms) would emit 9 GETs at 0..48 ms.
+    assert effective_gap(50, 8) == 7
+    assert effective_gap(40, 8) == 5
+    assert effective_gap(8, 8) == 1
+    # Degenerate but schema-valid config (refresh_gap_ms < max_refresh_per_loop):
+    # still clamped to >= 1 ms so the time gate is never "always true".
+    assert effective_gap(5, 8) == 1
+    assert effective_gap(1, 1) == 1
+    assert effective_gap(0, 0) == 1  # refresh_burst fallback to 1
+
+    # With a 1 ms floor, the drain never sends two GETs in the same millisecond.
+    gap, retry_interval, max_retries = effective_gap(5, 8), 200, 3
+    burst = new_burst()
+    for sensor in ("A", "B", "C"):
+        queue_sensor(burst, sensor)
+    assert drain_tick(burst, 30000, gap, retry_interval, max_retries) == 1
+    # Same-tick retry of the front entry is gated by the 1 ms gap.
+    assert drain_tick(burst, 30000, gap, retry_interval, max_retries) == 0
+    # After 1 ms elapses, another GET may go out (still spaced).
+    assert drain_tick(burst, 30001, gap, retry_interval, max_retries) == 1
+    print("OK  effective_gap uses ceiling division (budget respected, >= 1 ms floor)")
+
+
+def test_refresh_budget_not_exceeded_per_window():
+    """A burst must never emit more than max_refresh_per_loop GETs in one window.
+
+    Regression for the Greptile review: floor spacing (50/8 = 6 ms) put GETs at
+    0..48 ms = 9 requests inside the 50 ms window configured for 8. Ceiling
+    spacing (7 ms) keeps exactly 8 at 0..49 ms; the 9th would land at 56 ms.
+    """
+    refresh_gap_ms, budget = 50, 8
+    gap = effective_gap(refresh_gap_ms, budget)  # 7
+    retry_interval, max_retries = 200, 3
+
+    # Queue 8 distinct sensors (each send hits a fresh attempts==0 entry, so no
+    # early retry shortens the loop) and drain continuously over a window.
+    burst = new_burst()
+    for i in range(budget):
+        queue_sensor(burst, f"S{i}")
+
+    t0 = 30000
+    now = t0
+    sent_times = []
+    while now - t0 < refresh_gap_ms and burst["entries"]:
+        sent = drain_tick(burst, now, gap, retry_interval, max_retries)
+        if sent:
+            sent_times.append(now)
+        now += 1  # walk tick by tick
+
+    # 8 distinct sensors -> exactly 8 GETs in the window, never 9.
+    assert len(sent_times) == budget, f"expected {budget} GETs, got {len(sent_times)}: {sent_times}"
+    # And all within the window.
+    assert all(t - t0 < refresh_gap_ms for t in sent_times), sent_times
+    # Spacing is >= the effective gap.
+    diffs = [sent_times[i + 1] - sent_times[i] for i in range(len(sent_times) - 1)]
+    assert all(d >= gap for d in diffs), diffs
+    print(f"OK  {budget} GETs in {refresh_gap_ms} ms window, spacing >= {gap} ms")
+
+
+def test_refresh_retry_answered_removed():
+    gap, retry_interval, max_retries = 50, 200, 3
+    burst = new_burst()
+    queue_sensor(burst, "BM_83_0_0")
+
+    # now is the boot millis() at which the refresh fires (always large), so
+    # the first gap is already elapsed -> fresh entry is sent immediately.
+    assert drain_tick(burst, 30000, gap, retry_interval, max_retries) == 1
+    assert len(burst["entries"]) == 1 and burst["entries"][0]["attempts"] == 1
+
+    # Response arrives -> interpret_message() removes the matched entry, so it
+    # is never re-polled.
+    answer_sensor(burst, "BM_83_0_0")
+    assert burst["entries"] == []
+
+    # Empty burst is a no-op.
+    assert drain_tick(burst, 30100, gap, retry_interval, max_retries) == 0
+    print("OK  answered GET is removed from the refresh queue")
+
+
+def test_refresh_retry_unanswered_get_retried_then_give_up():
+    gap, retry_interval = 50, 200
+    max_retries = 3  # total transmissions = 1 initial + 3 retries = 4, then give up
+
+    burst = new_burst()
+    queue_sensor(burst, "BM_83_0_0")
+
+    sends = 0
+    sends_by_attempt = []
+    now = 0
+    # Step far enough (>= retry_interval) each time so the front entry is due,
+    # and collect the total number of GETs sent until the queue empties.
+    while burst["entries"]:
+        now += 250
+        sends += drain_tick(burst, now, gap, retry_interval, max_retries)
+        if burst["entries"]:
+            sends_by_attempt.append(burst["entries"][0]["attempts"])
+
+    # initial send (1) + 3 re-sends = 4 transmissions total. The entry is
+    # re-queued with attempts 1,2,3; when attempts reaches 4 (> max_retries) it
+    # is dropped (never sent a 5th time) — the normal 30 s poll is the backstop.
+    assert sends == 4, f"expected 4 GETs total, got {sends}"
+    assert sends_by_attempt == [1, 2, 3], sends_by_attempt
+    print("OK  unanswered GET sent initially + max_refresh_retries times, then dropped")
+
+
+def test_refresh_coalesce_during_burst():
+    """A "Refresh all" press during a burst is deferred, not dropped.
+
+    Mirrors update_all() setting refresh_pending_ when pending_refresh_ is
+    non-empty, and loop() starting a fresh burst once the current one empties.
+    """
+    gap, retry_interval, max_retries = 50, 200, 3
+    burst = new_burst()
+    refresh_pending = False
+
+    # First burst starts with one sensor.
+    queue_sensor(burst, "HV_50_0_40651")
+    assert drain_tick(burst, 30000, gap, retry_interval, max_retries) == 1
+
+    # A "Refresh all" press arrives while the burst is still draining:
+    # update_all() defers it (sets refresh_pending), it does NOT queue a duplicate.
+    assert len(burst["entries"]) == 1
+    refresh_pending = True  # update_all() when pending_refresh_ non-empty
+    assert len(burst["entries"]) == 1
+
+    # Drain the current burst fully (sensor answered).
+    answer_sensor(burst, "HV_50_0_40651")
+    assert burst["entries"] == []
+
+    # loop() sees the pending request after the burst empties and starts a new one.
+    if refresh_pending and not burst["entries"]:
+        refresh_pending = False
+        queue_sensor(burst, "BM_83_0_0")
+    assert len(burst["entries"]) == 1
+    assert refresh_pending is False
+    # The deferred burst is now served.
+    assert drain_tick(burst, 30100, gap, retry_interval, max_retries) == 1
+    print("OK  refresh requested during a burst is coalesced and served afterward")
+
+
 if __name__ == "__main__":
     test_crc16_samples()
     test_build_can_id()
@@ -205,4 +411,9 @@ if __name__ == "__main__":
     test_build_set_request()
     test_continuation_count_semantics()
     test_reassembly_wait_count()
+    test_effective_gap_ceiling_division()
+    test_refresh_budget_not_exceeded_per_window()
+    test_refresh_retry_answered_removed()
+    test_refresh_retry_unanswered_get_retried_then_give_up()
+    test_refresh_coalesce_during_burst()
     print("\nAll logic tests passed.")
