@@ -483,8 +483,9 @@ void TopTronic::register_input_callbacks() {
 // select) follow automatically through the linked sensors set up in link_inputs().
 //
 // The refresh is THROTTLED: sensors are queued into pending_refresh_ and released
-// a few per loop() tick (max_refresh_per_loop_) so a large preset does not saturate
-// the 50 kbps bus with a burst of GET frames.
+// at most one per loop() tick per refresh_gap_ms_ of wall-clock time, so a large
+// preset does not saturate the 50 kbps bus with a burst of GET frames and does
+// not compress the boiler's responses into a main-loop-stalling avalanche.
 void TopTronic::update_all() {
   if (!this->pending_refresh_.empty()) {
     TT_LOGI("Refresh already in progress (%zu sensors pending), request ignored", this->pending_refresh_.size());
@@ -664,13 +665,21 @@ void TopTronic::loop() {
     }
   }
 
-  // Throttled refresh burst: release at most this->max_refresh_per_loop_ sensors per tick.
-  size_t sent = 0;
-  while (!this->pending_refresh_.empty() && sent < this->max_refresh_per_loop_) {
-    TopTronicBase *sensor = this->pending_refresh_.front();
-    this->pending_refresh_.pop_front();
-    sensor->update();
-    ++sent;
+  // Time-gated refresh burst: send at most ONE GET per this->refresh_gap_ms_ of
+  // wall-clock time (not per loop tick). The previous per-tick cap (up to
+  // max_refresh_per_loop_) fired the whole batch in a few loop ticks, which
+  // compressed the boiler's responses into an avalanche and starved the main
+  // loop (log showed a 356 ms canbus operation stall mid-burst). Pacing by
+  // wall-clock time spreads the GETs so the responses come back interleaved
+  // and the loop stays responsive.
+  if (!this->pending_refresh_.empty()) {
+    const uint32_t now = millis();
+    if (now - this->last_refresh_send_ms_ >= this->refresh_gap_ms_) {
+      TopTronicBase *sensor = this->pending_refresh_.front();
+      this->pending_refresh_.pop_front();
+      sensor->update();
+      this->last_refresh_send_ms_ = now;
+    }
   }
 
   const uint32_t now = millis();
