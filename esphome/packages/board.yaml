@@ -36,23 +36,28 @@ ota:
   - platform: esphome
     on_begin:
       then:
+        # request_pause()/request_resume() are the thread-safe variants: OTA
+        # triggers run on the OTA network task, and the raw pause()/resume()
+        # flips a bool on the main loop task without synchronization. The
+        # queue-based request_* variants marshal the command to the main loop
+        # task where parse_frame() reads the flag.
         - lambda: |-
-            <% for h in toptronic_hubs %>id(${ h }).pause();
+            <% for h in toptronic_hubs %>id(${ h }).request_pause();
             <% endfor %>
     on_end:
       then:
         - lambda: |-
-            <% for h in toptronic_hubs %>id(${ h }).resume();
+            <% for h in toptronic_hubs %>id(${ h }).request_resume();
             <% endfor %>
     on_abort:
       then:
         - lambda: |-
-            <% for h in toptronic_hubs %>id(${ h }).resume();
+            <% for h in toptronic_hubs %>id(${ h }).request_resume();
             <% endfor %>
     on_error:
       then:
         - lambda: |-
-            <% for h in toptronic_hubs %>id(${ h }).resume();
+            <% for h in toptronic_hubs %>id(${ h }).request_resume();
             <% endfor %>
 
 safe_mode:

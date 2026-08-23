@@ -346,7 +346,13 @@ void TopTronic::register_sensor_callbacks() {
       // Capture the receiver device id (e.g. 0x208 for HV+8, 0x408 for BM+8) so the
       // [GET] log shows exactly which bus device is being polled.
       uint16_t receiver_dev = this->get_device_id();
-      sensor->add_on_update_callback([canbus, sensor, can_id, receiver_dev]() -> void {
+      // Capture this hub so the poll callback can be silenced during OTA: pause()
+      // only dropped incoming frames, but the 30 s scheduler polls kept sending
+      // GETs. Gating on paused_ here makes pause a true idle of outgoing CAN too.
+      TopTronic *hub = this;
+      sensor->add_on_update_callback([canbus, sensor, can_id, receiver_dev, hub]() -> void {
+        if (hub->paused_)
+          return;
         const auto &data = sensor->get_request_data();
         canbus->send_data(can_id, true, data);
         TT_LOGD("[GET] dev 0x%04X Data: 0x%s", receiver_dev, hex_str(data.data(), data.size()).c_str());
@@ -700,7 +706,7 @@ void TopTronic::loop() {
   // 56 ms being outside the 50 ms window. The result is always >= 1 for
   // schema-valid configs (refresh_gap_ms >= 1 ms, max_refresh_per_loop >= 1).
   const uint32_t effective_gap_ms = (this->refresh_gap_ms_ + refresh_burst - 1) / refresh_burst;
-  if (!this->pending_refresh_.empty()) {
+  if (!this->paused_ && !this->pending_refresh_.empty()) {
     const uint32_t now = millis();
     if (now - this->last_refresh_send_ms_ >= effective_gap_ms) {
       RefreshEntry entry = this->pending_refresh_.front();
