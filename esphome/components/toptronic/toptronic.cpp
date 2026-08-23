@@ -537,7 +537,7 @@ void TopTronic::refresh_all() {
       // Stagger: schedule this hub's batch after the previous ones. Keyed by the
       // hub's unique device id so batches never collide with each other or with
       // this hub's own boot-refresh timeout.
-      hub->set_timeout(hub->get_device_id(), offset, [hub]() { hub->update_all(); });
+      hub->set_timeout(reinterpret_cast<uintptr_t>(hub), offset, [hub]() { hub->update_all(); });
     } else {
       hub->update_all();  // first hub runs immediately
     }
