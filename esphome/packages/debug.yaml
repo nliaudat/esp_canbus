@@ -165,28 +165,28 @@
 #   logs:
 #     toptronic: DEBUG
 
-debug:
-  update_interval: 5s
+# debug:
+#   update_interval: 5s
 
-sensor:
-  - platform: debug
-    free:
-      name: "Heap Free"
-      entity_category: diagnostic
+# sensor:
+#   - platform: debug
+  # free:
+    #   name: "Heap Free"
+    #   entity_category: diagnostic
     # fragmentation:
     #   name: "Heap Fragmentation"
-    block:
-      name: "Heap Max Block"
-      entity_category: diagnostic
-    loop_time:
-      name: "Loop Time"
-      entity_category: diagnostic
+    # block:
+    #   name: "Heap Max Block"
+    #   entity_category: diagnostic
+    # loop_time:
+    #   name: "Loop Time"
+    #   entity_category: diagnostic
     # psram:
     #   name: "Free PSRAM"
     #   entity_category: diagnostic
-    cpu_frequency:
-      name: "CPU Frequency"
-      entity_category: diagnostic
+    # cpu_frequency:
+    #   name: "CPU Frequency"
+    #   entity_category: diagnostic
 
     # CPU Temperature
     # - platform: internal_temperature
