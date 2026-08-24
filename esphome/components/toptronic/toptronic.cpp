@@ -61,6 +61,10 @@ static constexpr uint32_t REFRESH_STAGGER_MS = 15000;
 // Forward declaration: referenced by the deduplicated debug callback installed
 // in the constructor below (defined later in this file, next to the debug flags).
 static void debug_log_frame(const std::vector<uint8_t> &data, uint32_t can_id);
+// Forward declaration: logs the frames THIS gateway transmits (GET/SET requests)
+// while candump is active, so a capture also shows the requested frames. Defined
+// later in this file, next to debug_log_frame().
+static void debug_log_tx_frame(const std::vector<uint8_t> &data, uint32_t can_id);
 // One-shot post-boot refresh state. The deadline is captured from the FIRST hub
 // that has a non-zero boot_refresh_delay, and fired once from loop() (which only
 // runs after App.setup() has fully completed — so every hub has registered). The
@@ -367,6 +371,9 @@ void TopTronic::register_sensor_callbacks() {
           return;
         const auto &data = sensor->get_request_data();
         canbus->send_data(can_id, true, data);
+        // While candump is active, export the request frame itself so the capture
+        // shows the full request → response exchange (see debug_log_tx_frame()).
+        debug_log_tx_frame(data, can_id);
         TT_LOGD("[GET] dev 0x%04X Data: 0x%s", receiver_dev, hex_str(data.data(), data.size()).c_str());
       });
     }
@@ -437,6 +444,8 @@ static void send_can_frames(canbus::Canbus *canbus, uint32_t can_id, const std::
   if (data.size() <= 8) {
     // Single-frame: payload fits in one CAN frame — send as-is.
     canbus->send_data(can_id, true, data);
+    // Export the outgoing SET frame while candump is active.
+    debug_log_tx_frame(data, can_id);
     return;
   }
 
@@ -463,6 +472,7 @@ static void send_can_frames(canbus::Canbus *canbus, uint32_t can_id, const std::
   first_frame.push_back(msg_header);  // reassembly key
   first_frame.insert(first_frame.end(), msg.begin(), msg.begin() + first_chunk);
   canbus->send_data(can_id, true, first_frame);
+  debug_log_tx_frame(first_frame, can_id);
 
   // Continuation frames use a lower-priority CAN ID (bits 28-22 cleared → msg_id ≠ 0x1F).
   uint32_t cont_id = can_id & 0x003FFFFF;
@@ -475,6 +485,7 @@ static void send_can_frames(canbus::Canbus *canbus, uint32_t can_id, const std::
     cont_frame.insert(cont_frame.end(), msg.begin() + offset, msg.begin() + offset + chunk);
     offset += chunk;
     canbus->send_data(cont_id, true, cont_frame);
+    debug_log_tx_frame(cont_frame, cont_id);
   }
 
   TT_LOGD("[SET] Sent %u CAN frames (msg_header=0x%02X, payload=%zu bytes)", 1 + num_cont, msg_header, data.size());
@@ -913,6 +924,37 @@ static void debug_log_frame(const std::vector<uint8_t> &data, uint32_t can_id) {
       }
     }
   }
+}
+
+// Optional debug logging of OUTGOING request frames (GET/SET) while candump is
+// active. The receive callback never sees the frames this node transmits (CAN is
+// half-duplex, no local echo), so without this a candump capture would show only
+// the device responses ("all outputs") and the "frame requested" would be
+// missing. Exporting the TX frames with the same tag and format as the RX path
+// makes a capture a complete request → response conversation.
+//
+// Unlike debug_log_frame() this is NOT subject to the 33 ms RX rate limit:
+// outgoing frames are sparse (bounded by the poll/SET rate, a few per second)
+// and dropping one would defeat the feature. The auto-off deadline is still
+// enforced on every frame.
+static void debug_log_tx_frame(const std::vector<uint8_t> &data, uint32_t can_id) {
+  if (!s_candump_enabled)
+    return;
+  const uint32_t now = millis();
+  if (now - s_candump_start_ms > CANDUMP_AUTO_OFF_MS) {
+    set_candump_flag(false);
+    return;
+  }
+  static const char *const HEX = "0123456789ABCDEF";
+  char hex_payload[32];
+  size_t pos = 0;
+  for (size_t i = 0; i < data.size() && pos + 3 < sizeof(hex_payload); ++i) {
+    hex_payload[pos++] = HEX[(data[i] >> 4) & 0x0F];
+    hex_payload[pos++] = HEX[data[i] & 0x0F];
+    hex_payload[pos++] = ' ';
+  }
+  hex_payload[pos] = '\0';
+  ESP_LOGI("candump", "0x%08X : %s", (unsigned int) can_id, hex_payload);
 }
 
 void TopTronic::set_candump_enabled(bool enabled) { set_candump_flag(enabled); }

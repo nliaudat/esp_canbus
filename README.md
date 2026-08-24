@@ -196,7 +196,8 @@ injects synthetic frames for testing and must be enabled manually in `config.yam
 
 > ℹ️ Candump and "find can_id" bus debugging are now available at runtime as two
 > switches (see `esphome/packages/switch.yaml`): **"candump debug"** logs every CAN
-> frame and **"find can_id debug"** logs only 0x42/0x40 frames (results also land
+> frame — including the gateway's own GET/SET request frames — and **"find can_id
+> debug"** logs only 0x42/0x40 frames (results also land
 > in the "main logs" text sensor). Turn them on for a short debug session only —
 > they add bus/log latency and reset to off on every reboot. The old commented-out
 > `on_frame` blocks in `canbus.yaml` are kept for reference only and are superseded.

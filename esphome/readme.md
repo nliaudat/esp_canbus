@@ -154,7 +154,8 @@ plus the platform-specific options). Read-only entities accept the standard
 - **Refresh button** — `button.yaml` provides a "Refresh all" button that calls
   `update_all()` on every hub.
 - **Debug switches** — `switch.yaml` provides two on/off toggles: **"candump
-  debug"** logs every CAN frame (tag `candump`) and **"find can_id debug"** logs
+  debug"** logs every CAN frame (tag `candump`, including the gateway's own
+  GET/SET request frames) and **"find can_id debug"** logs
   only 0x42/0x40 frames (tag `toptronic` WARN, also routed to the `main_logs`
   text sensor). Both reset to OFF on reboot and must not be left on permanently;
   they supersede the old commented `on_frame` blocks in `canbus.yaml`.
