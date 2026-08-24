@@ -460,6 +460,17 @@ class TopTronic : public Component {
   // and honored rather than silently dropped.
   bool refresh_pending_{false};
 
+  // Refresh-burst observability + stall watchdog. burst_in_progress_ is true
+  // while a throttled burst is draining; the counters feed the completion log
+  // (queued / answered / dropped) and last_burst_progress_ms_ drives the
+  // loop() stall watchdog, which aborts a burst that stops making progress
+  // (no GET sent, no response erased) for 5 s + refresh_retry_interval_ms_.
+  bool burst_in_progress_{false};
+  size_t burst_queued_{0};
+  size_t burst_answered_{0};
+  size_t burst_dropped_{0};
+  uint32_t last_burst_progress_ms_{0};
+
   // Timestamp of the last stale-fragment sweep in loop().
   uint32_t last_cleanup_ms_{0};
 

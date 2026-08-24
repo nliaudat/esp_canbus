@@ -146,6 +146,10 @@ plus the platform-specific options). Read-only entities accept the standard
   not saturate the 50 kbps bus and the boiler's responses come back interleaved
   instead of as a single main-loop-stalling avalanche. Both knobs drive the
   refresh throughput.
+- **Refresh-burst monitoring** - every `update_all()` burst logs a completion
+  summary (`N queued, A answered, D dropped`). If a burst ever stops making
+  progress for > 5 s (no GETs sent, no responses), `loop()` aborts it so the
+  next refresh can start fresh instead of wedging the queue.
 - **Multi-frame reassembly** — long responses (U32/S32/S64) are reassembled with
   CRC-16 validation (lookup-table accelerated); stale fragments are evicted after
   `max_pending_age` (default 5 s) by the throttled `loop()` sweep.

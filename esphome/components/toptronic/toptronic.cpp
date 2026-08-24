@@ -538,6 +538,14 @@ void TopTronic::update_all() {
       this->pending_refresh_.push_back(entry);
     }
   }
+  // This queueing begins a throttled burst. Arm the observability counters
+  // (completion log + stall watchdog) for it.
+  this->burst_in_progress_ = true;
+  this->burst_queued_ = sensor_count;
+  this->burst_answered_ = 0;
+  this->burst_dropped_ = 0;
+  this->last_burst_progress_ms_ = millis();
+
   TT_LOGI("Refresh requested for device 0x%04X (%zu sensors)", (unsigned) this->get_device_id(), sensor_count);
 }
 
@@ -743,10 +751,12 @@ void TopTronic::loop() {
         entry.last_send_ms = now;
         entry.attempts++;
         this->pending_refresh_.pop_front();
+        this->last_burst_progress_ms_ = now;  // burst made progress: a GET was sent
         if (entry.attempts > this->max_refresh_retries_) {
           // Retries exhausted — give up on this sensor for this burst. The
           // normal 30 s poll remains the backstop, so a dead/absent device is
           // never hammered.
+          this->burst_dropped_++;  // counted in the completion log
           TT_LOGD("[GET] Giving up device 0x%04X sensor 0x%08X after %u tries", (unsigned) this->get_device_id(),
                   (unsigned) entry.sensor->get_id(), (unsigned) entry.attempts);
         } else {
@@ -755,6 +765,39 @@ void TopTronic::loop() {
         }
         this->last_refresh_send_ms_ = now;
       }
+    }
+  }
+
+  // Refresh-burst observability: log when a throttled burst finishes draining so
+  // the log proves the queue is being processed. Accounting: queued = sensors
+  // queued by update_all(), answered = responses erased in interpret_message(),
+  // dropped = retries exhausted (loop()) or stall-aborted (watchdog below).
+  if (this->burst_in_progress_ && this->pending_refresh_.empty()) {
+    this->burst_in_progress_ = false;
+    TT_LOGI("Refresh burst finished for device 0x%04X: %zu queued, %zu answered, %zu dropped",
+            (unsigned) this->get_device_id(), this->burst_queued_, this->burst_answered_,
+            this->burst_dropped_);
+  }
+
+  // Burst stall watchdog: a draining burst must keep making progress (a GET
+  // sent, or a response erasing an entry) at roughly the retry cadence. If it
+  // has been idle for 5 s + refresh_retry_interval_ms_, the burst is wedged
+  // (loop task starved, bus dead, device gone silent). Abort it so a later
+  // refresh can start fresh - the normal 30 s polls remain the backstop.
+  // Skipped while paused_ (OTA) so an intentional freeze is not flagged.
+  if (this->burst_in_progress_ && !this->paused_ && !this->pending_refresh_.empty()) {
+    const uint32_t now = millis();
+    const uint32_t stall_timeout = 5000u + this->refresh_retry_interval_ms_;
+    if (now - this->last_burst_progress_ms_ >= stall_timeout) {
+      const size_t abandoned = this->pending_refresh_.size();
+      TT_LOGW("Refresh burst stalled (%zu sensors pending, no progress for %u ms) - aborting", abandoned,
+              (unsigned) (now - this->last_burst_progress_ms_));
+      this->pending_refresh_.clear();
+      this->burst_dropped_ += abandoned;
+      this->burst_in_progress_ = false;
+      TT_LOGI("Refresh burst finished for device 0x%04X: %zu queued, %zu answered, %zu dropped (stall-aborted)",
+              (unsigned) this->get_device_id(), this->burst_queued_, this->burst_answered_,
+              this->burst_dropped_);
     }
   }
 
@@ -773,7 +816,11 @@ void TopTronic::loop() {
   // refresh_all() from here always covers all hubs (HV, BM, …, staggered 15 s).
   if (s_boot_refresh_delay_ms != 0 && now - s_boot_refresh_start_ms >= s_boot_refresh_delay_ms) {
     s_boot_refresh_delay_ms = 0;  // fire exactly once
-    this->refresh_all();
+    // Call through the first registered hub so the gate is explicitly
+    // hub-order independent; refresh_all() fans out to every hub regardless.
+    if (!s_all_instances.empty()) {
+      s_all_instances[0]->refresh_all();
+    }
   }
 
   // Auto-disable debug modes if left on to protect network/log buffers. This is
@@ -1240,6 +1287,12 @@ void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_
     for (auto rit = this->pending_refresh_.begin(); rit != this->pending_refresh_.end(); ++rit) {
       if (rit->sensor == sensor_base) {
         this->pending_refresh_.erase(rit);
+        // Burst progress: a pending GET was answered. Count it for the
+        // completion log and refresh the stall-watchdog timestamp.
+        if (this->burst_in_progress_) {
+          this->burst_answered_++;
+          this->last_burst_progress_ms_ = millis();
+        }
         break;
       }
     }

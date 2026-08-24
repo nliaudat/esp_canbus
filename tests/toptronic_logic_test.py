@@ -207,16 +207,32 @@ def test_reassembly_wait_count():
 # (entry = RefreshEntry {sensor, last_send_ms, attempts}) plus the global
 # last_refresh_send_ms_ timestamp that gates per-send spacing.
 def new_burst():
-    return {"entries": [], "last_send_ms": 0}
+    return {
+        "entries": [],
+        "last_send_ms": 0,
+        "in_progress": False,
+        "queued": 0,
+        "answered": 0,
+        "dropped": 0,
+        "progress_ms": 0,
+    }
 
 
 def queue_sensor(burst, sensor_id):
     burst["entries"].append({"sensor": sensor_id, "last_send_ms": 0, "attempts": 0})
 
 
-def answer_sensor(burst, sensor_id):
-    """Mirror of interpret_message() removing a matched sensor from the queue."""
+def answer_sensor(burst, sensor_id, now=0):
+    """Mirror of interpret_message() removing a matched sensor from the queue.
+
+    While a burst is in progress, an answered sensor also bumps the completion
+    accounting (answered counter) and the stall-watchdog progress timestamp.
+    """
+    before = len(burst["entries"])
     burst["entries"] = [e for e in burst["entries"] if e["sensor"] != sensor_id]
+    if len(burst["entries"]) < before and burst["in_progress"]:
+        burst["answered"] += 1
+        burst["progress_ms"] = now
 
 
 def effective_gap(refresh_gap_ms, max_refresh_per_loop):
@@ -255,11 +271,36 @@ def drain_tick(burst, now, gap_ms, retry_interval_ms, max_retries):
             entry["attempts"] += 1
             entry["last_send_ms"] = now
             burst["last_send_ms"] = now
+            burst["progress_ms"] = now  # a GET was sent: burst made progress
             burst["entries"].pop(0)
             if entry["attempts"] <= max_retries:
                 burst["entries"].append(entry)  # re-queue behind the others
+            else:
+                burst["dropped"] += 1
             sent = 1
     return sent
+
+
+def stall_watchdog(burst, now, retry_interval_ms, stall_base_ms=5000):
+    """Mirror of loop()'s burst stall watchdog.
+
+    A draining burst must keep making progress (a GET sent, or a response
+    erasing an entry) at roughly the retry cadence. If it has been idle for
+    stall_base_ms + retry_interval_ms, the burst is wedged and is aborted: the
+    remaining entries are counted as dropped, the burst is marked finished, and
+    a later refresh can start fresh (the normal 30 s poll is the backstop).
+    Returns the number of entries aborted, or 0 if the burst is healthy.
+    """
+    if not burst["in_progress"] or not burst["entries"]:
+        return 0
+    stall_timeout = stall_base_ms + retry_interval_ms
+    if now - burst["progress_ms"] >= stall_timeout:
+        abandoned = len(burst["entries"])
+        burst["dropped"] += abandoned
+        burst["entries"].clear()
+        burst["in_progress"] = False
+        return abandoned
+    return 0
 
 
 def test_effective_gap_ceiling_division():
@@ -404,6 +445,43 @@ def test_refresh_coalesce_during_burst():
     print("OK  refresh requested during a burst is coalesced and served afterward")
 
 
+def test_refresh_burst_stall_aborted():
+    """A burst that stops making progress is aborted by the loop() watchdog.
+
+    Mirrors loop()'s stall watchdog: pending_refresh_ entries are dropped, the
+    burst is marked finished (completion accounting stays honest), and a later
+    refresh can start fresh instead of wedging the queue forever.
+    """
+    gap, retry_interval, max_retries = 50, 200, 1
+    burst = new_burst()
+
+    # update_all() queues a burst and arms the observability state.
+    queue_sensor(burst, "BM_83_0_0")
+    queue_sensor(burst, "HV_50_0_0")
+    burst["in_progress"] = True
+    burst["queued"] = 2
+    burst["progress_ms"] = 30000
+
+    # A healthy burst sends a GET well inside the stall window -> no abort.
+    assert drain_tick(burst, 30000, gap, retry_interval, max_retries) == 1
+    assert stall_watchdog(burst, 30000 + 3000, retry_interval) == 0
+    assert len(burst["entries"]) == 2  # still draining normally
+
+    # The queue then stops making progress (bus wedged / loop starved): after
+    # 5 s + retry interval the watchdog aborts the burst and counts it dropped.
+    assert stall_watchdog(burst, 30000 + 5000 + retry_interval, retry_interval) == 2
+    assert burst["entries"] == []
+    assert burst["in_progress"] is False
+    assert burst["dropped"] == 2
+
+    # A fresh refresh can start immediately (deferred run / next press / poll).
+    queue_sensor(burst, "BM_83_0_0")
+    burst["in_progress"] = True
+    burst["progress_ms"] = 30000 + 6000
+    assert drain_tick(burst, 30000 + 6000, gap, retry_interval, max_retries) == 1
+    print("OK  stalled burst is aborted by the watchdog; a fresh refresh can start")
+
+
 if __name__ == "__main__":
     test_crc16_samples()
     test_build_can_id()
@@ -416,4 +494,5 @@ if __name__ == "__main__":
     test_refresh_retry_answered_removed()
     test_refresh_retry_unanswered_get_retried_then_give_up()
     test_refresh_coalesce_during_burst()
+    test_refresh_burst_stall_aborted()
     print("\nAll logic tests passed.")
