@@ -775,8 +775,7 @@ void TopTronic::loop() {
   if (this->burst_in_progress_ && this->pending_refresh_.empty()) {
     this->burst_in_progress_ = false;
     TT_LOGI("Refresh burst finished for device 0x%04X: %zu queued, %zu answered, %zu dropped",
-            (unsigned) this->get_device_id(), this->burst_queued_, this->burst_answered_,
-            this->burst_dropped_);
+            (unsigned) this->get_device_id(), this->burst_queued_, this->burst_answered_, this->burst_dropped_);
   }
 
   // Burst stall watchdog: a draining burst must keep making progress (a GET
@@ -796,8 +795,7 @@ void TopTronic::loop() {
       this->burst_dropped_ += abandoned;
       this->burst_in_progress_ = false;
       TT_LOGI("Refresh burst finished for device 0x%04X: %zu queued, %zu answered, %zu dropped (stall-aborted)",
-              (unsigned) this->get_device_id(), this->burst_queued_, this->burst_answered_,
-              this->burst_dropped_);
+              (unsigned) this->get_device_id(), this->burst_queued_, this->burst_answered_, this->burst_dropped_);
     }
   }
 
