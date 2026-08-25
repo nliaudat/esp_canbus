@@ -522,8 +522,8 @@ void TopTronic::update_all() {
   // honored, never silently lost.
   if (!this->pending_refresh_.empty()) {
     this->refresh_pending_ = true;
-    TT_LOGI("Refresh already in progress (%zu sensors pending), will re-run after it finishes",
-            this->pending_refresh_.size());
+    TT_LOGI("Refresh already in progress (%zu sensors pending) [paused=%d], will re-run after it finishes",
+            this->pending_refresh_.size(), (int) this->paused_);
     return;  // loop() kicks off the deferred run when the burst empties
   }
   size_t sensor_count = 0;
@@ -548,6 +548,9 @@ void TopTronic::update_all() {
 
   TT_LOGI("Refresh requested for device 0x%04X (%zu sensors) [paused=%d]", (unsigned) this->get_device_id(),
           sensor_count, (int) this->paused_);
+  // Kick the scheduler-driven drain so the burst starts even if this hub's
+  // component loop() is not invoked by ESPHome.
+  this->set_timeout("refresh_drain", 1, [this]() { this->drain_refresh_burst(); });
 }
 
 // Refresh EVERY registered hub, staggering each hub's batch by REFRESH_STAGGER_MS
@@ -701,9 +704,141 @@ void TopTronic::setup() {
   // Producer/consumer bridge for commands issued from other FreeRTOS tasks.
   // Producers only enqueue; the main loop task drains and executes in loop().
   this->cmd_queue_ = xQueueCreate(8, sizeof(Command));
+
+  // Diagnostic: report the component loop state (LOOP_DONE "idle" / FAILED) and
+  // re-activate the loop if ESPHome parked this hub in its inactive loop section.
+  // Scheduler-driven (Phase A), so it runs even if this hub's loop() is not
+  // invoked. Remove once the BM loop issue is resolved.
+  this->set_timeout("state_probe", 3000, [this]() {
+    TT_LOGW("State probe hub 0x%04X: idle=%d failed=%d", (unsigned) this->get_device_id(), (int) this->is_idle(),
+            (int) this->is_failed());
+  });
+  this->set_timeout("activate_loop", 3000, [this]() { this->enable_loop(); });
+}
+
+void TopTronic::drain_refresh_burst() {
+  // Time-gated refresh burst with per-sensor retry. max_refresh_per_loop_ is the
+  // GET burst budget per refresh_gap_ms_ window, so the effective per-GET spacing
+  // is ceil(refresh_gap_ms_ / max_refresh_per_loop_). Both knobs stay active:
+  // raising max_refresh_per_loop_ sends more GETs per window (faster burst),
+  // lowering it paces harder. Spreading the burst evenly across the window
+  // (rather than sending N back-to-back) keeps the boiler responses interleaved.
+  //
+  // Each entry is a sensor whose GET is still awaiting a response. Spacing
+  // between sends is effective_gap_ms_, exactly as before; additionally, an
+  // entry that has not been answered within refresh_retry_interval_ms_ is
+  // re-sent (up to max_refresh_retries_ attempts). interpret_message() removes
+  // an entry as soon as its response arrives, so only genuinely unanswered GETs
+  // are retried. This makes the burst self-healing and independent of bus/hub
+  // ordering - a single lost GET (e.g. BM 83-0-0 colliding with boiler
+  // broadcasts) is retried instead of leaving the sensor unknown until the next
+  // 30 s poll.
+  const uint32_t refresh_burst = (this->max_refresh_per_loop_ == 0) ? 1 : this->max_refresh_per_loop_;
+  const uint32_t effective_gap_ms = (this->refresh_gap_ms_ + refresh_burst - 1) / refresh_burst;
+  if (!this->paused_ && !this->pending_refresh_.empty()) {
+    const uint32_t now = millis();
+    if (now - this->last_refresh_send_ms_ >= effective_gap_ms) {
+      RefreshEntry entry = this->pending_refresh_.front();
+      const uint32_t since_last = now - entry.last_send_ms;
+      if (entry.attempts == 0 || since_last >= this->refresh_retry_interval_ms_) {
+        if (entry.attempts > 0) {
+          TT_LOGD("[GET] Retry %u/%u device 0x%04X sensor 0x%08X", (unsigned) entry.attempts,
+                  (unsigned) this->max_refresh_retries_, (unsigned) this->get_device_id(),
+                  (unsigned) entry.sensor->get_id());
+        }
+        entry.sensor->update();
+        entry.last_send_ms = now;
+        entry.attempts++;
+        this->pending_refresh_.pop_front();
+        this->last_burst_progress_ms_ = now;  // burst made progress: a GET was sent
+        if (entry.attempts > this->max_refresh_retries_) {
+          // Retries exhausted - give up on this sensor for this burst. The
+          // normal 30 s poll remains the backstop, so a dead/absent device is
+          // never hammered.
+          this->burst_dropped_++;  // counted in the completion log
+          TT_LOGD("[GET] Giving up device 0x%04X sensor 0x%08X after %u tries", (unsigned) this->get_device_id(),
+                  (unsigned) entry.sensor->get_id(), (unsigned) entry.attempts);
+        } else {
+          // Re-queue so every other sensor is tried before this one is retried.
+          this->pending_refresh_.push_back(entry);
+        }
+        this->last_refresh_send_ms_ = now;
+      }
+    }
+  }
+
+  // Refresh-burst observability: log when a throttled burst finishes draining so
+  // the log proves the queue is being processed. Accounting: queued = sensors
+  // queued by update_all(), answered = responses erased in interpret_message(),
+  // dropped = retries exhausted or stall-aborted (watchdog below).
+  if (this->burst_in_progress_ && this->pending_refresh_.empty()) {
+    this->burst_in_progress_ = false;
+    TT_LOGI("Refresh burst finished for device 0x%04X: %zu queued, %zu answered, %zu dropped",
+            (unsigned) this->get_device_id(), this->burst_queued_, this->burst_answered_, this->burst_dropped_);
+  }
+
+  // Burst stall watchdog: a draining burst must keep making progress (a GET
+  // sent, or a response erasing an entry) at roughly the retry cadence. If it
+  // has been idle for 5 s + refresh_retry_interval_ms_, the burst is wedged
+  // (loop task starved, bus dead, device gone silent). Abort it so a later
+  // refresh can start fresh - the normal 30 s polls remain the backstop.
+  // Skipped while paused_ (OTA) so an intentional freeze is not flagged.
+  if (this->burst_in_progress_ && !this->paused_ && !this->pending_refresh_.empty()) {
+    const uint32_t now = millis();
+    const uint32_t stall_timeout = 5000u + this->refresh_retry_interval_ms_;
+    if (now - this->last_burst_progress_ms_ >= stall_timeout) {
+      const size_t abandoned = this->pending_refresh_.size();
+      TT_LOGW("Refresh burst stalled (%zu sensors pending, no progress for %u ms) - aborting", abandoned,
+              (unsigned) (now - this->last_burst_progress_ms_));
+      this->pending_refresh_.clear();
+      this->burst_dropped_ += abandoned;
+      this->burst_in_progress_ = false;
+      TT_LOGI("Refresh burst finished for device 0x%04X: %zu queued, %zu answered, %zu dropped (stall-aborted)",
+              (unsigned) this->get_device_id(), this->burst_queued_, this->burst_answered_, this->burst_dropped_);
+    }
+  }
+
+  // Burst-state heartbeat (diagnostic): while any sensors are pending, log the
+  // burst state at most every 5 s so a stuck/frozen burst is visible even
+  // without a button press. Remove once the BM issue is resolved.
+  if (!this->pending_refresh_.empty()) {
+    const uint32_t now = millis();
+    if (now - this->last_burst_state_log_ms_ >= 5000) {
+      this->last_burst_state_log_ms_ = now;
+      TT_LOGW("Burst state: %zu sensors pending, paused=%d, in_progress=%d, idle=%u ms", this->pending_refresh_.size(),
+              (int) this->paused_, (int) this->burst_in_progress_, (unsigned) (now - this->last_burst_progress_ms_));
+    }
+  }
+
+  // The burst has finished (either drained or empty). If a refresh was requested
+  // while it was running, honor it now with a fresh burst - a "Refresh all" press
+  // during a burst is deferred, never lost.
+  if (this->refresh_pending_ && this->pending_refresh_.empty()) {
+    this->refresh_pending_ = false;
+    this->update_all();
+  }
+
+  // Re-schedule a drain while sensors remain pending, so the burst keeps draining
+  // even on a hub whose component loop() is not invoked by ESPHome (the ESPHome
+  // scheduler runs independently of the Phase-B component loop). loop() calls
+  // drain_refresh_burst() as well; the effective_gap_ms throttle makes the
+  // double-invocation a harmless no-op.
+  if (!this->pending_refresh_.empty()) {
+    this->set_timeout("refresh_drain", effective_gap_ms > 0 ? effective_gap_ms : 1u,
+                      [this]() { this->drain_refresh_burst(); });
+  }
 }
 
 void TopTronic::loop() {
+  // Loop-tick probe (diagnostic): proves this hub loop() is invoked by ESPHome.
+  // Remove once the BM burst issue is resolved.
+  const uint32_t probe_now = millis();
+  if (probe_now - this->last_loop_probe_ms_ >= 10000) {
+    this->last_loop_probe_ms_ = probe_now;
+    TT_LOGW("Loop probe hub 0x%04X alive (paused=%d, pending=%zu)", (unsigned) this->get_device_id(),
+            (int) this->paused_, this->pending_refresh_.size());
+  }
+
   // Drain cross-task commands first (non-blocking), so requests issued from other
   // FreeRTOS tasks are serviced on the main loop task — keeping all component state
   // single-threaded (the ESPHome model). Duplicate commands in one drain cycle are
@@ -736,101 +871,11 @@ void TopTronic::loop() {
     }
   }
 
-  // Time-gated refresh burst with per-sensor retry. max_refresh_per_loop_ is the
-  // GET burst budget per refresh_gap_ms_ window, so the effective per-GET spacing
-  // is ceil(refresh_gap_ms_ / max_refresh_per_loop_). Both knobs stay active:
-  // raising max_refresh_per_loop_ sends more GETs per window (faster burst),
-  // lowering it paces harder. Spreading the burst evenly across the window
-  // (rather than sending N back-to-back) keeps the boiler's responses
-  // interleaved so the main loop is not swamped with an avalanche (log showed a
-  // 356 ms canbus operation stall mid-burst).
-  //
-  // Each entry is a sensor whose
-  // GET is still awaiting a response. Spacing between sends is effective_gap_ms_,
-  // exactly as before; additionally, an entry that has not been answered within
-  // refresh_retry_interval_ms_ is re-sent (up to max_refresh_retries_ attempts).
-  // interpret_message() removes an entry as soon as its response arrives, so
-  // only genuinely unanswered GETs are retried. This makes the burst self-healing
-  // and independent of bus/hub ordering — a single lost GET (e.g. BM 83-0-0
-  // colliding with boiler broadcasts) is retried instead of leaving the sensor
-  // unknown until the next 30 s poll.
-  const uint32_t refresh_burst = (this->max_refresh_per_loop_ == 0) ? 1 : this->max_refresh_per_loop_;
-  // Ceiling division: floor spacing under-delivers the budget, letting a burst
-  // emit budget+1 GETs inside the window (e.g. 50 ms / 8 floor = 6 ms -> 9 GETs
-  // at 0..48 ms). Ceil(50/8) = 7 ms -> exactly 8 GETs at 0..49 ms, the 9th at
-  // 56 ms being outside the 50 ms window. The result is always >= 1 for
-  // schema-valid configs (refresh_gap_ms >= 1 ms, max_refresh_per_loop >= 1).
-  const uint32_t effective_gap_ms = (this->refresh_gap_ms_ + refresh_burst - 1) / refresh_burst;
-  if (!this->paused_ && !this->pending_refresh_.empty()) {
-    const uint32_t now = millis();
-    if (now - this->last_refresh_send_ms_ >= effective_gap_ms) {
-      RefreshEntry entry = this->pending_refresh_.front();
-      const uint32_t since_last = now - entry.last_send_ms;
-      if (entry.attempts == 0 || since_last >= this->refresh_retry_interval_ms_) {
-        if (entry.attempts > 0) {
-          TT_LOGD("[GET] Retry %u/%u device 0x%04X sensor 0x%08X", (unsigned) entry.attempts,
-                  (unsigned) this->max_refresh_retries_, (unsigned) this->get_device_id(),
-                  (unsigned) entry.sensor->get_id());
-        }
-        entry.sensor->update();
-        entry.last_send_ms = now;
-        entry.attempts++;
-        this->pending_refresh_.pop_front();
-        this->last_burst_progress_ms_ = now;  // burst made progress: a GET was sent
-        if (entry.attempts > this->max_refresh_retries_) {
-          // Retries exhausted — give up on this sensor for this burst. The
-          // normal 30 s poll remains the backstop, so a dead/absent device is
-          // never hammered.
-          this->burst_dropped_++;  // counted in the completion log
-          TT_LOGD("[GET] Giving up device 0x%04X sensor 0x%08X after %u tries", (unsigned) this->get_device_id(),
-                  (unsigned) entry.sensor->get_id(), (unsigned) entry.attempts);
-        } else {
-          // Re-queue so every other sensor is tried before this one is retried.
-          this->pending_refresh_.push_back(entry);
-        }
-        this->last_refresh_send_ms_ = now;
-      }
-    }
-  }
-
-  // Refresh-burst observability: log when a throttled burst finishes draining so
-  // the log proves the queue is being processed. Accounting: queued = sensors
-  // queued by update_all(), answered = responses erased in interpret_message(),
-  // dropped = retries exhausted (loop()) or stall-aborted (watchdog below).
-  if (this->burst_in_progress_ && this->pending_refresh_.empty()) {
-    this->burst_in_progress_ = false;
-    TT_LOGI("Refresh burst finished for device 0x%04X: %zu queued, %zu answered, %zu dropped",
-            (unsigned) this->get_device_id(), this->burst_queued_, this->burst_answered_, this->burst_dropped_);
-  }
-
-  // Burst stall watchdog: a draining burst must keep making progress (a GET
-  // sent, or a response erasing an entry) at roughly the retry cadence. If it
-  // has been idle for 5 s + refresh_retry_interval_ms_, the burst is wedged
-  // (loop task starved, bus dead, device gone silent). Abort it so a later
-  // refresh can start fresh - the normal 30 s polls remain the backstop.
-  // Skipped while paused_ (OTA) so an intentional freeze is not flagged.
-  if (this->burst_in_progress_ && !this->paused_ && !this->pending_refresh_.empty()) {
-    const uint32_t now = millis();
-    const uint32_t stall_timeout = 5000u + this->refresh_retry_interval_ms_;
-    if (now - this->last_burst_progress_ms_ >= stall_timeout) {
-      const size_t abandoned = this->pending_refresh_.size();
-      TT_LOGW("Refresh burst stalled (%zu sensors pending, no progress for %u ms) - aborting", abandoned,
-              (unsigned) (now - this->last_burst_progress_ms_));
-      this->pending_refresh_.clear();
-      this->burst_dropped_ += abandoned;
-      this->burst_in_progress_ = false;
-      TT_LOGI("Refresh burst finished for device 0x%04X: %zu queued, %zu answered, %zu dropped (stall-aborted)",
-              (unsigned) this->get_device_id(), this->burst_queued_, this->burst_answered_, this->burst_dropped_);
-    }
-  }
-
-  // The burst has finished (either drained or empty). If a refresh was requested
-  // while it was running, honor it now with a fresh burst — a "Refresh all" press
-  // during a burst is deferred, never lost.
-  if (this->refresh_pending_ && this->pending_refresh_.empty()) {
-    this->refresh_pending_ = false;
-    this->update_all();
-  }
+  // Burst processing (send/retry/drop, completion, stall watchdog, heartbeat,
+  // deferred run) lives in drain_refresh_burst(), which loop() calls and which
+  // also re-schedules itself through the ESPHome scheduler, so a hub whose
+  // component loop() is not invoked still drains its burst.
+  this->drain_refresh_burst();
 
   const uint32_t now = millis();
 

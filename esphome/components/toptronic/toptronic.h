@@ -294,6 +294,12 @@ class TopTronic : public Component {
   // every hub (HV, BM, WEZ …). Also used by the one-shot boot refresh.
   void refresh_all();
 
+  // Process the throttled refresh burst (send/retry/drop, completion log, stall
+  // watchdog, state heartbeat, deferred run). Called from loop() and also
+  // re-scheduled through the ESPHome scheduler, so a hub whose component loop()
+  // is not invoked still drains its burst.
+  void drain_refresh_burst();
+
   // Thread-safe requests callable from any FreeRTOS task. They only enqueue a
   // command; the main loop task drains the queue and does the real work, so all
   // component state stays single-threaded. Non-blocking (not ISR-safe).
@@ -472,6 +478,10 @@ class TopTronic : public Component {
   size_t burst_answered_{0};
   size_t burst_dropped_{0};
   uint32_t last_burst_progress_ms_{0};
+  // Throttle for the burst-state heartbeat log (diagnostic).
+  uint32_t last_burst_state_log_ms_{0};
+  // Throttle for the loop-tick probe log (diagnostic).
+  uint32_t last_loop_probe_ms_{0};
 
   // Timestamp of the last stale-fragment sweep in loop().
   uint32_t last_cleanup_ms_{0};
