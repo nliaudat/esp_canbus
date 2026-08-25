@@ -352,8 +352,10 @@ class TopTronic : public Component {
 
   // Pause/resume CAN frame processing. Used during OTA to free the main loop
   // and logging path so the update connection is not starved.
-  void pause() { this->paused_ = true; }
-  void resume() { this->paused_ = false; }
+  // Implemented in toptronic.cpp so transitions are logged (makes a stuck-pause
+  // bug visible instead of silently freezing polls and refresh bursts).
+  void pause();
+  void resume();
   bool is_paused() { return this->paused_; }
 
   void setup() override;

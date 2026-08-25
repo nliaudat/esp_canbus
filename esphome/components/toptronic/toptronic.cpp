@@ -546,7 +546,8 @@ void TopTronic::update_all() {
   this->burst_dropped_ = 0;
   this->last_burst_progress_ms_ = millis();
 
-  TT_LOGI("Refresh requested for device 0x%04X (%zu sensors)", (unsigned) this->get_device_id(), sensor_count);
+  TT_LOGI("Refresh requested for device 0x%04X (%zu sensors) [paused=%d]", (unsigned) this->get_device_id(),
+          sensor_count, (int) this->paused_);
 }
 
 // Refresh EVERY registered hub, staggering each hub's batch by REFRESH_STAGGER_MS
@@ -655,10 +656,26 @@ void TopTronic::link_inputs() {
   }
 }
 
+void TopTronic::pause() {
+  this->paused_ = true;
+  TT_LOGI("Hub 0x%04X paused (CAN processing and refresh bursts halted)", (unsigned) this->get_device_id());
+}
+
+void TopTronic::resume() {
+  this->paused_ = false;
+  TT_LOGI("Hub 0x%04X resumed", (unsigned) this->get_device_id());
+}
+
 void TopTronic::setup() {
   this->link_inputs();
   this->register_sensor_callbacks();
   this->register_input_callbacks();
+
+  // A fresh boot must always start unpaused. Normally paused_ is already false,
+  // but this is a safety net in case a previous session was interrupted while
+  // paused (e.g. an OTA whose on_end/on_abort never ran): polls and refresh
+  // bursts must not stay frozen across reboots.
+  this->paused_ = false;
 
   // Registration + receive-path wiring happened in the constructor (s_all_instances,
   // parse_frame callback, dedup debug callback), so a single refresh_all() call
@@ -671,7 +688,15 @@ void TopTronic::setup() {
       s_boot_refresh_start_ms = millis();
     }
   }
-  TT_LOGI("Hub 0x%04X registered, total hubs: %zu", (unsigned) this->get_device_id(), s_all_instances.size());
+  size_t sensor_count = 0;
+  size_t input_count = 0;
+  for (const auto &d : this->devices_) {
+    auto *device = d.second.get();
+    sensor_count += device->sensors.size();
+    input_count += device->inputs.size();
+  }
+  TT_LOGI("Hub 0x%04X registered, total hubs: %zu (%zu sensors, %zu inputs)", (unsigned) this->get_device_id(),
+          s_all_instances.size(), sensor_count, input_count);
 
   // Producer/consumer bridge for commands issued from other FreeRTOS tasks.
   // Producers only enqueue; the main loop task drains and executes in loop().

@@ -81,7 +81,7 @@ logger:
     select: ERROR
     number: ERROR
     sensor: INFO
-    toptronic: INFO  # DEBUG for full frame details: [RES]/[SET]/[GET]/[UNK] + reassembly
+    toptronic: DEBUG #INFO  # DEBUG for full frame details: [RES]/[SET]/[GET]/[UNK] + reassembly
   on_message:
     - level: WARN  # capture only WARN + ERROR messages from the toptronic component
       then:
