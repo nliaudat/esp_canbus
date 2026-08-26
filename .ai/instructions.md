@@ -63,7 +63,7 @@ esp_canbus/
 │   ├── packages/                      # ESPHome packages (wifi/board/time/canbus/...)
 │   │   ├── board.yaml                 # esp32: esp-idf, sdkconfig, logger, api, ota
 │   │   ├── canbus.yaml                # esp32_can platform, 50kbps, candump on_frame (debug)
-│   │   ├── wifi.yaml / time.yaml / sensors_others.yaml / switch.yaml / button.yaml / debug.yaml
+│   │   ├── wifi.yaml / time.yaml / sensors_others.yaml / switch.yaml / debug.yaml
 │   └── components/toptronic/          # External ESPHome component (AUTO_LOAD'd platforms)
 │       ├── __init__.py                # Hub schema, preset loading, entity generation
 │       ├── toptronic.h / toptronic.cpp# Hub + entity classes, CAN protocol

@@ -328,6 +328,12 @@ void TopTronicButton::press_action() {
   TT_LOGD("[SET] %s: %f, Data: 0x%s", this->get_name().c_str(), this->value_,
           hex_str(data.data(), data.size()).c_str());
 }
+
+void TopTronicRefreshButton::press_action() {
+  if (this->parent_ != nullptr) {
+    this->parent_->refresh_all();
+  }
+}
 #endif
 
 // Return the TopTronicDevice for this ID, creating it on first access.
@@ -610,6 +616,20 @@ void TopTronic::request_resume() {
   }
 }
 
+// Fan out Pause/Resume to every registered hub. Same build-wide registry used
+// by refresh_all(), so targeting any one hub id covers all hubs.
+void TopTronic::request_pause_all() {
+  for (TopTronic *hub : s_all_instances) {
+    hub->request_pause();
+  }
+}
+
+void TopTronic::request_resume_all() {
+  for (TopTronic *hub : s_all_instances) {
+    hub->request_resume();
+  }
+}
+
 // Look up a sensor by its (device_id, sensor_id) pair.
 // Uses find() on both maps so each is traversed at most once (no double-lookup).
 TopTronicBase *TopTronic::get_sensor(uint32_t device_id, uint32_t sensor_id) {
@@ -705,15 +725,10 @@ void TopTronic::setup() {
   // Producers only enqueue; the main loop task drains and executes in loop().
   this->cmd_queue_ = xQueueCreate(8, sizeof(Command));
 
-  // Diagnostic: report the component loop state (LOOP_DONE "idle" / FAILED) and
-  // re-activate the loop if ESPHome parked this hub in its inactive loop section.
-  // Scheduler-driven (Phase A), so it runs even if this hub's loop() is not
-  // invoked. Remove once the BM loop issue is resolved.
-  this->set_timeout("state_probe", 3000, [this]() {
-    TT_LOGW("State probe hub 0x%04X: idle=%d failed=%d", (unsigned) this->get_device_id(), (int) this->is_idle(),
-            (int) this->is_failed());
-  });
-  this->set_timeout("activate_loop", 3000, [this]() { this->enable_loop(); });
+  // Drive the work pump from the scheduler (Phase A) so the hub stays fully
+  // functional even if ESPHome does not invoke its component loop() (Phase B) -
+  // the loop partition can silently drop hubs depending on registration order.
+  this->set_interval("pump", 50, [this]() { this->pump(); });
 }
 
 void TopTronic::drain_refresh_burst() {
@@ -838,7 +853,17 @@ void TopTronic::loop() {
     TT_LOGW("Loop probe hub 0x%04X alive (paused=%d, pending=%zu)", (unsigned) this->get_device_id(),
             (int) this->paused_, this->pending_refresh_.size());
   }
+  this->pump();
+}
 
+// Scheduler-driven work pump (order-independent). ESPHome may not invoke a hub's
+// component loop() (Phase B) depending on registration order - its loop partition
+// (a fixed-capacity vector) silently drops hubs that do not fit. The Phase-A
+// scheduler, however, always runs this hub's set_interval()/set_timeout()
+// callbacks, so all critical work (command bridge, burst drain, boot refresh,
+// cleanup) is driven from here via set_interval() in setup(). loop() calls pump()
+// too; the operations are time-gated/once-only so the redundancy is harmless.
+void TopTronic::pump() {
   // Drain cross-task commands first (non-blocking), so requests issued from other
   // FreeRTOS tasks are serviced on the main loop task — keeping all component state
   // single-threaded (the ESPHome model). Duplicate commands in one drain cycle are

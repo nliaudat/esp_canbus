@@ -20,22 +20,21 @@ files in the `esphome/` folder (full checklist in the root
 | File | Purpose | Usually edited? |
 |---|---|---|
 | `secrets.yaml` | WiFi credentials + fallback AP password (**gitignored**, create it) | **Always** |
-| `config.yaml` | `substitutions:` (`name`, `can_tx_pin`, `can_rx_pin`, `board_type`, `TZ`, `toptronic_hubs`) + `toptronic:` hub blocks | **Always** |
+| `config.yaml` | `substitutions:` (`name`, `can_tx_pin`, `can_rx_pin`, `board_type`, `TZ`) + `toptronic:` hub blocks | **Always** |
 | `packages/wifi.yaml` | WiFi network list (`!secret` references) | Almost always |
 | `packages/board.yaml` | ESP-IDF, watchdog/sdkconfig, API/OTA | Rarely |
 | `packages/canbus.yaml` | 50 kbps `esp32_can` bus | Rarely |
 | `packages/debug.yaml` | Opt-in synthetic-frame test buttons + CRC logging | Only for reverse-engineering |
 
-> ⚠️ Every hub id listed under `toptronic_hubs` must match an `id:` in a
-> `toptronic:` block — `board.yaml` OTA pause/resume and `button.yaml`
-> refresh-all iterate over that list.
+> The refresh button and the OTA pause/resume lambdas call fan-out methods
+> (`refresh_all()` / `request_pause_all()` / `request_resume_all()`), so they
+> work with any hub id and any number of hubs — no per-hub list to maintain.
 
 ---
 
 ## Hub configuration
 
 ```yaml
-  ### toptronic hubs — used by board.yaml OTA pause/resume and button.yaml refresh all
 substitutions:
   name: canbus
   friendly_name: "CanBus Controller"
@@ -49,11 +48,6 @@ substitutions:
 
   ### time
   TZ: "Europe/Zurich"  # timezone
-
-  ### toptronic hubs — used by board.yaml OTA pause/resume and button.yaml refresh all
-  toptronic_hubs:
-    - toptronic_HV
-    # - toptronic_BM
 
 toptronic:
   - id: toptronic_HV  # HomeVent
@@ -71,7 +65,7 @@ toptronic:
 
 | Option | Required | Default | Description |
 |---|---|---|---|
-| `id` | yes | — | Unique hub id (used by `board.yaml` OTA pause/resume and `button.yaml` refresh-all). |
+| `id` | yes | — | Unique hub id (used by `board.yaml` OTA pause/resume and the auto-generated refresh-all button). |
 | `canbus_id` | yes | — | Id of the `canbus:` component. Must run at **50 kbps**. |
 | `device_type` | yes | — | One of `WEZ`, `SOL`, `PS`, `FW`, `HK`, `MWA`, `GLT`, `HV`, `BM`, `GW` (`BD` is an alias for `BM`; use `BM`). |
 | `device_addr` | yes | — | Bus address (typical defaults: `HV=8`, `BM=8`, `WEZ=1` — find it on the room control unit). |
@@ -155,8 +149,9 @@ plus the platform-specific options). Read-only entities accept the standard
   `max_pending_age` (default 5 s) by the throttled `loop()` sweep.
 - **OTA** — `board.yaml` calls `pause()` / `resume()` on every hub during OTA so
   frame processing does not starve the update path.
-- **Refresh button** — `button.yaml` provides a "Refresh all" button that calls
-  `update_all()` on every hub.
+- **Refresh button** — the component auto-generates one "Refresh all" button
+  (`TopTronicRefreshButton`). Pressing it calls `refresh_all()`, which fans out
+  to every hub and staggers each hub's batch by 15 s.
 - **Debug switches** — `switch.yaml` provides two on/off toggles: **"candump
   debug"** logs every CAN frame (tag `candump`, including the gateway's own
   GET/SET request frames) and **"find can_id debug"** logs

@@ -12,7 +12,7 @@ canbus:
 
     # SUPERSEDED — the toptronic component now provides the same two debug modes
     # (candump / find can_id) enabled at runtime via the
-    # "${friendly_name} candump debug toggle" button in button.yaml. The blocks
+    # "${friendly_name} candump debug" switch in switch.yaml. The blocks
     # below are kept for reference only and should NOT be uncommented.
 
     # on_frame:

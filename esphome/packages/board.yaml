@@ -34,30 +34,26 @@ api:
 
 ota:
   - platform: esphome
-    on_begin:
-      then:
-        # request_pause()/request_resume() are the thread-safe variants: OTA
-        # triggers run on the OTA network task, and the raw pause()/resume()
-        # flips a bool on the main loop task without synchronization. The
-        # queue-based request_* variants marshal the command to the main loop
-        # task where parse_frame() reads the flag.
-        - lambda: |-
-            <% for h in toptronic_hubs %>id(${ h }).request_pause();
-            <% endfor %>
-    on_end:
-      then:
-        - lambda: |-
-            <% for h in toptronic_hubs %>id(${ h }).request_resume();
-            <% endfor %>
-    on_abort:
-      then:
-        - lambda: |-
-            <% for h in toptronic_hubs %>id(${ h }).request_resume();
-            <% endfor %>
-    on_error:
-      then:
-        - lambda: |-
-            <% for h in toptronic_hubs %>id(${ h }).request_resume();
-            <% endfor %>
+    # on_begin:
+      # then:
+        # # request_pause_all()/request_resume_all() fan out to EVERY registered
+        # # hub (build-wide registry), so the lambda can target any one hub id and
+        # # still covers all of them. The request_* variants are the thread-safe
+        # # queue-based bridge: OTA triggers run on the OTA network task, and the
+        # # main loop task drains the queue where parse_frame() reads the flag.
+        # - lambda: |-
+            # id(toptronic_HV).request_pause_all();
+    # on_end:
+      # then:
+        # - lambda: |-
+            # id(toptronic_HV).request_resume_all();
+    # on_abort:
+      # then:
+        # - lambda: |-
+            # id(toptronic_HV).request_resume_all();
+    # on_error:
+      # then:
+        # - lambda: |-
+            # id(toptronic_HV).request_resume_all();
 
 safe_mode:

@@ -16,12 +16,6 @@ substitutions:
   ### time
   TZ: "Europe/Zurich"  # timezone
 
-  ### toptronic hubs — used by board.yaml OTA pause/resume and button.yaml refresh all
-  toptronic_hubs:
-    - toptronic_BM
-    - toptronic_HV
-    # - toptronic_BM
-
 toptronic:
 
   - id: toptronic_HV  # HomeVent
@@ -81,7 +75,7 @@ logger:
     select: ERROR
     number: ERROR
     sensor: INFO
-    toptronic: DEBUG #INFO  # DEBUG for full frame details: [RES]/[SET]/[GET]/[UNK] + reassembly
+    toptronic: INFO  # DEBUG for full frame details: [RES]/[SET]/[GET]/[UNK] + reassembly
   on_message:
     - level: WARN  # capture only WARN + ERROR messages from the toptronic component
       then:
@@ -97,8 +91,7 @@ packages:
   canbus: !include packages/canbus.yaml
   sensors_others: !include packages/sensors_others.yaml
   switch: !include packages/switch.yaml
-  button: !include packages/button.yaml
-  # debug: !include packages/debug.yaml
+  debug: !include packages/debug.yaml
 
 # web_server:
 #   port: 80
