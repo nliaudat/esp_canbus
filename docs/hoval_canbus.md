@@ -214,6 +214,11 @@ The gateway presents itself on the bus as a **GW** device
   `max_refresh_per_loop` GETs (default 8) spread across each `refresh_gap_ms`
   window (default 50 ms) to keep the 50 kbps bus and the main loop responsive;
   effective per-GET spacing = `refresh_gap_ms / max_refresh_per_loop`.
+- **Refresh-burst monitoring** - every throttled burst logs a completion line
+  (`Refresh burst finished ... queued/answered/dropped`), proving the queue is
+  drained. A stall watchdog aborts a burst that makes no progress (no GET sent,
+  no response erased) for 5 s + `refresh_retry_interval_ms`; the 30 s polls
+  remain the backstop.
 - **Thread safety** — `request_refresh() / request_pause() / request_resume()`
   enqueue commands on a FreeRTOS queue drained by `loop()` on the main task
   (duplicate commands are coalesced and queue overflow is logged).

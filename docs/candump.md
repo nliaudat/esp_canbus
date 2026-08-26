@@ -16,12 +16,14 @@ multi-frame reassembly.
 
 Flash the firmware, then enable the **"candump debug"** switch (see
 `esphome/packages/switch.yaml`) from Home Assistant. While it is ON, every CAN
-frame is logged with the `candump` tag and normal toptronic frame noise is
-suppressed. The mode resets to OFF on every reboot and also self-disables
-automatically after 120 s — the timeout is checked on every received frame, so it
-fires even when the candump flood would otherwise starve the main loop task.
-The switch is optimistic (assumed-state) in Home Assistant: you can always turn
-it back OFF, even after the auto-disable already cleared the flag.
+frame is logged with the `candump` tag — including the GET/SET request frames
+the gateway itself sends, so each capture shows the full request → response
+exchange — and normal toptronic frame noise is suppressed. The mode resets to
+OFF on every reboot and also self-disables automatically after 120 s — the
+timeout is checked on every received frame, so it fires even when the candump
+flood would otherwise starve the main loop task. The switch is optimistic
+(assumed-state) in Home Assistant: you can always turn it back OFF, even after
+the auto-disable already cleared the flag.
 
 > Keep the old `on_frame` blocks commented out: they are superseded by the
 > switch and would double every candump line if re-enabled.
@@ -61,17 +63,28 @@ With the device running, open the device log:
   config.yaml`).
 - **OTA logs** — through the ESPHome dashboard / API if the device is on WiFi.
 
-Each received frame is printed by the `candump` logger as:
+Every CAN frame is printed by the `candump` logger as:
 
 ```
-[I][candump:026]: 0x1FD047FF : 01 42 32 00 9E EE 1E
-[I][candump:026]: 0x1F5047FF : 19 5F 56 00 00 A2 8D 80
-[I][candump:026]: 0x1E1047FF : 5F 00 00 00 00 00 00 00
-[I][candump:026]: 0x1D9047FF : 5F 34 10 B3
+[I][candump:026]: 0x1FE04208 : 01 40 32 00 9E EE          <- GET request (sent by the gateway)
+[I][candump:026]: 0x1FD047FF : 01 42 32 00 9E EE 1E      <- response (received)
+[I][candump:026]: 0x1F5047FF : 19 5F 56 00 00 A2 8D 80   <- multi-frame response start
+[I][candump:026]: 0x1E1047FF : 5F 00 00 00 00 00 00 00   <- continuation #1
+[I][candump:026]: 0x1D9047FF : 5F 34 10 B3               <- continuation #2 (+CRC)
 ```
 
-- `0x1FD047FF` — extended CAN id (from a device with id `0x47FF`).
-- `01 42 32 00 9E EE 1E` — the 8-byte (or fewer) payload, space-separated hex.
+- `0x1FE04208` / `0x1FD047FF` — extended CAN id. `0x1FE04208` is the gateway
+  itself (sender `0x4208`) exporting the **frame requested** (its own GET/SET);
+  `0x1FD047FF` is a device response (sender `0x47FF`).
+- `01 40 32 00 9E EE` / `01 42 32 00 9E EE 1E` — the 8-byte (or fewer) payload,
+  space-separated hex (`01 40 …` = GET request, `01 46 …` = SET request,
+  `01 42 …` = response, `01 56 …` = extended response).
+
+Request frames are exported because the CAN controller never echoes its own
+transmissions back to the receive path — without this a capture would contain
+only the device responses and you could not see which datapoint each response
+was answering. Multi-frame SET requests are dumped frame by frame, exactly as
+they go on the wire.
 
 Trigger the traffic you want to study (e.g. press buttons, wait for a poll
 cycle, toggle party mode) and let it capture for a representative period.

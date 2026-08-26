@@ -5,8 +5,16 @@ import yaml
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
+from esphome.components import button as button_platform
 from esphome.components.canbus import CanbusComponent
-from esphome.const import CONF_ID, CONF_OPTIONS
+from esphome.const import (
+    CONF_ENTITY_CATEGORY,
+    CONF_ICON,
+    CONF_ID,
+    CONF_NAME,
+    CONF_OPTIONS,
+    CONF_SUBSTITUTIONS,
+)
 from esphome.core import CORE, ID
 from esphome.cpp_types import Component
 
@@ -41,6 +49,12 @@ toptronic = cg.esphome_ns.namespace("toptronic")
 TopTronicComponent = toptronic.class_("TopTronic", cg.Component)
 
 TopTronicBase = toptronic.class_("TopTronicBase", cg.PollingComponent)
+
+# Auto-generated "Refresh all" button (one per build). press_action() calls the
+# parent hub's refresh_all(), which fans out to every registered hub.
+TopTronicRefreshButton = toptronic.class_(
+    "TopTronicRefreshButton", button_platform.Button, cg.Component
+)
 
 TT_TYPE = toptronic.enum("TypeName")
 TT_TYPE_OPTIONS = {
@@ -168,7 +182,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(
                 CONF_REFRESH_GAP_MS, default="50ms"
             ): cv.positive_time_period_milliseconds,
-            cv.Optional(CONF_MAX_REFRESH_RETRIES, default=3): cv.int_range(
+            cv.Optional(CONF_MAX_REFRESH_RETRIES, default=1): cv.int_range(
                 min=0, max=10
             ),
             cv.Optional(
@@ -253,6 +267,37 @@ async def _generate_entities(hub, config):
         await codegen(validated)
 
 
+_REFRESH_BUTTON_KEY = "toptronic_refresh_button_generated"
+
+
+async def _generate_refresh_button(hub_var):
+    """Emit a single build-wide 'Refresh all' button (once, on the first hub).
+
+    The on-press action is handled in C++ (TopTronicRefreshButton::press_action()
+    -> refresh_all()), so no lambda or hardcoded hub id is needed in YAML. The
+    button id is auto-generated from the component namespace.
+    """
+    if CORE.data.setdefault(_REFRESH_BUTTON_KEY, False):
+        return
+    CORE.data[_REFRESH_BUTTON_KEY] = True
+
+    friendly = (CORE.config.get(CONF_SUBSTITUTIONS, {}) or {}).get("friendly_name", "") or ""
+    name = f"{friendly} Refresh all" if friendly else "Refresh all"
+
+    cfg = button_platform.button_schema(TopTronicRefreshButton)(
+        {
+            CONF_NAME: name,
+            CONF_ICON: "mdi:refresh",
+            CONF_ENTITY_CATEGORY: "config",
+        }
+    )
+    _resolve_ids(cfg, _shared_used_ids())
+    var = cg.new_Pvariable(cfg[CONF_ID])
+    cg.add(var.set_parent(hub_var))
+    await button_platform.register_button(var, cfg)
+    await cg.register_component(var, cfg)
+
+
 async def to_code(config):
     cbus = await cg.get_variable(config[CONF_CANBUS_ID])
     var = cg.new_Pvariable(config[CONF_ID], cbus)
@@ -272,3 +317,12 @@ async def to_code(config):
     cg.add(var.set_refresh_retry_interval_ms(config[CONF_REFRESH_RETRY_INTERVAL_MS]))
 
     await _generate_entities(var, config)
+
+    await _generate_refresh_button(var)
+
+    # Critical wiring (update callbacks, command queue, pump, boot-refresh gate)
+    # must not depend on ESPHome invoking setup(): ESPHOME_COMPONENT_COUNT is
+    # computed from CORE.component_ids before preset entities are registered, so
+    # a hub can be silently dropped from components_ and setup() never runs.
+    # Config-phase statements always run for every hub.
+    cg.add(var.configure_hub())

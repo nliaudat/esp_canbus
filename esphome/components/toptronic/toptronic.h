@@ -212,6 +212,21 @@ class TopTronicButton : public button::Button, public TopTronicBase {
   // Called by ESPHome when the user presses the button from Home Assistant.
   void press_action() override;
 };
+
+// Build-wide "Refresh all" button, generated once by the component codegen
+// (__init__.py). press_action() calls the parent hub's refresh_all(), which
+// fans out to EVERY registered hub (HV, BM, WEZ …) and staggers each hub's
+// batch by REFRESH_STAGGER_MS so the 50 kbps bus is not spammed.
+class TopTronicRefreshButton : public button::Button, public Component {
+ public:
+  void set_parent(TopTronic *parent) { this->parent_ = parent; }
+
+ protected:
+  // Called by ESPHome when the user presses the button from Home Assistant.
+  void press_action() override;
+
+  TopTronic *parent_{nullptr};
+};
 #endif
 
 #ifdef USE_SWITCH
@@ -284,6 +299,15 @@ class TopTronic : public Component {
   // Wire up write callbacks for inputs so they send SET requests over CAN.
   void register_input_callbacks();
 
+  // One-time functional wiring (link_inputs, sensor/input callbacks, command
+  // queue, boot-refresh gate, work-pump scheduling). Called from the CONFIG
+  // phase (emitted by __init__.py right after all add_sensor/add_input calls)
+  // instead of setup(): ESPHome sizes components_ from ESPHOME_COMPONENT_COUNT,
+  // which is computed before this component registers its preset-entity IDs, so
+  // a hub can be silently dropped from components_ and its setup() never runs.
+  // Config-phase statements always run for every hub.
+  void configure_hub();
+
   // Trigger a GET refresh for every registered sensor across all devices.
   // Can be called from a template button or automation to force an update.
   void update_all();
@@ -294,12 +318,30 @@ class TopTronic : public Component {
   // every hub (HV, BM, WEZ …). Also used by the one-shot boot refresh.
   void refresh_all();
 
+  // Process the throttled refresh burst (send/retry/drop, completion log, stall
+  // watchdog, state heartbeat, deferred run). Called from loop() and also
+  // re-scheduled through the ESPHome scheduler, so a hub whose component loop()
+  // is not invoked still drains its burst.
+  void drain_refresh_burst();
+
+  // Scheduler-driven work pump (order-independent): all critical work (command
+  // bridge, burst drain, boot refresh, cleanup) is driven from here via
+  // set_interval() in setup(), so a hub works even if ESPHome does not invoke
+  // its component loop() (Phase B). loop() calls pump() as well.
+  void pump();
+
   // Thread-safe requests callable from any FreeRTOS task. They only enqueue a
   // command; the main loop task drains the queue and does the real work, so all
   // component state stays single-threaded. Non-blocking (not ISR-safe).
   void request_refresh();
   void request_pause();
   void request_resume();
+
+  // Fan out Pause/Resume to EVERY registered hub via the build-wide registry,
+  // so OTA pause/resume lambdas can target any single hub id and still cover
+  // all hubs (HV, BM, WEZ …). Thread-safe request variants.
+  void request_pause_all();
+  void request_resume_all();
 
   void set_device_type(uint16_t device_type) { this->device_type_ = device_type; }
   void set_device_addr(uint8_t device_addr) { this->device_addr_ = device_addr; }
@@ -352,8 +394,10 @@ class TopTronic : public Component {
 
   // Pause/resume CAN frame processing. Used during OTA to free the main loop
   // and logging path so the update connection is not starved.
-  void pause() { this->paused_ = true; }
-  void resume() { this->paused_ = false; }
+  // Implemented in toptronic.cpp so transitions are logged (makes a stuck-pause
+  // bug visible instead of silently freezing polls and refresh bursts).
+  void pause();
+  void resume();
   bool is_paused() { return this->paused_; }
 
   void setup() override;
@@ -379,6 +423,12 @@ class TopTronic : public Component {
   // Parse a fully reassembled CAN message and update the matching sensor or input.
   // data/len reference the reassembly buffer directly — no per-frame heap copies.
   void interpret_message(const uint8_t *data, size_t len, uint32_t can_id, bool remote_transmission_request);
+
+  // True if a device with this sender node id is registered on this hub. The
+  // sender node id (bits 21-11 of a CAN id) is exactly the devices_ map key, so
+  // membership is a single O(1) lookup — it covers EVERY device this hub owns,
+  // not a single hardcoded address.
+  bool owns_device(uint32_t device_id) const { return this->devices_.find(device_id) != this->devices_.end(); }
 
   canbus::Canbus *canbus_;
 
@@ -425,9 +475,9 @@ class TopTronic : public Component {
   // per-window GET budget.
   uint32_t refresh_gap_ms_{50};
   // Maximum number of re-sends for an unanswered GET during a refresh burst
-  // (default 3). 0 disables retries. Kept small: the normal 30 s poll is the
-  // backstop, so a burst should never hammer a dead/absent device.
-  uint32_t max_refresh_retries_{3};
+  // (default 0 = single-pass, no retries; the normal 30 s poll is the backstop).
+  // If you enable it, keep it small: a burst should never hammer a dead/absent device.
+  uint32_t max_refresh_retries_{0};
   // Wall-clock delay (ms) before an unanswered GET is re-sent during a refresh
   // burst (default 200 ms). Longer than the worst-case multi-frame response so
   // a slow device response is not needlessly re-polled.
@@ -453,6 +503,17 @@ class TopTronic : public Component {
   // current one empties, so a "Refresh all" press during a burst is deferred
   // and honored rather than silently dropped.
   bool refresh_pending_{false};
+
+  // Refresh-burst observability + stall watchdog. burst_in_progress_ is true
+  // while a throttled burst is draining; the counters feed the completion log
+  // (queued / answered / dropped) and last_burst_progress_ms_ drives the
+  // loop() stall watchdog, which aborts a burst that stops making progress
+  // (no GET sent, no response erased) for 5 s + refresh_retry_interval_ms_.
+  bool burst_in_progress_{false};
+  size_t burst_queued_{0};
+  size_t burst_answered_{0};
+  size_t burst_dropped_{0};
+  uint32_t last_burst_progress_ms_{0};
 
   // Timestamp of the last stale-fragment sweep in loop().
   uint32_t last_cleanup_ms_{0};
