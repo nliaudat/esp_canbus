@@ -1,5 +1,5 @@
 # =============================================================================
-# ESP32 CANBus (Hoval TopTronic) --- Token-Optimized Rule Database (v1.0)
+# ESP32 CANBus (Hoval TopTronic) --- Token-Optimized Rule Database (v1.1)
 # =============================================================================
 # Source: .ai/instructions.md (SINGLE SOURCE OF TRUTH --- full text)
 # This file is a DERIVED ARTIFACT --- regenerate when .ai/instructions.md changes.
@@ -7,7 +7,7 @@
 # For context/examples, fall back to .ai/instructions.md.
 # =============================================================================
 
-version: "1.0"
+version: "1.1"
 source: ".ai/instructions.md"
 
 # =============================================================================
@@ -171,6 +171,17 @@ cpp:
   feature_guards:
     - "Entity classes/headers wrapped in #ifdef USE_SENSOR / USE_TEXT_SENSOR / USE_NUMBER / USE_SELECT / USE_BUTTON"
     - "toptronic.h includes platform headers ONLY inside matching #ifdef"
+    - "Naming: USE_FEATURE_NAME (YAML-enabled), DEBUG_FEATURE_NAME (debug path), CONFIG_FEATURE_NAME (build config)"
+    - "Guard BOTH declaration and call sites so disabled features compile out"
+    - "Define macro in __init__.py ONLY when the YAML option is enabled (cg.add_define)"
+    - "NEVER commit #if 0 / #if 1 dead code --- delete instead"
+  field_visibility:
+    rule: "protected default (ESPHome convention); private ONLY for safety-critical"
+    safety_critical:
+      - "Pointer lifetime safety --- member must point into validated/owned list"
+      - "Invariant coupling --- buffer size + pointer must stay synchronized"
+      - "Resource management --- cleanup derived classes might skip"
+    pattern: "store pointer FROM validated list, never the raw input pointer"
   casts:
     note: "Existing C-style casts ACCEPTED (clang-tidy disables cstyle-cast checks, clang-format SpaceAfterCStyleCast: true) --- do NOT mass-rewrite"
     new_code: "prefer static_cast<>"
@@ -247,8 +258,8 @@ yaml_presets:
       - "Verify diff is exactly the intended entity changes"
     generated_rules:
       - "newline='\\n', encoding='utf-8', sort_keys=False, _IndentDumper (indented sequences)"
-    - "entity id: <DEVICE>_<fg>_<fn>_<dp>; writable adds _set suffix"
-    - "writable presets -> internal: true sensors; read+write pairs linked via link_inputs()"
+      - "entity id: <DEVICE>_<fg>_<fn>_<dp>; writable adds _set suffix"
+      - "writable presets -> internal: true sensors; read+write pairs linked via link_inputs()"
   src_packages:
     - "board.yaml: ESP-IDF, CONFIG_COMPILER_OPTIMIZATION_PERF, CONFIG_TASK_WDT*, logger map, toptronic: INFO (toptronic: DEBUG only for CAN/CRC work via debug.yaml)"
     - "canbus log level BELOW INFO may crash (esphome/issues#4051) --- keep canbus: ERROR/INFO"
@@ -273,6 +284,17 @@ memory_perf:
     - "delay()/blocking in loop() or CAN callback"
     - "new/delete in receive path"
     - "Unbounded containers sized by untrusted frame data"
+  long_running:
+    - "Allocate everything in setup()"
+    - "std::array / fixed-size collections for fixed-size buffers (reassembly, frame payloads)"
+    - "NO new/delete in loop() or CAN callback"
+    - "NO std::string temporaries in parse_frame()/interpret_message()/send_can_frames()"
+  ownership:
+    - "unique_ptr/containers own buffers --- no raw owning pointers (matches unique_ptr<TopTronicDevice> device map)"
+    - "No manual free()/delete of owned objects --- destructors on scope exit"
+  thread_safety:
+    - "CAN callback can run outside main loop() task --- guard shared state with std::mutex + std::lock_guard (or std::atomic for scalars)"
+    - "Never mutate vector/map/deque from callback while loop() reads it"
 
 # =============================================================================
 # S10 SECURITY & PROTOCOL SAFETY
@@ -289,6 +311,7 @@ security:
   blockers:
     - "No ptr + N before checking N fits remaining length"
     - "No multiplication overflow in buffer-size math"
+    - "Guarded multiplication BEFORE computing size (CVE-2026-23833): if (a > SIZE_MAX / b) fail closed"
     - "No format-string: always ESP_LOGD(TAG, '%s', value.c_str())"
 
 # =============================================================================
@@ -337,6 +360,18 @@ anti_patterns:
   - id: AP-MAGIC
     bad: "uint8_t cmd = 0x42; // magic number"
     ok: "static const uint8_t RESPONSE = 0x42;"
+  - id: AP-RAII
+    bad: "auto *buf = new uint8_t[64]; // manual ownership, leak risk on early return"
+    ok: "auto buf = std::make_unique<uint8_t[]>(64);"
+  - id: AP-IF0
+    bad: "#if 0 ... obsolete code ... #endif  // committed dead code"
+    ok: "delete dead code instead"
+  - id: AP-QUEUE
+    bad: "std::string frame; xQueueReceive(q, &frame, 0) // memcpy on non-TriviallyCopyable"
+    ok: "POD/trivially-copyable structs only; drain with manual free + nullify between iterations (destructor fires only for LAST item)"
+  - id: AP-STRTEMP
+    bad: "std::string tmp = std::to_string(v) + suffix; // heap alloc per call in loop()"
+    ok: "pre-reserved scratch buffer (SSO-safe) reserved in setup()"
   - id: AP-WS
     bad: "CRLF / trailing whitespace / missing EOF newline"
     ok: "LF-only, no trailing spaces, exactly one \\n at EOF"
@@ -353,6 +388,7 @@ review:
     - "CRC or multi-frame regressions (protocol correctness)"
     - "Unvalidated frame lengths before indexing (overflow/CVE pattern)"
     - "Blocking calls in loop() or CAN callback"
+    - "Non-trivially-copyable types through xQueue (raw memcpy bypasses RAII)"
     - "Format-string vulnerabilities in logging"
     - "Hand-edited presets/ or schema bypass"
     - "CRLF / trailing whitespace / missing EOF newline"
@@ -362,6 +398,9 @@ review:
     - "std::regex / std::stringstream on hot path"
     - "Missing schema bounds on user inputs"
     - "Unbounded option maps (stay bounded per entity)"
+    - "Heap allocation in loop() (allocate once in setup())"
+    - "Large stack allocations (>1KB) in receive-path functions"
+    - "Missing mutex/atomic on state shared between CAN callback and loop()"
   info:
     - "Const correctness / include-what-you-use"
     - "Dead or commented-out code"
@@ -391,4 +430,11 @@ ai_instructions:
       - "Exactly one trailing newline at EOF --- ends with \\n, not \\n\\n"
       - "UTF-8 (non-ASCII allowed in this repo) --- valid UTF-8"
     scope: "ALL write operations: new files, edits, patches, generated output"
+  cpp20_expected: "gnu++20 toolchain --- do NOT flag C++20 features as too modern/incompatible; match codebase usage"
+  lessons_learned:
+    - "Tasks MUST exit their loop naturally to unwind the stack (destructors on scope exit); vTaskDelete(nullptr) only at very end"
+    - "NEVER pass non-TriviallyCopyable types via xQueueSend/xQueueReceive (raw memcpy bypasses C++ semantics)"
+    - "Queue-drain struct declared outside loop: manual free + nullify between iterations --- destructor fires only for LAST item"
+    - "Dead-code hygiene: when deleting a source file, remove ALL #include references across the tree"
+    - "Hot path: pre-allocated scratch buffers (reserved in setup()) over per-frame resize(); integer arithmetic over to_string()+strtol()"
   maintenance: "When .ai/instructions.md changes, this YAML MUST be regenerated"
