@@ -15,6 +15,14 @@ static const uint8_t RESPONSE_EXT = 0x56;
 static const uint8_t GET_REQ = 0x40;
 static const uint8_t SET_REQ = 0x46;
 
+// Multi-frame protocol constants (see §3.5): a standard CAN frame holds 8 bytes;
+// the first frame spends 2 on headers (6 payload bytes), continuation frames 1
+// (7 payload bytes). Continuation CAN IDs clear bits 28-22 (msg_id → 0).
+static constexpr size_t MAX_FIRST_FRAME_PAYLOAD = 6;
+static constexpr size_t MAX_CONT_FRAME_PAYLOAD = 7;
+static constexpr uint32_t CONTINUATION_ID_MASK = 0x003FFFFF;
+static constexpr uint8_t START_OF_MESSAGE_ID = 0x1F;
+
 // Minimum decodable TopTronic message: cmd | function_group | function_number | dp_hi | dp_lo.
 static constexpr size_t MIN_MESSAGE_LEN = 5;
 
@@ -40,6 +48,11 @@ static uint32_t s_last_candump_log_ms = 0;
 // starves the loop task).
 static constexpr uint32_t CANDUMP_AUTO_OFF_MS = 120000;
 static constexpr uint32_t FIND_CAN_ID_AUTO_OFF_MS = 120000;
+
+// Behavioral constants — named per §5.4 (no magic numbers).
+static constexpr uint32_t CANDUMP_MIN_LOG_GAP_MS = 33;    // min ms between candump log lines
+static constexpr uint32_t BURST_STALL_TIMEOUT_MS = 5000;  // refresh burst watchdog idle threshold
+static constexpr UBaseType_t COMMAND_QUEUE_LENGTH = 8;    // producer/consumer bridge depth
 
 // Fan-out for each debug flag: the matching TopTronicDebugSwitch registers here
 // so its published switch state always mirrors the real (build-wide) flag.
@@ -348,18 +361,18 @@ TopTronicDevice *TopTronic::get_or_create_device(uint32_t device_id) {
 
 void TopTronic::add_sensor(TopTronicBase *sensor) {
   TopTronicDevice *device = this->get_or_create_device(this->get_device_id());
-  device->sensors[sensor->get_id()] = sensor;
+  device->get_sensors()[sensor->get_id()] = sensor;
 }
 
 void TopTronic::add_input(TopTronicBase *input) {
   TopTronicDevice *device = this->get_or_create_device(this->get_device_id());
-  device->inputs[input->get_id()] = input;
+  device->get_inputs()[input->get_id()] = input;
 }
 
 void TopTronic::register_sensor_callbacks() {
   for (const auto &d : this->devices_) {
     auto *device = d.second.get();
-    for (const auto &s : device->sensors) {
+    for (const auto &s : device->get_sensors()) {
       auto *sensor = s.second;
       sensor->cache_request_data();  // build once, avoid per-poll heap alloc
       auto *canbus = this->canbus_;
@@ -467,9 +480,9 @@ static void send_can_frames(canbus::Canbus *canbus, uint32_t can_id, const std::
   msg.push_back(static_cast<uint8_t>(crc & 0xFF));  // CRC low byte
 
   // First frame carries up to 6 message bytes (2 header bytes consume slots 0 and 1).
-  size_t first_chunk = std::min<size_t>(6, msg.size());
+  size_t first_chunk = std::min<size_t>(MAX_FIRST_FRAME_PAYLOAD, msg.size());
   size_t after_first = msg.size() - first_chunk;
-  auto num_cont = static_cast<uint8_t>((after_first + 6) / 7);  // ceil(remaining / 7)
+  auto num_cont = static_cast<uint8_t>((after_first + MAX_CONT_FRAME_PAYLOAD - 1) / MAX_CONT_FRAME_PAYLOAD);  // ceil
 
   // The first-frame header carries the TOTAL frame count (first frame +
   // continuations), matching the boiler's receive convention.
@@ -481,11 +494,11 @@ static void send_can_frames(canbus::Canbus *canbus, uint32_t can_id, const std::
   debug_log_tx_frame(first_frame, can_id);
 
   // Continuation frames use a lower-priority CAN ID (bits 28-22 cleared → msg_id ≠ 0x1F).
-  uint32_t cont_id = can_id & 0x003FFFFF;
+  uint32_t cont_id = can_id & CONTINUATION_ID_MASK;
   std::vector<uint8_t> cont_frame;
   cont_frame.reserve(8);
   for (size_t offset = first_chunk; offset < msg.size();) {
-    size_t chunk = std::min<size_t>(7, msg.size() - offset);
+    size_t chunk = std::min<size_t>(MAX_CONT_FRAME_PAYLOAD, msg.size() - offset);
     cont_frame.clear();
     cont_frame.push_back(msg_header);
     cont_frame.insert(cont_frame.end(), msg.begin() + offset, msg.begin() + offset + chunk);
@@ -500,7 +513,7 @@ static void send_can_frames(canbus::Canbus *canbus, uint32_t can_id, const std::
 void TopTronic::register_input_callbacks() {
   for (const auto &d : this->devices_) {
     auto *device = d.second.get();
-    for (const auto &i : device->inputs) {
+    for (const auto &i : device->get_inputs()) {
       auto *input = i.second;
       auto *canbus = this->canbus_;
       uint32_t can_id = build_can_id(GATEWAY_DEVICE_TYPE | this->device_addr_, this->get_device_id());
@@ -535,8 +548,8 @@ void TopTronic::update_all() {
   size_t sensor_count = 0;
   for (const auto &d : this->devices_) {
     auto *device = d.second.get();
-    sensor_count += device->sensors.size();
-    for (const auto &s : device->sensors) {
+    sensor_count += device->get_sensors().size();
+    for (const auto &s : device->get_sensors()) {
       RefreshEntry entry;
       entry.sensor = s.second;
       entry.last_send_ms = 0;  // attempts==0 → first send goes out immediately
@@ -570,7 +583,7 @@ void TopTronic::refresh_all() {
   for (TopTronic *hub : s_all_instances) {
     size_t count = 0;
     for (const auto &d : hub->devices_) {
-      count += d.second->sensors.size();
+      count += d.second->get_sensors().size();
     }
     total_sensors += count;
     ++hubs;
@@ -596,21 +609,21 @@ void TopTronic::refresh_all() {
 // command (non-blocking). The main loop task drains the queue in loop() and performs
 // the actual work, so component state is never touched from other tasks.
 void TopTronic::request_refresh() {
-  Command cmd = Command::Refresh;
+  Command cmd = Command::REFRESH;
   if (this->cmd_queue_ != nullptr && xQueueSend(this->cmd_queue_, &cmd, 0) != pdTRUE) {
     TT_LOGD("Command queue full — refresh request dropped");
   }
 }
 
 void TopTronic::request_pause() {
-  Command cmd = Command::Pause;
+  Command cmd = Command::PAUSE;
   if (this->cmd_queue_ != nullptr && xQueueSend(this->cmd_queue_, &cmd, 0) != pdTRUE) {
     TT_LOGD("Command queue full — pause request dropped");
   }
 }
 
 void TopTronic::request_resume() {
-  Command cmd = Command::Resume;
+  Command cmd = Command::RESUME;
   if (this->cmd_queue_ != nullptr && xQueueSend(this->cmd_queue_, &cmd, 0) != pdTRUE) {
     TT_LOGD("Command queue full — resume request dropped");
   }
@@ -639,8 +652,8 @@ TopTronicBase *TopTronic::get_sensor(uint32_t device_id, uint32_t sensor_id) {
   }
   TopTronicDevice *device = device_it->second.get();
 
-  auto sensor_it = device->sensors.find(sensor_id);
-  if (sensor_it == device->sensors.end()) {
+  auto sensor_it = device->get_sensors().find(sensor_id);
+  if (sensor_it == device->get_sensors().end()) {
     return nullptr;  // sensor not registered for this device — ignore
   }
   return sensor_it->second;
@@ -649,7 +662,7 @@ TopTronicBase *TopTronic::get_sensor(uint32_t device_id, uint32_t sensor_id) {
 void TopTronic::link_inputs() {
   for (const auto &d : this->devices_) {
     auto *device = d.second.get();
-    for (const auto &i : device->inputs) {
+    for (const auto &i : device->get_inputs()) {
       auto *input_base = i.second;
       if (input_base->type() == BUTTON) {
         continue;  // buttons are fire-and-forget — no linked sensor to sync
@@ -719,7 +732,7 @@ void TopTronic::configure_hub() {
 
   // Producer/consumer bridge for commands issued from other FreeRTOS tasks.
   // Producers only enqueue; the main loop task drains and executes in loop().
-  this->cmd_queue_ = xQueueCreate(8, sizeof(Command));
+  this->cmd_queue_ = xQueueCreate(COMMAND_QUEUE_LENGTH, sizeof(Command));
 
   // Drive the work pump from the scheduler (Phase A) so the hub stays fully
   // functional even if ESPHome does not invoke its component loop() (Phase B) -
@@ -735,8 +748,8 @@ void TopTronic::setup() {
   size_t input_count = 0;
   for (const auto &d : this->devices_) {
     auto *device = d.second.get();
-    sensor_count += device->sensors.size();
-    input_count += device->inputs.size();
+    sensor_count += device->get_sensors().size();
+    input_count += device->get_inputs().size();
   }
   TT_LOGI("Hub 0x%04X registered, total hubs: %zu (%zu sensors, %zu inputs)", (unsigned) this->get_device_id(),
           s_all_instances.size(), sensor_count, input_count);
@@ -811,7 +824,7 @@ void TopTronic::drain_refresh_burst() {
   // Skipped while paused_ (OTA) so an intentional freeze is not flagged.
   if (this->burst_in_progress_ && !this->paused_ && !this->pending_refresh_.empty()) {
     const uint32_t now = millis();
-    const uint32_t stall_timeout = 5000u + this->refresh_retry_interval_ms_;
+    const uint32_t stall_timeout = BURST_STALL_TIMEOUT_MS + this->refresh_retry_interval_ms_;
     if (now - this->last_burst_progress_ms_ >= stall_timeout) {
       const size_t abandoned = this->pending_refresh_.size();
       TT_LOGW("Refresh burst stalled (%zu sensors pending, no progress for %u ms) - aborting", abandoned,
@@ -864,19 +877,19 @@ void TopTronic::pump() {
   Command cmd;
   while (this->cmd_queue_ != nullptr && xQueueReceive(this->cmd_queue_, &cmd, 0) == pdTRUE) {
     switch (cmd) {
-      case Command::Refresh:
+      case Command::REFRESH:
         if (!handled_refresh) {
           this->update_all();
           handled_refresh = true;
         }
         break;
-      case Command::Pause:
+      case Command::PAUSE:
         if (!handled_pause) {
           this->pause();
           handled_pause = true;
         }
         break;
-      case Command::Resume:
+      case Command::RESUME:
         if (!handled_resume) {
           this->resume();
           handled_resume = true;
@@ -946,8 +959,8 @@ void TopTronic::dump_config() {
   size_t sensor_count = 0;
   size_t input_count = 0;
   for (const auto &d : this->devices_) {
-    sensor_count += d.second->sensors.size();
-    input_count += d.second->inputs.size();
+    sensor_count += d.second->get_sensors().size();
+    input_count += d.second->get_inputs().size();
   }
   ESP_LOGCONFIG(TAG, "TopTronic:");
   ESP_LOGCONFIG(TAG, "  Device type: 0x%04X, device address: 0x%02X", this->device_type_, this->device_addr_);
@@ -1022,7 +1035,7 @@ static void debug_log_frame(const std::vector<uint8_t> &data, uint32_t can_id) {
     } else {
       // Rate limit to max 30 frames/sec (33ms minimum gap) to prevent saturating
       // the ESPHome API logger socket and causing TCP disconnects in Home Assistant.
-      if (now - s_last_candump_log_ms >= 33) {
+      if (now - s_last_candump_log_ms >= CANDUMP_MIN_LOG_GAP_MS) {
         s_last_candump_log_ms = now;
         static const char *const HEX = "0123456789ABCDEF";
         char hex_payload[32];
@@ -1173,7 +1186,7 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
     return;
   }
 
-  if (msg_id == 0x1f) {
+  if (msg_id == START_OF_MESSAGE_ID) {
     // First frame of a message. data[0] upper 5 bits = number of remaining frames.
     if (data.size() < 2) {
       TT_LOGW("Dropping malformed start frame (%zu bytes)", data.size());
@@ -1190,6 +1203,14 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       // response, and it never sends continuations. Rejection is correct, but
       // logged at DEBUG so it stays out of the WARN→main_logs path.
       TT_LOGD("Dropping start frame with implausible frame count %u (header 0x%02X)", num_remaining, data[0]);
+      return;
+    }
+    if (num_remaining == 1) {
+      // A start frame always begins a multi-frame message (total frame count >= 2).
+      // total==1 is malformed: remaining_frames would start at 0, so no continuation
+      // could ever complete it and the entry would sit as a zombie until the stale
+      // sweep evicts it. Drop it like any other implausible header.
+      TT_LOGD("Dropping start frame with total frame count 1 (header 0x%02X)", data[0]);
       return;
     }
     if (num_remaining == 0) {
@@ -1228,9 +1249,12 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       }
 
       PendingMessage pending;
+      // Pre-allocate FIRST so the initial fragment lands in the full-size buffer —
+      // exactly ONE heap allocation per message (per §9.4). Each continuation frame
+      // carries at most 7 payload bytes (8 - header byte); the reserve covers the
+      // worst case, so the continuation insert()s never reallocate.
+      pending.data.reserve(static_cast<size_t>(num_remaining) * MAX_CONT_FRAME_PAYLOAD);
       pending.data.assign(data.begin() + 2, data.end());
-      // Pre-allocate: each continuation frame carries at most 7 payload bytes (8 - header byte).
-      pending.data.reserve(static_cast<size_t>(num_remaining) * 7);
       // data[0]>>3 is the TOTAL frame count (first frame + continuations), so
       // only num_remaining - 1 continuation frames are expected. Verified against
       // captured bus traffic (command 0x42 responses to register 0x74).
@@ -1361,8 +1385,8 @@ void TopTronic::interpret_message(const uint8_t *data, size_t len, uint32_t can_
                 + (data[2] << 8)  // function_number
                 + (datapoint << 16);
 
-  auto sensor_it = device->sensors.find(id);
-  if (sensor_it == device->sensors.end()) {
+  auto sensor_it = device->get_sensors().find(id);
+  if (sensor_it == device->get_sensors().end()) {
     // Unregistered datapoint for a known device. Logged at DEBUG so preset key
     // mismatches (fg/fn/dp vs. what the device actually emits) are visible
     // instead of silently dropping the response.
