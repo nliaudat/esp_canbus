@@ -537,6 +537,30 @@ void on_can_frame(...) {
 }
 ```
 
+### 9.4 Memory Audit — Leaks & Fragmentation Posture
+
+**No-leak invariants** (audited 2026-08):
+
+- Ownership is uniformly RAII — no raw `new`/`delete`/`malloc`/`free` anywhere:
+  - `devices_` → `std::unordered_map<uint32_t, std::unique_ptr<TopTronicDevice>>` (hub destructor frees all devices).
+  - `pending_messages_` / `pending_refresh_` / `request_data_` / option maps → `std::` containers with destructors.
+- Only manual resource: `cmd_queue_` (`xQueueCreate` in `configure_hub()`, `vQueueDelete` in `on_shutdown()`) — create/delete paired, pointer nullified after free.
+- Callbacks register exactly once (guarded statics); `s_all_instances` grows only at hub construction (≤ hub count). No runtime growth → no leak.
+
+**Fragmentation posture:**
+
+- Single-frame receive path is allocation-free (zero heap): `interpret_message()` reads `data.data() + 1` directly, no copies.
+- Multi-frame: exactly ONE `vector` allocation per message (reserve at start frame, `num_remaining * 7`), freed on completion/eviction; the map is bounded (`max_pending_messages_`, default 32). Continuation frames append into reserved capacity — no reallocation.
+- `hex_str()`: SSO covers ≤15 chars; an 8-byte CAN frame hex-dumps to 16 chars → one small heap alloc per log line **only under DEBUG logging** (`ESP_LOGD` is compiled out at INFO; the candump path already uses a stack `char[32]`, not `hex_str`). Churn is bounded to temporary debug sessions (candump auto-off 120 s).
+- Text-sensor responses copy one label string per 30 s poll (SSO for short labels).
+
+**Preserve rules (review-gated):**
+
+- NEVER add per-frame heap allocation to `parse_frame()` / `interpret_message()` — keep the single-frame path allocation-free.
+- Keep `hex_str()` SSO-friendly (`reserve()`, no `stringstream`); do not grow log payloads.
+- Keep DEBUG/candump sessions bounded (auto-off 120 s) — they are the only heap-churn logging path.
+- If long-uptime fragmentation is ever measured (free heap steadily decreasing over days despite an idle bus), move `pending_messages_` to a fixed-capacity pool (`std::array`/StaticVector per §9.1) — NOT required today.
+
 ---
 
 ## 10. SECURITY & PROTOCOL SAFETY
@@ -765,6 +789,8 @@ Any of these will fail pre-commit hooks. Keep LF-only, no trailing spaces, exact
 - Heap allocation in `loop()` (allocate once in `setup()`)
 - Large stack allocations (>1 KB) in receive-path functions
 - Missing mutex/atomic on state shared between the CAN callback and `loop()`
+- Heap churn beyond the documented one-alloc-per-message in `parse_frame()`/`interpret_message()` (§9.4)
+- Unbounded log-string growth in the hot path (`hex_str()` on long payloads at DEBUG — §9.4)
 
 ### 🟡 INFO (Nice to fix)
 

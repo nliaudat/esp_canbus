@@ -1,5 +1,5 @@
 # =============================================================================
-# ESP32 CANBus (Hoval TopTronic) --- Token-Optimized Rule Database (v1.1)
+# ESP32 CANBus (Hoval TopTronic) --- Token-Optimized Rule Database (v1.2)
 # =============================================================================
 # Source: .ai/instructions.md (SINGLE SOURCE OF TRUTH --- full text)
 # This file is a DERIVED ARTIFACT --- regenerate when .ai/instructions.md changes.
@@ -7,7 +7,7 @@
 # For context/examples, fall back to .ai/instructions.md.
 # =============================================================================
 
-version: "1.1"
+version: "1.2"
 source: ".ai/instructions.md"
 
 # =============================================================================
@@ -295,6 +295,22 @@ memory_perf:
   thread_safety:
     - "CAN callback can run outside main loop() task --- guard shared state with std::mutex + std::lock_guard (or std::atomic for scalars)"
     - "Never mutate vector/map/deque from callback while loop() reads it"
+  audit:
+    no_leaks:
+      - "RAII-only ownership --- no raw new/delete/malloc/free anywhere"
+      - "devices_ -> unique_ptr<TopTronicDevice> (hub destructor frees all)"
+      - "cmd_queue_ xQueueCreate (configure_hub) / vQueueDelete (on_shutdown) paired + nullified"
+      - "Callbacks registered once (guarded statics); s_all_instances grows only at construction"
+    fragmentation:
+      - "Single-frame receive path allocation-free (interpret_message reads data+1 directly)"
+      - "Multi-frame: exactly ONE vector alloc per message (reserve at start frame); map bounded (32 default)"
+      - "hex_str(): SSO <= 15 chars --- 8-byte frame hex = 16 chars -> small heap alloc ONLY under DEBUG logging (compiled out at INFO; candump path uses stack char[32])"
+      - "Text-sensor responses copy one label string per 30s poll (SSO for short labels)"
+    preserve:
+      - "NEVER add per-frame heap allocation to parse_frame()/interpret_message()"
+      - "Keep hex_str() SSO-friendly (reserve(), no stringstream); do not grow log payloads"
+      - "Keep DEBUG/candump sessions bounded (auto-off 120s) --- only heap-churn logging path"
+      - "If long-uptime fragmentation is measured: move pending_messages_ to fixed-capacity pool (std::array/StaticVector) --- NOT required today"
 
 # =============================================================================
 # S10 SECURITY & PROTOCOL SAFETY
@@ -401,6 +417,8 @@ review:
     - "Heap allocation in loop() (allocate once in setup())"
     - "Large stack allocations (>1KB) in receive-path functions"
     - "Missing mutex/atomic on state shared between CAN callback and loop()"
+    - "Heap churn beyond the documented one-alloc-per-message in parse_frame()/interpret_message()"
+    - "Unbounded log-string growth in hot path (hex_str() on long payloads at DEBUG)"
   info:
     - "Const correctness / include-what-you-use"
     - "Dead or commented-out code"
