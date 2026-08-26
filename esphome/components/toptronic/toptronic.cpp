@@ -1249,9 +1249,12 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       }
 
       PendingMessage pending;
-      pending.data.assign(data.begin() + 2, data.end());
-      // Pre-allocate: each continuation frame carries at most 7 payload bytes (8 - header byte).
+      // Pre-allocate FIRST so the initial fragment lands in the full-size buffer —
+      // exactly ONE heap allocation per message (per §9.4). Each continuation frame
+      // carries at most 7 payload bytes (8 - header byte); the reserve covers the
+      // worst case, so the continuation insert()s never reallocate.
       pending.data.reserve(static_cast<size_t>(num_remaining) * MAX_CONT_FRAME_PAYLOAD);
+      pending.data.assign(data.begin() + 2, data.end());
       // data[0]>>3 is the TOTAL frame count (first frame + continuations), so
       // only num_remaining - 1 continuation frames are expected. Verified against
       // captured bus traffic (command 0x42 responses to register 0x74).
