@@ -689,7 +689,16 @@ void TopTronic::resume() {
   TT_LOGI("Hub 0x%04X resumed", (unsigned) this->get_device_id());
 }
 
-void TopTronic::setup() {
+void TopTronic::configure_hub() {
+  // All functional wiring runs from the CONFIG phase (emitted by __init__.py
+  // right after the add_sensor/add_input calls) instead of setup(). Reason:
+  // ESPHome sizes components_ (StaticVector) from ESPHOME_COMPONENT_COUNT,
+  // which is computed at CORE codegen priority - BEFORE this component
+  // registers its preset-generated entity IDs in CORE.component_ids. The
+  // under-count silently drops every registration past the StaticVector
+  // capacity, so a hub can be missing from components_ entirely and its
+  // setup() never invoked. Config-phase statements always run for every hub.
+
   this->link_inputs();
   this->register_sensor_callbacks();
   this->register_input_callbacks();
@@ -700,10 +709,6 @@ void TopTronic::setup() {
   // bursts must not stay frozen across reboots.
   this->paused_ = false;
 
-  // Registration + receive-path wiring happened in the constructor (s_all_instances,
-  // parse_frame callback, dedup debug callback), so a single refresh_all() call
-  // covers every hub and every hub can already receive frames from the first moment.
-
   // Capture the earliest non‑zero post‑boot refresh delay across all hubs.
   if (this->boot_refresh_delay_ms_ != 0) {
     if (s_boot_refresh_delay_ms == 0 || this->boot_refresh_delay_ms_ < s_boot_refresh_delay_ms) {
@@ -711,15 +716,6 @@ void TopTronic::setup() {
       s_boot_refresh_start_ms = millis();
     }
   }
-  size_t sensor_count = 0;
-  size_t input_count = 0;
-  for (const auto &d : this->devices_) {
-    auto *device = d.second.get();
-    sensor_count += device->sensors.size();
-    input_count += device->inputs.size();
-  }
-  TT_LOGI("Hub 0x%04X registered, total hubs: %zu (%zu sensors, %zu inputs)", (unsigned) this->get_device_id(),
-          s_all_instances.size(), sensor_count, input_count);
 
   // Producer/consumer bridge for commands issued from other FreeRTOS tasks.
   // Producers only enqueue; the main loop task drains and executes in loop().
@@ -729,6 +725,21 @@ void TopTronic::setup() {
   // functional even if ESPHome does not invoke its component loop() (Phase B) -
   // the loop partition can silently drop hubs depending on registration order.
   this->set_interval("pump", 50, [this]() { this->pump(); });
+}
+
+void TopTronic::setup() {
+  // Functional wiring lives in configure_hub() (config phase) so it runs even
+  // when ESPHome silently drops this hub from components_ (see configure_hub()).
+  // setup() only keeps the observability log.
+  size_t sensor_count = 0;
+  size_t input_count = 0;
+  for (const auto &d : this->devices_) {
+    auto *device = d.second.get();
+    sensor_count += device->sensors.size();
+    input_count += device->inputs.size();
+  }
+  TT_LOGI("Hub 0x%04X registered, total hubs: %zu (%zu sensors, %zu inputs)", (unsigned) this->get_device_id(),
+          s_all_instances.size(), sensor_count, input_count);
 }
 
 void TopTronic::drain_refresh_burst() {
@@ -1210,7 +1221,8 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       // Multi-frame message: save the first fragment and wait for the rest.
       uint8_t msg_header = data[1];  // reassembly key shared across all frames of this message
       uint32_t header_key = (device_id << 8) | msg_header;
-      TT_LOGD("     - Start of message with id: %d with length %d", msg_header, num_remaining);
+      TT_LOGD("     - Start of message with id: %d with length %d (Can-ID: 0x%08X, Data: 0x%s)", msg_header,
+              num_remaining, (unsigned) can_id, hex_str(data.data(), data.size()).c_str());
       if (this->pending_messages_.size() >= this->max_pending_messages_ &&
           this->pending_messages_.find(header_key) == this->pending_messages_.end()) {
         // Buffer full: evict the SINGLE oldest entry (LRU) instead of clearing all
@@ -1258,10 +1270,20 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
     uint32_t header_key = (device_id << 8) | msg_header;
     auto it = this->pending_messages_.find(header_key);
     if (it == this->pending_messages_.end()) {
-      // Continuation for an unknown/expired message (evicted, purged, or the start
-      // frame never arrived). Logged at DEBUG so lost reassemblies are visible.
-      TT_LOGD("[DROP] Continuation for unknown/expired message (node 0x%03X, header 0x%02X)", (unsigned) device_id,
-              msg_header);
+      // A frame whose msg_id (can_id bits 31-24) is 0x00 is a standalone
+      // low-priority broadcast (device presence / ACK), NOT a continuation of a
+      // 0x1f-start message — its "header" byte is just its own first payload
+      // byte. Log it as its own class instead of a lost reassembly.
+      if ((can_id >> 24) == 0) {
+        TT_LOGD("[IGN] Low-priority frame from node 0x%03X (Can-ID: 0x%08X, Data: 0x%s)", (unsigned) device_id,
+                (unsigned) can_id, hex_str(data.data(), data.size()).c_str());
+      } else {
+        // Continuation for an unknown/expired message (evicted, purged, or the start
+        // frame never arrived). Logged at DEBUG so lost reassemblies are visible.
+        TT_LOGD(
+            "[DROP] Continuation for unknown/expired message (node 0x%03X, header 0x%02X) Can-ID: 0x%08X, Data: 0x%s",
+            (unsigned) device_id, msg_header, (unsigned) can_id, hex_str(data.data(), data.size()).c_str());
+      }
       return;
     }
     PendingMessage &pending = it->second;

@@ -299,6 +299,15 @@ class TopTronic : public Component {
   // Wire up write callbacks for inputs so they send SET requests over CAN.
   void register_input_callbacks();
 
+  // One-time functional wiring (link_inputs, sensor/input callbacks, command
+  // queue, boot-refresh gate, work-pump scheduling). Called from the CONFIG
+  // phase (emitted by __init__.py right after all add_sensor/add_input calls)
+  // instead of setup(): ESPHome sizes components_ from ESPHOME_COMPONENT_COUNT,
+  // which is computed before this component registers its preset-entity IDs, so
+  // a hub can be silently dropped from components_ and its setup() never runs.
+  // Config-phase statements always run for every hub.
+  void configure_hub();
+
   // Trigger a GET refresh for every registered sensor across all devices.
   // Can be called from a template button or automation to force an update.
   void update_all();

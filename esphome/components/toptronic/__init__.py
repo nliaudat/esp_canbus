@@ -319,3 +319,10 @@ async def to_code(config):
     await _generate_entities(var, config)
 
     await _generate_refresh_button(var)
+
+    # Critical wiring (update callbacks, command queue, pump, boot-refresh gate)
+    # must not depend on ESPHome invoking setup(): ESPHOME_COMPONENT_COUNT is
+    # computed from CORE.component_ids before preset entities are registered, so
+    # a hub can be silently dropped from components_ and setup() never runs.
+    # Config-phase statements always run for every hub.
+    cg.add(var.configure_hub())
