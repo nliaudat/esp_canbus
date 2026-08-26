@@ -271,8 +271,17 @@ class TopTronicDebugSwitch : public switch_::Switch, public Component {
 class TopTronicDevice {
  public:
   // unordered_map: integer keys allow O(1) lookup on every received CAN frame.
-  std::unordered_map<uint32_t, TopTronicBase *> sensors;  // keyed by get_id()
-  std::unordered_map<uint32_t, TopTronicBase *> inputs;   // keyed by get_id()
+  // Per §5.9 the maps stay private (pointer lifetime safety — the pointers are
+  // owned by the ESPHome registry, never deleted here); the hub reaches them
+  // only through these accessors.
+  std::unordered_map<uint32_t, TopTronicBase *> &get_sensors() { return this->sensors_; }
+  const std::unordered_map<uint32_t, TopTronicBase *> &get_sensors() const { return this->sensors_; }
+  std::unordered_map<uint32_t, TopTronicBase *> &get_inputs() { return this->inputs_; }
+  const std::unordered_map<uint32_t, TopTronicBase *> &get_inputs() const { return this->inputs_; }
+
+ private:
+  std::unordered_map<uint32_t, TopTronicBase *> sensors_;  // keyed by get_id()
+  std::unordered_map<uint32_t, TopTronicBase *> inputs_;   // keyed by get_id()
 };
 
 // Root component: owns all TopTronicDevice instances and is the entry point
@@ -447,7 +456,8 @@ class TopTronic : public Component {
   uint8_t device_addr_;
 
   // Commands marshalled from other tasks into the main loop task.
-  enum class Command : uint8_t { Refresh, Pause, Resume };
+  // Enumerator names are UPPER_SNAKE_CASE per §5.3; values stay 0/1/2.
+  enum class Command : uint8_t { REFRESH, PAUSE, RESUME };
   // Producer/consumer bridge: other tasks enqueue here, loop() drains on the
   // main loop task. Created in setup(); nullptr until then.
   QueueHandle_t cmd_queue_{nullptr};
