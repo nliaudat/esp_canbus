@@ -514,10 +514,6 @@ class TopTronic : public Component {
   size_t burst_answered_{0};
   size_t burst_dropped_{0};
   uint32_t last_burst_progress_ms_{0};
-  // Throttle for the burst-state heartbeat log (diagnostic).
-  uint32_t last_burst_state_log_ms_{0};
-  // Throttle for the loop-tick probe log (diagnostic).
-  uint32_t last_loop_probe_ms_{0};
 
   // Timestamp of the last stale-fragment sweep in loop().
   uint32_t last_cleanup_ms_{0};

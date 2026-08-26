@@ -824,18 +824,6 @@ void TopTronic::drain_refresh_burst() {
     }
   }
 
-  // Burst-state heartbeat (diagnostic): while any sensors are pending, log the
-  // burst state at most every 5 s so a stuck/frozen burst is visible even
-  // without a button press. Remove once the BM issue is resolved.
-  if (!this->pending_refresh_.empty()) {
-    const uint32_t now = millis();
-    if (now - this->last_burst_state_log_ms_ >= 5000) {
-      this->last_burst_state_log_ms_ = now;
-      TT_LOGW("Burst state: %zu sensors pending, paused=%d, in_progress=%d, idle=%u ms", this->pending_refresh_.size(),
-              (int) this->paused_, (int) this->burst_in_progress_, (unsigned) (now - this->last_burst_progress_ms_));
-    }
-  }
-
   // The burst has finished (either drained or empty). If a refresh was requested
   // while it was running, honor it now with a fresh burst - a "Refresh all" press
   // during a burst is deferred, never lost.
@@ -855,17 +843,7 @@ void TopTronic::drain_refresh_burst() {
   }
 }
 
-void TopTronic::loop() {
-  // Loop-tick probe (diagnostic): proves this hub loop() is invoked by ESPHome.
-  // Remove once the BM burst issue is resolved.
-  const uint32_t probe_now = millis();
-  if (probe_now - this->last_loop_probe_ms_ >= 10000) {
-    this->last_loop_probe_ms_ = probe_now;
-    TT_LOGW("Loop probe hub 0x%04X alive (paused=%d, pending=%zu)", (unsigned) this->get_device_id(),
-            (int) this->paused_, this->pending_refresh_.size());
-  }
-  this->pump();
-}
+void TopTronic::loop() { this->pump(); }
 
 // Scheduler-driven work pump (order-independent). ESPHome may not invoke a hub's
 // component loop() (Phase B) depending on registration order - its loop partition
