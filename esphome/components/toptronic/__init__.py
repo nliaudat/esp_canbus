@@ -1,12 +1,12 @@
-import pathlib
 from enum import Enum
+import pathlib
 
 import yaml
 
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import button as button_platform
 from esphome.components.canbus import CanbusComponent
+import esphome.config_validation as cv
 from esphome.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
@@ -23,9 +23,8 @@ DEPENDENCIES = ["canbus"]
 AUTO_LOAD = ["sensor", "number", "select", "text_sensor", "button", "switch"]
 MULTI_CONF = True
 
-CONF_TT_ID = "toptronic_id"
+CONF_TOPTRONIC_ID = "toptronic_id"
 CONF_CANBUS_ID = "canbus_id"
-CONF_DEVICE_TYPE = "device_type"
 CONF_DEVICE_ADDR = "device_addr"
 CONF_FUNCTION_GROUP = "function_group"
 CONF_FUNCTION_NUMBER = "function_number"
@@ -69,17 +68,17 @@ TT_TYPE_OPTIONS = {
 
 
 class DeviceType(Enum):
-    WEZ = 0     # EN: Heat generator / FR: Générateur de chaleur / DE: Wärmeerzeuger
-    SOL = 64    # EN: Solar module / FR: Module solaire / DE: Solar
-    PS = 128    # EN: Buffer storage tank / FR: Ballon tampon / DE: Pufferspeicher
-    FW = 192    # EN: District heating / FR: Chauffage urbain / DE: Fernwärme
-    HK = 256    # EN: Heating circuit / FR: Circuit de chauffage / DE: Heizkreis
-    MWA = 384   # EN: Energy meter module / FR: Module de mesure d'énergie / DE: Messwertauswertung
-    GLT = 448   # EN: Building mgmt system (BMS) / FR: Gestion technique du bâtiment (GTB) / DE: Gebäudeleittechnik
-    HV = 512    # EN: HomeVent ventilation / FR: Ventilation HomeVent / DE: HomeVent
-    BM = 1024   # EN: Control module (Display) / FR: Module de commande (Écran) / DE: Bedienmodul
-    BD = 1024   # EN: Control display (Alias) / FR: Écran de commande (Alias) / DE: Bediendisplay
-    GW = 1153   # EN: Gateway (Modbus/KNX) / FR: Passerelle (Modbus/KNX) / DE: Gateway
+    WEZ = 0  # EN: Heat generator / FR: Générateur de chaleur / DE: Wärmeerzeuger
+    SOL = 64  # EN: Solar module / FR: Module solaire / DE: Solar
+    PS = 128  # EN: Buffer storage tank / FR: Ballon tampon / DE: Pufferspeicher
+    FW = 192  # EN: District heating / FR: Chauffage urbain / DE: Fernwärme
+    HK = 256  # EN: Heating circuit / FR: Circuit de chauffage / DE: Heizkreis
+    MWA = 384  # EN: Energy meter module / FR: Module de mesure d'énergie / DE: Messwertauswertung
+    GLT = 448  # EN: Building mgmt system (BMS) / FR: Gestion technique du bâtiment (GTB) / DE: Gebäudeleittechnik
+    HV = 512  # EN: HomeVent ventilation / FR: Ventilation HomeVent / DE: HomeVent
+    BM = 1024  # EN: Control module (Display) / FR: Module de commande (Écran) / DE: Bedienmodul
+    BD = BM  # EN: Control display (Alias) / FR: Écran de commande (Alias) / DE: Bediendisplay
+    GW = 1153  # EN: Gateway (Modbus/KNX) / FR: Passerelle (Modbus/KNX) / DE: Gateway
 
 
 _device_types = {t.name: t.value for t in DeviceType}
@@ -103,11 +102,17 @@ def get_device_type(t: str) -> int:
 
 
 def _validate_preset(config):
-    device_type = config[CONF_DEVICE_TYPE]
+    device_type = config["device_type"]
     if device_type not in _device_types:
-        raise cv.Invalid(f"Device type '{device_type}' is not a known TopTronic device type")
+        raise cv.Invalid(
+            f"Device type '{device_type}' is not a known TopTronic device type"
+        )
     if not (PRESETS_DIR / device_type).is_dir():
-        available = sorted(d.name for d in PRESETS_DIR.iterdir() if d.is_dir()) if PRESETS_DIR.is_dir() else []
+        available = (
+            sorted(d.name for d in PRESETS_DIR.iterdir() if d.is_dir())
+            if PRESETS_DIR.is_dir()
+            else []
+        )
         raise cv.Invalid(
             f"No preset directory found for device type '{device_type}'. "
             f"Available presets: {', '.join(available)}"
@@ -156,7 +161,7 @@ CONFIG_SCHEMA = cv.All(
         {
             cv.GenerateID(): cv.declare_id(TopTronicComponent),
             cv.GenerateID(CONF_CANBUS_ID): cv.use_id(CanbusComponent),
-            cv.Required(CONF_DEVICE_TYPE): cv.one_of(
+            cv.Required("device_type"): cv.one_of(
                 *[t.name for t in DeviceType], upper=True
             ),
             cv.Required(CONF_DEVICE_ADDR): cv.uint8_t,
@@ -200,11 +205,10 @@ def _load_entities(device_type: str, language: str):
         path = PRESETS_DIR / device_type / f"{kind}_{language}.yaml"
         if not path.exists():
             continue
-        with open(path, encoding="utf-8") as f:
+        with pathlib.Path(path).open(encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
         for platform_name, entries in data.items():
-            for entry in entries or []:
-                entities.append((platform_name, dict(entry)))
+            entities.extend((platform_name, dict(entry)) for entry in entries or [])
     return entities
 
 
@@ -222,8 +226,10 @@ def _resolve_ids(obj, used=None):
         if obj.id is None:
             obj.resolve(used)
         used.add(obj.id)
-        if obj.is_declaration and isinstance(obj.type, cg.MockObjClass) and obj.type.inherits_from(
-            Component
+        if (
+            obj.is_declaration
+            and isinstance(obj.type, cg.MockObjClass)
+            and obj.type.inherits_from(Component)
         ):
             CORE.component_ids.add(obj.id)
     elif isinstance(obj, dict):
@@ -248,18 +254,18 @@ async def _generate_entities(hub, config):
 
     used_ids = _shared_used_ids()
     for platform_name, entity_conf in _load_entities(
-        config[CONF_DEVICE_TYPE], config[CONF_LANGUAGE]
+        config["device_type"], config[CONF_LANGUAGE]
     ):
         if platform_name not in platforms:
             raise cv.Invalid(
                 f"Unsupported platform '{platform_name}' in toptronic preset"
             )
         entity_conf.pop("platform", None)
-        entity_conf.pop(CONF_DEVICE_TYPE, None)
+        entity_conf.pop("device_type", None)
         entity_conf.pop(CONF_DEVICE_ADDR, None)
         hub_ref = config[CONF_ID].copy()
         hub_ref.is_declaration = False
-        entity_conf[CONF_TT_ID] = hub_ref
+        entity_conf[CONF_TOPTRONIC_ID] = hub_ref
 
         schema, codegen = platforms[platform_name]
         validated = schema(entity_conf)
@@ -281,7 +287,9 @@ async def _generate_refresh_button(hub_var):
         return
     CORE.data[_REFRESH_BUTTON_KEY] = True
 
-    friendly = (CORE.config.get(CONF_SUBSTITUTIONS, {}) or {}).get("friendly_name", "") or ""
+    friendly = (CORE.config.get(CONF_SUBSTITUTIONS, {}) or {}).get(
+        "friendly_name", ""
+    ) or ""
     name = f"{friendly} Refresh all" if friendly else "Refresh all"
 
     cfg = button_platform.button_schema(TopTronicRefreshButton)(
@@ -303,7 +311,7 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID], cbus)
     await cg.register_component(var, config)
 
-    device_type = get_device_type(config[CONF_DEVICE_TYPE])
+    device_type = get_device_type(config["device_type"])
     cg.add(var.set_device_type(device_type))
     cg.add(var.set_device_addr(config[CONF_DEVICE_ADDR]))
     cg.add(var.set_boot_refresh_delay(config[CONF_BOOT_REFRESH_DELAY]))
