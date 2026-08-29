@@ -1,3 +1,17 @@
+esphome:
+  name: toptronic-test
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+external_components:
+  - source:
+      type: local
+      path: ../../../esphome/components
+
+
 canbus:
   - platform: esp32_can
     id: canbus_toptronic
