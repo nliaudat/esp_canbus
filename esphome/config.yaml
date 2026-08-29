@@ -15,6 +15,17 @@ substitutions:
 
   ### time
   TZ: "Europe/Zurich"  # timezone
+  
+  
+# external_components:
+  # - source: github://pr#18858
+    # components: [toptronic]
+    # refresh: 0s
+    
+external_components:
+  - source:
+      type: local
+      path: components
 
 toptronic:
 
@@ -52,10 +63,7 @@ toptronic:
     # NOTE: read-only entities (sensor/text_sensor) poll at update_interval (default 30s, set in the presets).
     #       This is an entity-level key, not a hub key - write entities (number/select/button) never poll.
 
-external_components:
-  - source:
-      type: local
-      path: components
+
 
 # Enable logging
 logger:
