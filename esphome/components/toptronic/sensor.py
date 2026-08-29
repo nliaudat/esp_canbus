@@ -1,33 +1,39 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import sensor
+import esphome.config_validation as cv
 from esphome.const import CONF_TYPE
 
 from . import (
-    toptronic,
-    CONF_TT_ID,
-    TopTronicComponent,
-    config_schema_polling,
+    CONF_DATAPOINT,
     CONF_FUNCTION_GROUP,
     CONF_FUNCTION_NUMBER,
-    CONF_DATAPOINT,
+    CONF_TOPTRONIC_ID,
     TT_TYPE_OPTIONS,
+    TopTronicComponent,
+    config_schema_polling,
+    toptronic,
 )
 
 TopTronicSensor = toptronic.class_(
-    "TopTronicSensor", sensor.Sensor, cg.PollingComponent,
+    "TopTronicSensor",
+    sensor.Sensor,
+    cg.PollingComponent,
 )
 
-CONFIG_SCHEMA = cv.Schema({
-    cv.GenerateID(CONF_TT_ID): cv.use_id(TopTronicComponent),
-    cv.Required(CONF_TYPE): cv.enum(TT_TYPE_OPTIONS),
-}).extend(sensor.sensor_schema(
-    TopTronicSensor
-)).extend(config_schema_polling("30s"))
+CONFIG_SCHEMA = (
+    cv.Schema(
+        {
+            cv.GenerateID(CONF_TOPTRONIC_ID): cv.use_id(TopTronicComponent),
+            cv.Required(CONF_TYPE): cv.enum(TT_TYPE_OPTIONS),
+        }
+    )
+    .extend(sensor.sensor_schema(TopTronicSensor))
+    .extend(config_schema_polling("30s"))
+)
 
 
 async def to_code(config):
-    tt = await cg.get_variable(config[CONF_TT_ID])
+    tt = await cg.get_variable(config[CONF_TOPTRONIC_ID])
     sens = await sensor.new_sensor(config)
     await cg.register_component(sens, config)
 
