@@ -7,8 +7,10 @@ does the same).  This tool:
 
   * downloads the current version from Hoval's CDN,
   * compares its sha256 against the last processed copy,
-  * on change (--apply): backs up the previous workbook, installs the new one
-    into hoval_data_processing/ and re-runs generate_presets.py,
+  * on change (--apply): regenerates the presets from the downloaded workbook
+    into a staging area first; the repository is only touched once generation
+    and the entity-count sanity check have both passed (previous workbook is
+    backed up, the new one installed, the staged presets copied in),
   * sanity-checks the regenerated presets (entity count must not collapse).
 
 Datapoints that a given controller firmware does not know simply never answer
@@ -24,6 +26,7 @@ import argparse
 import hashlib
 import json
 import pathlib
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -59,10 +62,10 @@ def download(dest):
     raise RuntimeError("Could not download the datapoint list (%s)" % last)
 
 
-def count_entities():
+def count_entities(base=PRESETS_DIR):
     import yaml
     total = 0
-    for path in PRESETS_DIR.glob("*/*.yaml"):
+    for path in pathlib.Path(base).glob("*/*.yaml"):
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         except Exception:  # noqa: BLE001
@@ -106,6 +109,34 @@ def main():
             print("Run with --apply to install it and regenerate the presets.")
             return 2
 
+        old_n = count_entities()
+
+        # Regenerate the presets into a staging directory first, feeding the
+        # newly downloaded workbook to the generator via --xlsx. Nothing in the
+        # repository is touched until generation AND the entity-count sanity
+        # check have both passed, so a failed update cannot leave the new
+        # workbook or partially rewritten presets active while the state hash
+        # still names the old list (a later --apply would otherwise overwrite
+        # the good backup and use damaged presets as its comparison baseline).
+        staging = pathlib.Path(tmp) / "presets_new"
+        try:
+            subprocess.run([sys.executable,
+                            str(pathlib.Path(__file__).parent / "generate_presets.py"),
+                            str(staging),
+                            "--xlsx", str(tmp_xlsx)], check=True)
+        except subprocess.CalledProcessError:
+            print("ABORT: preset generation failed - nothing was changed.")
+            return 1
+
+        new_n = count_entities(staging)
+        print("Preset entities: %d -> %d" % (old_n, new_n))
+        if old_n and new_n < old_n * 0.9:
+            print("ABORT: regenerated presets are much smaller than before - "
+                  "nothing was changed; inspect the workbook layout.")
+            return 3
+
+        # Validation passed - commit the update: back up the previous workbook,
+        # install the new one, then copy the regenerated presets into place.
         if WORKBOOK.exists():
             backup = WORKBOOK.with_suffix(".xlsx.bak")
             backup.write_bytes(WORKBOOK.read_bytes())
@@ -114,16 +145,8 @@ def main():
         tmp_xlsx.replace(WORKBOOK)
         print("Installed %s" % WORKBOOK)
 
-        old_n = count_entities()
-        subprocess.run([sys.executable,
-                        str(pathlib.Path(__file__).parent / "generate_presets.py"),
-                        str(PRESETS_DIR)], check=True)
-        new_n = count_entities()
-        print("Preset entities: %d -> %d" % (old_n, new_n))
-        if old_n and new_n < old_n * 0.9:
-            print("ABORT: regenerated presets are much smaller than before - "
-                  "restore %s.bak and inspect the workbook layout." % WORKBOOK)
-            return 3
+        shutil.copytree(staging, PRESETS_DIR, dirs_exist_ok=True)
+        print("Installed regenerated presets into %s" % PRESETS_DIR)
 
         STATE.write_text(json.dumps({"sha256": digest}, indent=1), encoding="utf-8")
         print("State saved to %s" % STATE)
