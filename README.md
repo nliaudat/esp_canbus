@@ -14,7 +14,7 @@
 > - **Presets moved into the component** (`esphome/components/toptronic/presets/`),
 >   with multi-language support (`de`/`en`/`fr`/`it`) and many upgrades.
 > - **`config.yaml` changed** — you can now define **multiple `toptronic:` components**
->   (one per CAN device, e.g. `HV`, `BM`, `WEZ`).
+>   (one per CAN device - presets for `WEZ`, `SOL`, `PS`, `FW`, `HK`, `MWA`, `GLT`, `HV`, `BM` and `GW`).
 > - Improved multi-frame reassembly, CRC validation, OTA pause/resume, a non-blocking
 >   post-boot refresh, and a thread-safe FreeRTOS command bridge.
 
@@ -106,7 +106,7 @@ Open `config.yaml` and adjust:
   - `TZ` — your timezone (default `Europe/Zurich`)
 - `toptronic:` — one block **per device** (device type + address). You can find the
   address of each Hoval device in your room control unit under maintenance
-  (e.g. `HV(8)`, `BM(8)`, `WEZ(1)`). All available presets are listed in
+  (e.g. `HV(8)`, `BM(8)`, `WEZ(1)`). Presets for all supported device types are listed in
   [`esphome/components/toptronic/presets`](esphome/components/toptronic/presets).
 
 Example exposing both an HV and a BM device:
@@ -119,7 +119,7 @@ substitutions:
 toptronic:
   - id: toptronic_HV  # HomeVent
     canbus_id: cbus  # the canbus bit_rate must be 50kbps. do not change name as it used in canbus.yaml
-    device_type: HV  # WEZ, HV, BM (BD is an alias for BM and BM must be used)
+    device_type: HV  # WEZ, SOL, PS, FW, HK, MWA, GLT, HV, BM, GW (BD is an alias for BM and BM must be used)
     device_addr: 8  # defaults are : HV=8, BM=8, WEZ=1
     language: en  # de, en, fr, it
     boot_refresh_delay: 30s  # optional; one-shot full refresh after boot; 0 disables it
@@ -131,6 +131,8 @@ toptronic:
     # refresh_gap_ms: 50ms  # optional; refresh window; GET spacing = window / burst budget
     # max_refresh_retries: 0  # optional; re-sends of an unanswered GET per refresh burst (0 = single-pass)
     # refresh_retry_interval_ms: 200ms  # optional; delay before an unanswered GET is re-sent
+    # write_min_interval: 2s  # optional; write-safety: min spacing between SETs to the same datapoint (0 disables)
+    # reject_writes_before_read: true  # optional; write-safety: block SETs until the datapoint was read once since boot
 
   - id: toptronic_BM  # display
     canbus_id: cbus  # the canbus bit_rate must be 50kbps
@@ -146,18 +148,21 @@ toptronic:
     # refresh_gap_ms: 50ms  # optional; refresh window; GET spacing = window / burst budget
     # max_refresh_retries: 0  # optional; re-sends of an unanswered GET per refresh burst (0 = single-pass)
     # refresh_retry_interval_ms: 200ms  # optional; delay before an unanswered GET is re-sent
+    # write_min_interval: 2s  # optional; write-safety: min spacing between SETs to the same datapoint (0 disables)
+    # reject_writes_before_read: true  # optional; write-safety: block SETs until the datapoint was read once since boot
 ```
 
-All nine options are optional. Their defaults are: `boot_refresh_delay: 30s`,
+All eleven options are optional. Their defaults are: `boot_refresh_delay: 30s`,
 `max_pending_messages: 32`, `max_pending_age: 5000ms`,
 `cleanup_interval: 5000ms`, `max_frames_per_message: 8`,
 `refresh_gap_ms: 50ms`, `max_refresh_per_loop: 8`,
-`max_refresh_retries: 0`, `refresh_retry_interval_ms: 200ms`. They tune the
+`max_refresh_retries: 0`, `refresh_retry_interval_ms: 200ms`,
+`write_min_interval: 2s`, `reject_writes_before_read: true`. They tune the
 multi-frame reassembly buffer, the stale-fragment sweep, the throttled refresh
-burst, and the bogus-frame-count guard. The effective per-GET spacing of a
-refresh burst is `refresh_gap_ms / max_refresh_per_loop` (default 50 ms / 8 =
-6.25 ms). See the component reference (`esphome/readme.md` - hub configuration
-table) for the full description of each.
+burst, the bogus-frame-count guard, and the write-safety guards. The effective
+per-GET spacing of a refresh burst is `refresh_gap_ms / max_refresh_per_loop`
+(default 50 ms / 8 = 6.25 ms). See the component reference (`esphome/readme.md`
+- hub configuration table) for the full description of each.
 
 > There is no `toptronic_hubs` substitution anymore: the refresh button and the
 > OTA pause/resume lambdas call fan-out methods (`refresh_all()` /

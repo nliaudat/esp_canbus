@@ -306,10 +306,10 @@ def unit_to_device_class(unit, name, class_measurement=0):
             'device_class': 'volume_flow_rate',
             **state_class,
         }
-    elif unit in ['m³/h', 'm3/h', 'L/min', 'l/min']: 
+    elif unit in ['bar', 'Pa', 'kPa']: 
         device_class = {
             'unit_of_measurement': unit ,
-            'icon': 'mdi:water-outline',
+            'icon': 'mdi:gauge',
             'device_class': 'pressure',
             **state_class,
         }

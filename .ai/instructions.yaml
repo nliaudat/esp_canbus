@@ -233,7 +233,7 @@ python:
 # S7 CONFIGURATION SCHEMA PATTERNS
 # =============================================================================
 schema:
-  hub: "cv.All(cv.Schema({GenerateID: TopTronicComponent, GenerateID(canbus_id): use_id(CanbusComponent), Required(device_type): one_of(*DeviceType, upper=True), Required(device_addr): uint8_t, Optional(language, default=en): one_of(de/en/fr/it, lower=True)}).extend(COMPONENT_SCHEMA), _validate_preset)"
+  hub: "cv.All(cv.Schema({GenerateID: TopTronicComponent, GenerateID(canbus_id): use_id(CanbusComponent), Required(device_type): one_of(*DeviceType, upper=True), Required(device_addr): uint8_t, Optional(language, default=en): one_of(de/en/fr/it, lower=True), Optional(write_min_interval, default=2s): positive_time_period_milliseconds, Optional(reject_writes_before_read, default=true): boolean}).extend(COMPONENT_SCHEMA), _validate_preset)"
   entity_base: "CONFIG_SCHEMA_BASE: Required(function_group): uint8_t, Required(function_number): uint8_t, Required(datapoint): uint16_t + polling_component_schema('30s')"
   required:
     - "Bounds-check ALL user inputs: cv.uint8_t/cv.uint16_t protocol fields, cv.float_range(min=0) decimal, cv.positive_float step"
@@ -250,6 +250,7 @@ yaml_presets:
     - "toptronic: [{id, canbus_id, device_type: HV/WEZ/BM (BD alias -> BM), device_addr: defaults HV=8 BM=8 WEZ=1, language: de/en/fr/it}]"
     - "canbus bit_rate MUST stay 50kbps"
     - "secrets.yaml gitignored --- never commit"
+    - "write safety: write_min_interval (default 2s, 0=off) rate-limits SETs per datapoint; reject_writes_before_read (default true) blocks SETs until the datapoint answered a GET since boot (buttons exempt)"
   presets_generated:
     rule: "NEVER hand-edit presets/**/*.yaml --- regenerate via 'python hoval_data_processing/generate_presets.py ../esphome/components/toptronic/presets'"
     workflow:

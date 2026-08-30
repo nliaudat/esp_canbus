@@ -13,6 +13,7 @@ ESP32 CAN bus firmware and the Hoval TopTronic integration.
 | [`crc_find.py`](crc_find.py) | **CRC search tool** — brute-force Python script that reverse-engineers the polynomial/init/reflection from the captured XOR-difference samples. See `catch_crc.md` for context. |
 | [`candump_base.log`](candump_base.log) | **Reference bus capture** — annotated candump + toptronic debug showing single-frame GET/RES, `0x42` and `0x56` multi-frame reassembly (TOTAL frame count), 0x56 extended responses (cleaning/maint. counters), unknown traffic, and loop-latency notes. |
 | [`candump_party_mode.log`](candump_party_mode.log) | **Party mode (undocumented)** -- decoded SET frames: duration 0x07DA (hours x 10) + power 0x9F0A (percent). |
+| [`write_safety.md`](write_safety.md) | **Write safety** — per-datapoint SET rate limit and cold-cache guard (config options), the HoxPi-verified writable-register table with ranges, and the write-back table of registers that other writers overwrite. |
 
 ## For later review — quick orientation
 

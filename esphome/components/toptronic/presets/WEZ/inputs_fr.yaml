@@ -2,7 +2,6 @@ number:
   - platform: toptronic
     name: "temp\xE9rature local normale mode chauffage (1)"
     device_type: WEZ
-    device_addr: ${TT_WEZ_addr}
     function_group: 1
     function_number: 0
     datapoint: 3051
@@ -18,7 +17,6 @@ number:
   - platform: toptronic
     name: "temp\xE9rature local \xE9co mode chauffage (1)"
     device_type: WEZ
-    device_addr: ${TT_WEZ_addr}
     function_group: 1
     function_number: 0
     datapoint: 3053
@@ -34,7 +32,6 @@ number:
   - platform: toptronic
     name: "temp\xE9rature local normale mode chauffage (2)"
     device_type: WEZ
-    device_addr: ${TT_WEZ_addr}
     function_group: 1
     function_number: 1
     datapoint: 3051
@@ -50,7 +47,6 @@ number:
   - platform: toptronic
     name: "temp\xE9rature local \xE9co mode chauffage (2)"
     device_type: WEZ
-    device_addr: ${TT_WEZ_addr}
     function_group: 1
     function_number: 1
     datapoint: 3053
@@ -66,7 +62,6 @@ number:
   - platform: toptronic
     name: "temp\xE9rature local normale mode chauffage (3)"
     device_type: WEZ
-    device_addr: ${TT_WEZ_addr}
     function_group: 1
     function_number: 2
     datapoint: 3051
@@ -82,7 +77,6 @@ number:
   - platform: toptronic
     name: "temp\xE9rature local \xE9co mode chauffage (3)"
     device_type: WEZ
-    device_addr: ${TT_WEZ_addr}
     function_group: 1
     function_number: 2
     datapoint: 3053
@@ -98,7 +92,6 @@ number:
   - platform: toptronic
     name: "temp\xE9rature d'eau chaude normale"
     device_type: WEZ
-    device_addr: ${TT_WEZ_addr}
     function_group: 2
     function_number: 0
     datapoint: 5051
@@ -114,7 +107,6 @@ number:
   - platform: toptronic
     name: "temp\xE9rature eau chaude \xE9co"
     device_type: WEZ
-    device_addr: ${TT_WEZ_addr}
     function_group: 2
     function_number: 0
     datapoint: 5086
@@ -127,11 +119,100 @@ number:
     unit_of_measurement: "\xB0C"
     icon: mdi:temperature-celsius
     device_class: temperature
+  - platform: toptronic
+    name: Valeur cons. EC (offset) Smart-Grid
+    device_type: WEZ
+    function_group: 2
+    function_number: 0
+    datapoint: 5077
+    id: WEZ_2_0_5077_set
+    type: S16
+    min_value: 0
+    max_value: 800
+    step: 5
+    decimal: 1
+    unit_of_measurement: "\xB0C"
+    icon: mdi:temperature-kelvin
+    device_class: temperature
+  - platform: toptronic
+    name: SmartGrid offset val. cons. local chauff (1)
+    device_type: WEZ
+    function_group: 1
+    function_number: 0
+    datapoint: 7031
+    id: WEZ_1_0_7031_set
+    type: S16
+    min_value: 0
+    max_value: 120
+    step: 5
+    decimal: 1
+    unit_of_measurement: "\xB0C"
+    icon: mdi:temperature-kelvin
+    device_class: temperature
+  - platform: toptronic
+    name: SmartGrid offset val. cons. local chauff (2)
+    device_type: WEZ
+    function_group: 1
+    function_number: 1
+    datapoint: 7031
+    id: WEZ_1_1_7031_set
+    type: S16
+    min_value: 0
+    max_value: 120
+    step: 5
+    decimal: 1
+    unit_of_measurement: "\xB0C"
+    icon: mdi:temperature-kelvin
+    device_class: temperature
+  - platform: toptronic
+    name: SmartGrid offset val. cons. local chauff (3)
+    device_type: WEZ
+    function_group: 1
+    function_number: 2
+    datapoint: 7031
+    id: WEZ_1_2_7031_set
+    type: S16
+    min_value: 0
+    max_value: 120
+    step: 5
+    decimal: 1
+    unit_of_measurement: "\xB0C"
+    icon: mdi:temperature-kelvin
+    device_class: temperature
+  - platform: toptronic
+    name: SmartGrid offset val cons local refroid. (1)
+    device_type: WEZ
+    function_group: 1
+    function_number: 0
+    datapoint: 7046
+    id: WEZ_1_0_7046_set
+    type: S16
+    min_value: -600
+    max_value: 0
+    step: 1
+    decimal: 1
+    unit_of_measurement: "\xB0C"
+    icon: mdi:temperature-kelvin
+    device_class: temperature
+  - platform: toptronic
+    name: SmartGrid offset val cons local refroid. (2)
+    device_type: WEZ
+    function_group: 1
+    function_number: 1
+    datapoint: 7046
+    id: WEZ_1_1_7046_set
+    type: S16
+    min_value: -600
+    max_value: 0
+    step: 1
+    decimal: 1
+    unit_of_measurement: "\xB0C"
+    icon: mdi:temperature-kelvin
+    device_class: temperature
 select:
   - platform: toptronic
     name: "S\xE9lection fonctionnement chauffage (1)"
     device_type: WEZ
-    device_addr: ${TT_WEZ_addr}
     function_group: 1
     function_number: 0
     datapoint: 3050
@@ -155,7 +236,6 @@ select:
   - platform: toptronic
     name: "S\xE9lection fonctionnement chauffage (2)"
     device_type: WEZ
-    device_addr: ${TT_WEZ_addr}
     function_group: 1
     function_number: 1
     datapoint: 3050
@@ -179,7 +259,6 @@ select:
   - platform: toptronic
     name: "S\xE9lection fonctionnement chauffage (3)"
     device_type: WEZ
-    device_addr: ${TT_WEZ_addr}
     function_group: 1
     function_number: 2
     datapoint: 3050
@@ -203,7 +282,6 @@ select:
   - platform: toptronic
     name: "S\xE9lection fonct. eau chaude"
     device_type: WEZ
-    device_addr: ${TT_WEZ_addr}
     function_group: 2
     function_number: 0
     datapoint: 5050
@@ -220,3 +298,54 @@ select:
       - 2
       - 4
       - 6
+  - platform: toptronic
+    name: "S\xE9lection fonct. g\xE9n\xE9rateur de chaleur"
+    device_type: WEZ
+    function_group: 10
+    function_number: 1
+    datapoint: 9075
+    id: WEZ_10_1_9075_set
+    options:
+      - Deakt.
+      - Automatik
+      - Heizen
+      - K?hlen
+    values:
+      - 0
+      - 1
+      - 4
+      - 5
+  - platform: toptronic
+    name: "Smart Grid via bus de donn\xE9es"
+    device_type: WEZ
+    function_group: 0
+    function_number: 0
+    datapoint: 38012
+    id: WEZ_0_0_38012_set
+    options:
+      - Normal
+      - Priority operation
+      - Locked
+      - Forced demand
+    values:
+      - 0
+      - 1
+      - 2
+      - 3
+  - platform: toptronic
+    name: "D\xE9clencheur fonction Smart Grid"
+    device_type: WEZ
+    function_group: 0
+    function_number: 0
+    datapoint: 38013
+    id: WEZ_0_0_38013_set
+    options:
+      - 'Off'
+      - Input contacts
+      - System bus
+      - Power damped
+    values:
+      - 0
+      - 1
+      - 2
+      - 3

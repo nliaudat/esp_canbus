@@ -52,7 +52,7 @@ substitutions:
 toptronic:
   - id: toptronic_HV  # HomeVent
     canbus_id: cbus  # the canbus bit_rate must be 50kbps. do not change name as it used in canbus.yaml
-    device_type: HV  # WEZ, HV, BM (BD is an alias for BM and BM must be used)
+    device_type: HV  # WEZ, SOL, PS, FW, HK, MWA, GLT, HV, BM, GW (BD is an alias for BM and BM must be used)
     device_addr: 8  # defaults are : HV=8, BM=8, WEZ=1
     language: en  # de, en, fr, it
 
@@ -79,6 +79,8 @@ toptronic:
 | `refresh_gap_ms` | no | `50ms` | Refresh window length. The burst budget (`max_refresh_per_loop`) GETs are spread across it; effective spacing = `refresh_gap_ms / max_refresh_per_loop` (default 6.25 ms), keeping responses interleaved so the main loop is not swamped. |
 | `max_refresh_retries` | no | `0` | Re-sends of an unanswered GET during a refresh burst (`0` = single-pass, no retries; the normal 30 s poll is the backstop). |
 | `refresh_retry_interval_ms` | no | `200ms` | Wall-clock delay before an unanswered GET in a burst is re-sent (only used when `max_refresh_retries` > 0). |
+| `write_min_interval` | no | `2s` | Write-safety: minimum spacing between two SET requests to the **same datapoint**; faster writes are ignored and logged at WARN. `0` disables the rate limit. |
+| `reject_writes_before_read` | no | `true` | Write-safety (cold-cache guard): reject a SET until that datapoint has delivered at least one RESPONSE since boot, so the gateway never writes blind. Datapoints with no read sensor (e.g. the filter-maintenance button) are exempt. |
 | `update_interval` | no | `30s` | Polling interval for the read-only entities (`sensor`/`text_sensor`) generated from this hub's presets; each poll sends a GET_REQUEST. Entity-level key (configured in the preset files), not a hub configuration key — write entities never poll. |
 
 `MULTI_CONF = true` — declare as many hubs as you have devices.
@@ -92,16 +94,41 @@ Entities are generated from YAML files in
 
 ```
 presets/
+├── WEZ/
+│   ├── sensors_<lang>.yaml
+│   └── inputs_<lang>.yaml
+├── SOL/
+│   ├── sensors_<lang>.yaml
+│   └── inputs_<lang>.yaml
+├── PS/
+│   ├── sensors_<lang>.yaml
+│   └── inputs_<lang>.yaml
+├── FW/
+│   ├── sensors_<lang>.yaml
+│   └── inputs_<lang>.yaml
+├── HK/
+│   ├── sensors_<lang>.yaml
+│   └── inputs_<lang>.yaml
+├── MWA/
+│   └── sensors_<lang>.yaml
+├── GLT/
+│   └── sensors_<lang>.yaml
 ├── HV/
 │   ├── sensors_<lang>.yaml
 │   ├── inputs_<lang>.yaml
 │   └── buttons_<lang>.yaml
 ├── BM/
 │   └── sensors_<lang>.yaml
-└── WEZ/
-    ├── sensors_<lang>.yaml
-    └── inputs_<lang>.yaml
+└── GW/
+    └── sensors_<lang>.yaml
 ```
+
+Supported device types: `WEZ` heat generator, `SOL` solar module, `PS` buffer storage tank,
+`FW` district heating, `HK` heating circuit, `MWA` energy meter module, `GLT` building
+management system (BMS), `HV` HomeVent ventilation, `BM` control module / display (`BD` is
+an alias for `BM`), and `GW` Modbus/KNX gateway. `BM`, `GLT`, `GW` and `MWA` presets are
+read-only (sensors only); the others also expose writable inputs, and `HV` additionally
+exposes buttons.
 
 Each file defines the entities of one platform (`sensor`, `text_sensor`, `number`,
 `select`, `button`). The `_load_entities()` codegen strips `platform`,
