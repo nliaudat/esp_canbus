@@ -119,6 +119,10 @@ class TopTronicSensor : public sensor::Sensor, public TopTronicBase {
   // Decode raw bytes from the CAN response into a float using the configured type.
   // data/len point into the reassembly buffer or the received CAN frame — no copy.
   float parse_value(const uint8_t *data, size_t len);
+  // Number of value bytes a complete RESPONSE must carry for this sensor's
+  // configured type (1/2/4/8) - used to reject truncated frames before they
+  // are decoded and before the cold-cache write guard is unlocked.
+  size_t value_width() const;
   SensorType type() override { return SENSOR; }
   const StringRef &get_name() const override { return this->sensor::Sensor::get_name(); }
 

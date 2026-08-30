@@ -240,6 +240,25 @@ template<typename T> T bytes_to_number(const uint8_t *data, size_t len) {
   return static_cast<T>(u);
 }
 
+// Byte width of a numeric datapoint value for the given TypeName. A RESPONSE
+// must carry at least this many value bytes before its payload is decoded.
+static size_t type_width(TypeName type) {
+  switch (type) {
+    case U8:
+    case S8:
+      return 1;
+    case U16:
+    case S16:
+      return 2;
+    case U32:
+    case S32:
+      return 4;
+    case S64:
+      return 8;
+  }
+  return 1;
+}
+
 // Convert raw CAN bytes to a float, interpreting them as the configured integer type.
 float bytes_to_float(const uint8_t *data, size_t len, TypeName type) {
   switch (type) {
@@ -292,6 +311,8 @@ std::vector<uint8_t> float_to_bytes(float value, TypeName type) {
 
 #ifdef USE_SENSOR
 float TopTronicSensor::parse_value(const uint8_t *data, size_t len) { return bytes_to_float(data, len, this->type_); }
+// Minimum value bytes a complete RESPONSE for this sensor must carry.
+size_t TopTronicSensor::value_width() const { return type_width(this->type_); }
 #endif
 
 #ifdef USE_NUMBER
@@ -1432,8 +1453,26 @@ void TopTronic::interpret_message_(const uint8_t *data, size_t len, uint32_t can
   }
   TopTronicBase *sensor_base = sensor_it->second;
 
-  // A RESPONSE for this datapoint arrived, so the cold-cache write guard
-  // (reject_writes_before_read_) may let SET requests through from now on.
+  // Reject truncated responses before they can unlock write safety or publish
+  // a partial/zero value: the payload must carry at least as many value bytes
+  // as the sensor's configured type decodes (1 for text sensors, 1/2/4/8 for
+  // numeric types).
+  const size_t value_len = len - value_off;
+  size_t required_value_len = 1;  // text sensors decode a single uint8 code
+#ifdef USE_SENSOR
+  if (sensor_base->type() == SENSOR) {
+    required_value_len = static_cast<TopTronicSensor *>(sensor_base)->value_width();
+  }
+#endif
+  if (value_len < required_value_len) {
+    TT_LOGW("Response for %s truncated (%u of %u value bytes), ignoring", sensor_base->get_name().c_str(),
+            (unsigned) value_len, (unsigned) required_value_len);
+    return;
+  }
+
+  // A RESPONSE with a complete value for this datapoint arrived, so the
+  // cold-cache write guard (reject_writes_before_read_) may let SET requests
+  // through from now on.
   this->read_ok_ids_.insert(id);
 
   // This sensor was answered — drop it from the refresh-retry queue so loop()
@@ -1460,7 +1499,7 @@ void TopTronic::interpret_message_(const uint8_t *data, size_t len, uint32_t can
 #ifdef USE_SENSOR
   if (sensor_base->type() == SENSOR) {
     auto *sensor = static_cast<TopTronicSensor *>(sensor_base);
-    float value = sensor->parse_value(data + value_off, len - value_off);
+    float value = sensor->parse_value(data + value_off, value_len);
     sensor->publish_state(value);
     log_response_frame(data, len, can_id, sensor->get_name());
   }
@@ -1468,7 +1507,7 @@ void TopTronic::interpret_message_(const uint8_t *data, size_t len, uint32_t can
 #ifdef USE_TEXT_SENSOR
   if (sensor_base->type() == TEXTSENSOR) {
     auto *sensor = static_cast<TopTronicTextSensor *>(sensor_base);
-    std::string value = sensor->parse_value(data + value_off, len - value_off);
+    std::string value = sensor->parse_value(data + value_off, value_len);
     sensor->publish_state(value);
     log_response_frame(data, len, can_id, sensor->get_name());
   }
