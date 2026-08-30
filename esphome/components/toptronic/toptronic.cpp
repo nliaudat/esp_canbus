@@ -517,12 +517,42 @@ static void send_can_frames(canbus::Canbus *canbus, uint32_t can_id, const std::
 void TopTronic::register_input_callbacks() {
   for (const auto &d : this->devices_) {
     auto *device = d.second.get();
+    uint32_t device_id = d.first;
     for (const auto &i : device->get_inputs()) {
       auto *input = i.second;
       auto *canbus = this->canbus_;
-      uint32_t can_id = build_can_id(GATEWAY_DEVICE_TYPE | this->device_addr_, this->get_device_id());
+      uint32_t can_id = build_can_id(GATEWAY_DEVICE_TYPE | this->device_addr_, device_id);
 
-      input->add_on_set_callback([canbus, can_id](const std::vector<uint8_t> &data) -> void {
+      input->add_on_set_callback([this, canbus, can_id, device_id, input](const std::vector<uint8_t> &data) -> void {
+        const uint32_t id = input->get_id();
+        const uint32_t now = millis();
+
+        // Write-safety rate limit: ignore repeats of the same datapoint that
+        // arrive faster than write_min_interval_ms_ (default 2000 ms). This
+        // protects the 50 kbps bus and the boiler controller from rapid SET
+        // spamming (e.g. a misbehaving HA automation).
+        if (this->write_min_interval_ms_ > 0) {
+          const auto last = this->last_write_ms_.find(id);
+          if (last != this->last_write_ms_.end() && (now - last->second) < this->write_min_interval_ms_) {
+            TT_LOGW("[SET] %s rate-limited (min %u ms between writes to this datapoint)", input->get_name().c_str(),
+                    (unsigned) this->write_min_interval_ms_);
+            return;
+          }
+        }
+
+        // Write-safety cold-cache guard: do not SET a datapoint that has never
+        // answered a GET since boot (we would be writing blind). Datapoints with
+        // no registered read sensor — e.g. the HV filter-maintenance button —
+        // are exempt because there is nothing to have read.
+        if (this->reject_writes_before_read_) {
+          TopTronicBase *sensor = this->get_sensor_(device_id, id);
+          if (sensor != nullptr && !this->read_ok_ids_.contains(id)) {
+            TT_LOGW("[SET] %s rejected (datapoint never read since boot — cold cache)", input->get_name().c_str());
+            return;
+          }
+        }
+
+        this->last_write_ms_[id] = now;
         // send_can_frames handles single-frame (≤8 bytes) and multi-frame (>8 bytes) automatically.
         send_can_frames(canbus, can_id, data);
       });
@@ -971,6 +1001,8 @@ void TopTronic::dump_config() {
   ESP_LOGCONFIG(TAG, "  Devices: %u, sensors: %u, inputs: %u", (unsigned) this->devices_.size(),
                 (unsigned) sensor_count, (unsigned) input_count);
   ESP_LOGCONFIG(TAG, "  Boot refresh delay: %u ms", (unsigned) this->boot_refresh_delay_ms_);
+  ESP_LOGCONFIG(TAG, "  Write safety: min SET interval %u ms, reject writes before read: %s",
+                (unsigned) this->write_min_interval_ms_, this->reject_writes_before_read_ ? "yes" : "no");
 }
 
 static void log_response_frame(const uint8_t *data, size_t len, uint32_t can_id, const std::string &sensor_name) {
@@ -1399,6 +1431,10 @@ void TopTronic::interpret_message_(const uint8_t *data, size_t len, uint32_t can
     return;
   }
   TopTronicBase *sensor_base = sensor_it->second;
+
+  // A RESPONSE for this datapoint arrived, so the cold-cache write guard
+  // (reject_writes_before_read_) may let SET requests through from now on.
+  this->read_ok_ids_.insert(id);
 
   // This sensor was answered — drop it from the refresh-retry queue so loop()
   // does not re-poll it. The deque is small (self-hub sensors) and the burst
