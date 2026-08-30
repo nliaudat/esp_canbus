@@ -421,9 +421,18 @@ CONFIG_SCHEMA = cv.All(
         cv.Required(CONF_DEVICE_TYPE): cv.one_of(*[t.name for t in DeviceType], upper=True),
         cv.Required(CONF_DEVICE_ADDR): cv.uint8_t,
         cv.Optional(CONF_LANGUAGE, default="en"): cv.one_of(*LANGS, lower=True),
+        cv.Optional(CONF_WRITE_MIN_INTERVAL, default="2s"): cv.positive_time_period_milliseconds,
+        cv.Optional(CONF_REJECT_WRITES_BEFORE_READ, default=True): cv.boolean,
     }).extend(cv.COMPONENT_SCHEMA),
     _validate_preset,
 )
+```
+
+**Write safety** (`register_input_callbacks()`): per-datapoint SET rate limit
+(`write_min_interval`, default 2s) and a cold-cache guard
+(`reject_writes_before_read`, default true — no SET until the datapoint
+answered a GET since boot; datapoints without a read sensor, e.g. buttons,
+are exempt).
 ```
 
 ### 7.2 Shared entity base schema

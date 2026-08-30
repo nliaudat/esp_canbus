@@ -193,6 +193,70 @@ The gateway presents itself on the bus as a **GW** device
 
 ---
 
+## 6bis. Independent cross-check — the HoxPi gateway
+
+[HoxPi](https://github.com/newstedaut/HoxPi) (MIT) is an independent
+Raspberry-Pi implementation of the same Hoval TopTronic-E bus (passive
+decoding + polite polling, exposed as Modbus-TCP). Its arbitration IDs
+corroborate the framing in §2/§3 and add useful reference points:
+
+| Purpose | CAN ID | Top byte (msg_id) |
+|---|---|---|
+| WEZ poll (GET) | `0x06E40801` | `0x06` |
+| WEZ write (SET) | `0x07E40801` | `0x07` |
+| HV / HomeVent poll & write | `0x1FE08A08` | `0x1F` (start-of-message) |
+
+Notes:
+
+- The top byte is the same `msg_id`/frame-type selector this component uses
+  (`can_id >> 24`, §2). HoxPi sends the HomeVent GET with top byte `0x1F` —
+  i.e. the HV answers polls that carry the multi-frame *start-of-message*
+  marker (§3.2), not the `0x06`/`0x07` ids used for the WEZ.
+- The low 16 bits are `device_type << 8 | device_addr`: `0x0801` = WEZ@1,
+  `0x8A08` = HV@8 — the same node addressing this component uses
+  (`build_can_id(GATEWAY_DEVICE_TYPE | device_addr, ...)`, §2/§6).
+
+### Unit-ID table (official Modbus datapoint list)
+
+The Hoval datapoint workbook addresses devices by a *unit id* that differs
+from the CAN node address:
+
+| Device | UnitId | DeviceType | typical CAN address |
+|---|---|---|---|
+| WEZ (heat generator) | `1` | WEZ (0) | 1 |
+| HV (HomeVent) | `520` | HV (512) | 8 |
+| PS (buffer storage tank) | `143` | PS (128) | — |
+| BM (control module / display) | — | BM (1024) | 8 |
+
+**PS (buffer storage, `DeviceType = PS`)** appears in newer datapoint lists
+and carries the SG-Ready buffer offset (Modbus register `28839`,
+datapoint `(21, 0, 6050)`); this component has no PS preset yet.
+
+### Coexistence
+
+Running an ESP32 gateway and a HoxPi on the same 50 kbps bus works because
+both poll politely and use disjoint identity:
+
+- The ESP32 presents itself as a **GW** node (`GATEWAY_DEVICE_TYPE = 1153`)
+  and never answers the other gateway's polls; HoxPi uses msg_ids
+  `0x06`/`0x07` for WEZ and `0x1F` for HV. Neither side registers the other's
+  frames as a device.
+- Keep the total polling load modest — this component's 30 s per-entity polls
+  plus HoxPi's WEZ poll every 30 s / HV poll every 5 s fit comfortably on a
+  50 kbps bus.
+- Both implementations use the same 29-bit extended framing, message layout
+  (§3) and multi-frame CRC (§5), so captures from either side are directly
+  comparable.
+
+### Write safety
+
+See [`write_safety.md`](write_safety.md) for the per-datapoint SET rate limit
+and cold-cache guard implemented in this component, the HoxPi-derived list of
+verified-writable registers (with ranges), and the write-back table of
+registers that Hoval's own control panel / Loxone cyclic writers overwrite.
+
+---
+
 ## 7. Component behaviour (implementation notes)
 
 - **GET** — sent on each entity poll (default `30s`) using the cached

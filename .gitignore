@@ -1,2 +1,7 @@
 esphome/secrets.yaml
 /hoval_data_processing/__pycache__
+# The Hoval datapoint workbook is copyrighted by Hoval AG — never commit it.
+# Use hoval_data_processing/update_datapoints.py to fetch/refresh it locally.
+/hoval_data_processing/TTE-GW-Modbus-datapoints.xlsx
+/hoval_data_processing/TTE-GW-Modbus-datapoints.xlsx.bak
+/hoval_data_processing/datapoints_version.json
