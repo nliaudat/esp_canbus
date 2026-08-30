@@ -26,6 +26,9 @@ python hoval_data_processing/update_datapoints.py --apply   # download + regener
 ```
 
 `--apply` downloads the current workbook, compares its sha256 against
-`datapoints_version.json`, backs up the previous workbook, regenerates the
-presets and sanity-checks that the entity count did not collapse.
+`datapoints_version.json`, and on change regenerates the presets into a
+staging area first. Only after generation succeeds and the entity-count
+sanity check passes is the previous workbook backed up, the new workbook
+installed and the staged presets copied into place -- a failed update leaves
+the repository untouched.
 

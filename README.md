@@ -14,7 +14,7 @@
 > - **Presets moved into the component** (`esphome/components/toptronic/presets/`),
 >   with multi-language support (`de`/`en`/`fr`/`it`) and many upgrades.
 > - **`config.yaml` changed** — you can now define **multiple `toptronic:` components**
->   (one per CAN device, e.g. `HV`, `BM`, `WEZ`).
+>   (one per CAN device - presets for `WEZ`, `SOL`, `PS`, `FW`, `HK`, `MWA`, `GLT`, `HV`, `BM` and `GW`).
 > - Improved multi-frame reassembly, CRC validation, OTA pause/resume, a non-blocking
 >   post-boot refresh, and a thread-safe FreeRTOS command bridge.
 
@@ -106,7 +106,7 @@ Open `config.yaml` and adjust:
   - `TZ` — your timezone (default `Europe/Zurich`)
 - `toptronic:` — one block **per device** (device type + address). You can find the
   address of each Hoval device in your room control unit under maintenance
-  (e.g. `HV(8)`, `BM(8)`, `WEZ(1)`). All available presets are listed in
+  (e.g. `HV(8)`, `BM(8)`, `WEZ(1)`). Presets for all supported device types are listed in
   [`esphome/components/toptronic/presets`](esphome/components/toptronic/presets).
 
 Example exposing both an HV and a BM device:
@@ -119,7 +119,7 @@ substitutions:
 toptronic:
   - id: toptronic_HV  # HomeVent
     canbus_id: cbus  # the canbus bit_rate must be 50kbps. do not change name as it used in canbus.yaml
-    device_type: HV  # WEZ, HV, BM (BD is an alias for BM and BM must be used)
+    device_type: HV  # WEZ, SOL, PS, FW, HK, MWA, GLT, HV, BM, GW (BD is an alias for BM and BM must be used)
     device_addr: 8  # defaults are : HV=8, BM=8, WEZ=1
     language: en  # de, en, fr, it
     boot_refresh_delay: 30s  # optional; one-shot full refresh after boot; 0 disables it

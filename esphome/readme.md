@@ -52,7 +52,7 @@ substitutions:
 toptronic:
   - id: toptronic_HV  # HomeVent
     canbus_id: cbus  # the canbus bit_rate must be 50kbps. do not change name as it used in canbus.yaml
-    device_type: HV  # WEZ, HV, BM (BD is an alias for BM and BM must be used)
+    device_type: HV  # WEZ, SOL, PS, FW, HK, MWA, GLT, HV, BM, GW (BD is an alias for BM and BM must be used)
     device_addr: 8  # defaults are : HV=8, BM=8, WEZ=1
     language: en  # de, en, fr, it
 
@@ -94,16 +94,41 @@ Entities are generated from YAML files in
 
 ```
 presets/
+├── WEZ/
+│   ├── sensors_<lang>.yaml
+│   └── inputs_<lang>.yaml
+├── SOL/
+│   ├── sensors_<lang>.yaml
+│   └── inputs_<lang>.yaml
+├── PS/
+│   ├── sensors_<lang>.yaml
+│   └── inputs_<lang>.yaml
+├── FW/
+│   ├── sensors_<lang>.yaml
+│   └── inputs_<lang>.yaml
+├── HK/
+│   ├── sensors_<lang>.yaml
+│   └── inputs_<lang>.yaml
+├── MWA/
+│   └── sensors_<lang>.yaml
+├── GLT/
+│   └── sensors_<lang>.yaml
 ├── HV/
 │   ├── sensors_<lang>.yaml
 │   ├── inputs_<lang>.yaml
 │   └── buttons_<lang>.yaml
 ├── BM/
 │   └── sensors_<lang>.yaml
-└── WEZ/
-    ├── sensors_<lang>.yaml
-    └── inputs_<lang>.yaml
+└── GW/
+    └── sensors_<lang>.yaml
 ```
+
+Supported device types: `WEZ` heat generator, `SOL` solar module, `PS` buffer storage tank,
+`FW` district heating, `HK` heating circuit, `MWA` energy meter module, `GLT` building
+management system (BMS), `HV` HomeVent ventilation, `BM` control module / display (`BD` is
+an alias for `BM`), and `GW` Modbus/KNX gateway. `BM`, `GLT`, `GW` and `MWA` presets are
+read-only (sensors only); the others also expose writable inputs, and `HV` additionally
+exposes buttons.
 
 Each file defines the entities of one platform (`sensor`, `text_sensor`, `number`,
 `select`, `button`). The `_load_entities()` codegen strips `platform`,

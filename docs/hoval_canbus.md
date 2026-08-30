@@ -5,7 +5,7 @@ heating / ventilation devices, as implemented by the `toptronic:` component
 (`esphome/components/toptronic/`).
 
 > **Scope** — this document describes the wire format and framing used between
-> the ESP32 gateway and the boiler devices (HV / BM / WEZ / ...) at 50 kbps.
+> the ESP32 gateway and the boiler devices (WEZ / SOL / PS / FW / HK / MWA / GLT / HV / BM / GW) at 50 kbps.
 > It is maintained for future review and for anyone extending the component or
 > the [`hoval_data_processing`](../hoval_data_processing/) preset generator.
 
