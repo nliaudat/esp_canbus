@@ -5,3 +5,4 @@ esphome/secrets.yaml
 /hoval_data_processing/TTE-GW-Modbus-datapoints.xlsx
 /hoval_data_processing/TTE-GW-Modbus-datapoints.xlsx.bak
 /hoval_data_processing/datapoints_version.json
+/tests/__pycache__
