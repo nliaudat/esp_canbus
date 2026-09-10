@@ -233,8 +233,8 @@ capture", not since boot. A `[STATS]` record is emitted every 10 s while candump
 is ON, and once when it turns OFF:
 
 ```text
-[STATS] candump running: rx=532 logged=532 throttled=0 | parsed=532 unowned=0 paused=0
-[STATS] candump off: rx=721 logged=721 throttled=0 | parsed=700 unowned=18 paused=3 | capture=OK parse=OK
+[STATS] candump running: rx=532 logged=532 throttled=0 tx=41 | parsed=532 unowned=0 paused=0
+[STATS] candump off: rx=721 logged=721 throttled=0 tx=57 | parsed=700 unowned=18 paused=3 | capture=OK parse=OK
 ```
 
 Two invariants must hold:
@@ -250,12 +250,19 @@ and `throttled` all come from the RX logging callback, so running records are
 exact for them; only `parsed` is counted in the receive callback, so a mid-frame
 snapshot can differ by one. `throttled` counts frames received while candump was
 ON but not written to the log — a rate-limited frame, or the frame that ended the
-capture.
+capture. `logged` counts frames **handed to the ESPHome logger**, not frames the
+sink actually emitted — the logger's finite task buffer can still drop a line. The
+offline check closes that hole: `tx` counts the gateway's own transmitted frames
+(also logged), so the file must contain exactly `logged + tx` candump lines, and
+any shortfall is reported by `replay_candump.py` as loss while *copying* the log.
 
 `[SKIP] ...` DEBUG lines name the frames that were **not** parsed and why (sender
-node owned by no hub; hub paused for OTA), and `tests/replay_candump.py` reads
-the `[STATS]` record back — preferring the `candump off` verdict — and flags a
-lossy or unaccounted capture.
+node owned by no hub *on that bus*; hub paused for OTA). Receive and logging
+callbacks are registered **per CAN bus**, so a multi-bus build parses and logs
+every bus, and a frame is never handed to a hub on another bus (node ids may
+repeat across buses for the same device type + address). `tests/replay_candump.py`
+reads the `[STATS]` record back — preferring the `candump off` verdict — and flags
+a lossy or unaccounted capture.
 
 ---
 
