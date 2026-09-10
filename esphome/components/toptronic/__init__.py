@@ -1,8 +1,6 @@
 from enum import Enum
 import pathlib
 
-import yaml
-
 import esphome.codegen as cg
 from esphome.components import button as button_platform
 from esphome.components.canbus import CanbusComponent
@@ -17,6 +15,7 @@ from esphome.const import (
 )
 from esphome.core import CORE, ID
 from esphome.cpp_types import Component
+from esphome import yaml_util
 
 CODEOWNERS = ["@nliaudat"]
 DEPENDENCIES = ["canbus"]
@@ -213,8 +212,12 @@ def _load_entities(device_type: str, language: str):
         path = PRESETS_DIR / device_type / f"{kind}_{language}.yaml"
         if not path.exists():
             continue
-        with pathlib.Path(path).open(encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
+        # Presets are loaded with ESPHome's own YAML loader (not plain
+        # yaml.safe_load) so scalar strings carry the ESPHomeDataBase/esp_range
+        # metadata that cv.lambda_'s validator requires when wrapping a lambda
+        # value; otherwise it fails with "'str' object has no attribute
+        # 'esp_range'" for any preset entity using a `lambda:` filter.
+        data = yaml_util.load_yaml(path, clear_secrets=False) or {}
         for platform_name, entries in data.items():
             entities.extend((platform_name, dict(entry)) for entry in entries or [])
     return entities
