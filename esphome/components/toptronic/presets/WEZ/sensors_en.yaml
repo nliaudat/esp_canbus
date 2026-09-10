@@ -402,7 +402,7 @@ sensor:
     unit_of_measurement: MWh
     icon: mdi:snowflake
     device_class: energy
-    state_class: measurement
+    state_class: total_increasing
     # Lifetime cooling energy counter -- the cooling counterpart to dp 47 / dp
     # 55.
   - platform: toptronic
