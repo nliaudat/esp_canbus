@@ -703,6 +703,43 @@ def test_replay_keys_are_per_hub():
     print("OK  replay keys dispatches per hub node id (same-type hubs stay separate)")
 
 
+def test_replay_stats_completeness():
+    """The firmware [STATS] record is parsed and checked for completeness.
+
+    Running records carry raw counters; the record emitted when candump turns OFF
+    adds the authoritative ``| capture=OK parse=OK`` verdict. Both the verdict and
+    the computed fallback must detect a lossy capture / a parsing gap.
+    """
+    import replay_candump as rc
+
+    running = ("[12:00:00.000][I][toptronic:077]: [STATS] candump running: "
+               "rx=100 logged=100 throttled=0 | parsed=99 unowned=1 paused=0")
+    stats = rc.parse_stats_line(running)
+    assert stats == {"ctx": "candump running", "rx": 100, "logged": 100, "throttled": 0,
+                     "parsed": 99, "unowned": 1, "paused": 0, "capture": None, "parse": None}, stats
+    assert rc.stats_verdict(stats) == (True, True)
+
+    final = running.replace("candump running", "candump off") + " | capture=OK parse=OK"
+    stats = rc.parse_stats_line(final)
+    assert (stats["capture"], stats["parse"]) == ("OK", "OK"), stats
+    assert rc.stats_are_complete(stats) is True
+
+    # A LOSSY capture: logged + throttled < rx. The verdict says so explicitly,
+    # and the computed fallback (no verdict fields) must agree.
+    lossy = rc.parse_stats_line(final.replace("capture=OK parse=OK", "capture=LOSSY parse=GAP")
+                                .replace("logged=100", "logged=90"))
+    assert rc.stats_verdict(lossy) == (False, False)
+    assert rc.stats_are_complete(lossy) is False
+    assert rc.stats_are_complete(dict(lossy, capture=None, parse=None)) is False
+
+    # Frames not accounted for by parsed/unowned/paused -> parsing gap.
+    assert rc.stats_are_complete(dict(stats, capture=None, parse=None, parsed=90,
+                                      unowned=0, paused=0)) is False
+
+    assert rc.parse_stats_line("no stats here") is None
+    print("OK  replay [STATS] accounting parses and detects lossy captures")
+
+
 if __name__ == "__main__":
     test_crc16_samples()
     test_build_can_id()
@@ -721,4 +758,5 @@ if __name__ == "__main__":
     test_hub_node_id_resolution()
     test_entity_id_qualifier_is_hub_unique()
     test_replay_keys_are_per_hub()
+    test_replay_stats_completeness()
     print("\nAll logic tests passed.")

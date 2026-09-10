@@ -71,6 +71,51 @@ PRESETS_DIR = os.path.join(
 
 FRAME_RE = re.compile(r"candump:\d+\]:\s*(0x[0-9A-Fa-f]+)\s*:\s*([0-9A-Fa-f ]+?)\s*$")
 
+# Firmware frame-accounting record, emitted while candump is ON (every 10 s) and
+# once when it turns OFF:
+#   [STATS] candump off: rx=N logged=N throttled=N | parsed=N unowned=N paused=N
+STATS_RE = re.compile(
+    r"\[STATS\]\s+(?P<ctx>[^:]+):\s+rx=(?P<rx>\d+)\s+logged=(?P<logged>\d+)\s+throttled=(?P<throttled>\d+)"
+    r"\s+\|\s+parsed=(?P<parsed>\d+)\s+unowned=(?P<unowned>\d+)\s+paused=(?P<paused>\d+)"
+    r"(?:\s+\|\s+capture=(?P<capture>OK|LOSSY)\s+parse=(?P<parse>OK|GAP))?"
+)
+
+STATS_KEYS = ("rx", "logged", "throttled", "parsed", "unowned", "paused")
+
+
+def parse_stats_line(line):
+    """Parse a firmware ``[STATS]`` record; return a dict or None.
+
+    The trailing ``| capture=OK parse=OK`` verdict is present only on the record
+    emitted when candump turns OFF (the authoritative one); running records and
+    older firmware omit it, so those two keys are then ``None``.
+    """
+    match = STATS_RE.search(line)
+    if not match:
+        return None
+    return {
+        key: (value if key in ("ctx", "capture", "parse") else int(value))
+        for key, value in match.groupdict().items()
+    }
+
+
+def stats_verdict(stats):
+    """Return ``(capture_ok, parse_ok)``.
+
+    Prefers the firmware's own verdict (present on the ``candump off`` record);
+    otherwise computes it — a running snapshot can be off by one because `parsed`
+    is counted in the receive callback while `rx`/`logged` are counted later.
+    """
+    if stats.get("capture") is not None and stats.get("parse") is not None:
+        return stats["capture"] == "OK", stats["parse"] == "OK"
+    return (stats["rx"] == stats["logged"] + stats["throttled"],
+            stats["parsed"] + stats["unowned"] + stats["paused"] == stats["rx"])
+
+
+def stats_are_complete(stats):
+    """True when the accounting proves nothing was lost and every frame examined."""
+    return all(stats_verdict(stats))
+
 
 # ---------------------------------------------------------------------------
 # CRC-16 (exact mirror of compute_crc16() in toptronic.cpp)
@@ -170,6 +215,9 @@ class Replayer:
         self.dispatches = []             # (ts, key, name, type, raw, value, single)
         self.drops = []                  # (ts, reason, detail)
         self.uncompleted = {}            # work_key -> report dict
+        self.stats = None                # latest firmware [STATS] record
+        self.final_stats = None          # latest [STATS] record with a verdict (candump off)
+        self.frame_lines = 0             # candump frame lines read from the file
 
     def hub_of(self, device_id):
         return self.hubs.get(device_id)
@@ -366,9 +414,16 @@ def replay(path, hubs, presets):
     replayer = Replayer(hubs, presets)
     with open(path, "r", encoding="utf-8", errors="replace") as handle:
         for line in handle:
+            stats = parse_stats_line(line)
+            if stats is not None:
+                replayer.stats = stats           # keep the latest record
+                if stats.get("capture") is not None:
+                    replayer.final_stats = stats  # ...and the authoritative one (candump off)
+                continue
             match = FRAME_RE.search(line)
             if not match:
                 continue
+            replayer.frame_lines += 1
             ts = line[1:13] if line.startswith("[") else "?"
             can_id = int(match.group(1), 16)
             data = bytearray(int(tok, 16) for tok in match.group(2).split())
@@ -381,6 +436,38 @@ def report(replayer, timeline):
     print("=" * 78)
     print("TopTronic candump replay (parser mirror)")
     print("=" * 78)
+
+    # --- capture completeness, from the firmware's own [STATS] accounting ---
+    print("\n-- capture completeness (firmware [STATS]) --")
+    if replayer.stats is None:
+        print("  no [STATS] record found in this log:")
+        print("    - firmware older than the frame-accounting change, or")
+        print("    - candump was not used (the record is emitted while candump is ON / on OFF).")
+    else:
+        s = replayer.final_stats or replayer.stats
+        print("  source: %s" % ("[STATS] candump off (authoritative)"
+                                if replayer.final_stats is not None else
+                                "[STATS] running snapshot (may be off by one - turn candump off for the final record)"))
+        print("  %s: rx=%d logged=%d throttled=%d | parsed=%d unowned=%d paused=%d"
+              % (s["ctx"], s["rx"], s["logged"], s["throttled"], s["parsed"],
+                 s["unowned"], s["paused"]))
+        capture_ok, parse_ok = stats_verdict(s)
+        print("  capture: rx == logged + throttled        -> %s"
+              % ("OK (complete)" if capture_ok else "FAIL (capture is LOSSY)"))
+        print("  parsing: parsed + unowned + paused == rx -> %s"
+              % ("OK (every frame accounted for)" if parse_ok else "FAIL (frames unaccounted)"))
+        if s["throttled"]:
+            print("  WARNING: %d frames were throttled OUT of the capture." % s["throttled"])
+        if s["unowned"]:
+            print("  NOTE: %d frames came from nodes no hub owns (see [SKIP] lines at DEBUG)."
+                  % s["unowned"])
+        if replayer.frame_lines < s["logged"]:
+            print("  WARNING: this file holds %d candump lines but the firmware logged %d RX frames"
+                  % (replayer.frame_lines, s["logged"]))
+            print("           -> lines were lost while COPYING the log (logger buffer/socket), not by the firmware.")
+        else:
+            print("  candump lines in this file: %d (RX frames logged: %d; TX lines add to the file count)"
+                  % (replayer.frame_lines, s["logged"]))
 
     if timeline:
         for (ts, device_id, preset_dir, _key, name, type_name, raw, value,

@@ -315,6 +315,7 @@ memory_perf:
       - "NEVER add per-frame heap allocation to parse_frame()/interpret_message()"
       - "Keep hex_str() SSO-friendly (reserve(), no stringstream); do not grow log payloads"
       - "Keep DEBUG/candump sessions bounded (auto-off 120s) --- only heap-churn logging path"
+      - "Frame accounting = completeness contract, live ONLY while candump is ON (increments guarded by s_candump_enabled; debug_log_frame early-returns when both debug flags off) and reset on enable (rx = per capture); final record must satisfy rx == logged + throttled AND parsed + unowned + paused == rx; 'candump off' line carries authoritative capture=/parse= verdict; throttled also counts the frame that ended the capture; rx/logged/throttled all in the RX logging callback (running snapshots exact; parsed in the receive callback -> can differ by 1); CANDUMP_MIN_LOG_GAP_MS=0 logs every frame; TX exported candump-only by debug_log_tx_frame; do not remove/re-order counters"
       - "If long-uptime fragmentation is measured: move pending_messages_ to fixed-capacity pool (std::array/StaticVector) --- NOT required today"
 
 # =============================================================================

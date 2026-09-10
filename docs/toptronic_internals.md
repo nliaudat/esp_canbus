@@ -221,6 +221,42 @@ Pinning this down needs a **`toptronic: DEBUG`** capture (candump off) rather
 than raw frames, so the component's own `[RES]` / `[DROP]` / truncation / CRC
 lines are visible — see [`candump.md`](candump.md) Step 5 and Part 3 below.
 
+### 2.4 Frame accounting — proving a capture is complete
+
+Every received frame is now **logged** in candump mode (`CANDUMP_MIN_LOG_GAP_MS
+= 0`; it is still a tunable constant) and **accounted for** whether or not it is
+parsed. Logging *and* accounting are active **only while candump is ON** — every
+counter increment is guarded, and with both debug modes off `debug_log_frame()`
+returns immediately, so normal operation pays nothing per frame. The counters are
+**reset each time candump is enabled**, so `rx` means "frames during this
+capture", not since boot. A `[STATS]` record is emitted every 10 s while candump
+is ON, and once when it turns OFF:
+
+```text
+[STATS] candump running: rx=532 logged=532 throttled=0 | parsed=532 unowned=0 paused=0
+[STATS] candump off: rx=721 logged=721 throttled=0 | parsed=700 unowned=18 paused=3 | capture=OK parse=OK
+```
+
+Two invariants must hold:
+
+| Check | Invariant | Meaning |
+|---|---|---|
+| capture | `rx == logged + throttled` | no frame was dropped from the log; `throttled` counts any rate-limited frames |
+| parsing | `parsed + unowned + paused == rx` | every frame was parsed, skipped because no hub owns its node, or skipped while paused (OTA) |
+
+The **`candump off`** record is the authoritative one and carries the verdict
+inline (`capture=OK` / `capture=LOSSY`, `parse=OK` / `parse=GAP`). `rx`, `logged`
+and `throttled` all come from the RX logging callback, so running records are
+exact for them; only `parsed` is counted in the receive callback, so a mid-frame
+snapshot can differ by one. `throttled` counts frames received while candump was
+ON but not written to the log — a rate-limited frame, or the frame that ended the
+capture.
+
+`[SKIP] ...` DEBUG lines name the frames that were **not** parsed and why (sender
+node owned by no hub; hub paused for OTA), and `tests/replay_candump.py` reads
+the `[STATS]` record back — preferring the `candump off` verdict — and flags a
+lossy or unaccounted capture.
+
 ---
 
 ## 3. Offline diagnostics: candump replay
@@ -246,6 +282,7 @@ Output sections:
 
 | Section | Meaning |
 |---|---|
+| capture completeness | the firmware `[STATS]` record — `rx == logged + throttled` (capture not truncated) and `parsed + unowned + paused == rx` (every frame accounted for) |
 | decoded datapoints | per **(hub node id, fg, fn, dp)** — value, dispatch count, last timestamp |
 | drops | `truncated`, `crc_fail`, `no_sensor`, `non_toptronic_start`, `bad_start`, … |
 | started but never completed | multi-frame messages still waiting for continuations, with an exact-header / `header+1` hint |

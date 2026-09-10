@@ -62,7 +62,7 @@ esp_canbus/
 │   ├── config.yaml                    # Main entrypoint: toptronic hubs + packages
 │   ├── packages/                      # ESPHome packages (wifi/board/time/canbus/...)
 │   │   ├── board.yaml                 # esp32: esp-idf, sdkconfig, logger, api, ota
-│   │   ├── canbus.yaml                # esp32_can platform, 50kbps, candump on_frame (debug)
+│   │   ├── canbus.yaml                # esp32_can platform, 50kbps, rx_queue_len (candump is a runtime switch)
 │   │   ├── wifi.yaml / time.yaml / sensors_others.yaml / switch.yaml / debug.yaml
 │   └── components/toptronic/          # External ESPHome component (AUTO_LOAD'd platforms)
 │       ├── __init__.py                # Hub schema, preset loading, entity generation
@@ -573,6 +573,7 @@ void on_can_frame(...) {
 - NEVER add per-frame heap allocation to `parse_frame()` / `interpret_message()` — keep the single-frame path allocation-free.
 - Keep `hex_str()` SSO-friendly (`reserve()`, no `stringstream`); do not grow log payloads.
 - Keep DEBUG/candump sessions bounded (auto-off 120 s) — they are the only heap-churn logging path.
+- **Frame accounting is the completeness contract for debug captures.** It is live **only while candump is ON** (every increment is guarded by `s_candump_enabled`; `debug_log_frame()` early-returns when both debug flags are off, so normal operation pays nothing) and is reset on enable, so `rx` = frames during *this* capture. The final record must satisfy `rx == logged + throttled` and `parsed + unowned + paused == rx`; the `candump off` line carries the authoritative `capture=`/`parse=` verdict. `throttled` also counts the frame that ended the capture. `rx`/`logged`/`throttled` are all counted in the RX logging callback (running snapshots are therefore exact; `parsed` lives in the receive callback, so only it can differ by one mid-frame). Candump logs every frame (`CANDUMP_MIN_LOG_GAP_MS = 0`); TX frames are exported candump-only by `debug_log_tx_frame()`. Do not remove/re-order these counters.
 - If long-uptime fragmentation is ever measured (free heap steadily decreasing over days despite an idle bus), move `pending_messages_` to a fixed-capacity pool (`std::array`/StaticVector per §9.1) — NOT required today.
 
 ---

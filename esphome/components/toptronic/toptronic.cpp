@@ -53,6 +53,60 @@ static bool s_receive_callback_registered = false;
 static uint32_t s_candump_start_ms = 0;
 static uint32_t s_find_can_id_start_ms = 0;
 static uint32_t s_last_candump_log_ms = 0;
+
+// Build-wide frame accounting, so a capture can PROVE completeness instead of
+// being trusted:
+//   logging: rx == logged + throttled
+//   parsing: parsed + skipped_unowned + skipped_paused == rx
+// Every counter is live ONLY while candump is ON (each increment is guarded by
+// s_candump_enabled) and is reset each time it is enabled, so `rx` means "frames
+// during this capture". `throttled` counts frames received while candump was ON
+// but not written to the log -- a rate-limited frame, or the one that ended the
+// capture. The [STATS] summary is emitted periodically while ON, and once on OFF.
+static uint32_t s_frames_rx = 0;
+static uint32_t s_frames_logged = 0;
+static uint32_t s_frames_throttled = 0;
+static uint32_t s_frames_parsed = 0;
+static uint32_t s_frames_skipped_unowned = 0;
+static uint32_t s_frames_skipped_paused = 0;
+static uint32_t s_last_stats_ms = 0;
+
+// How often the [STATS] completeness summary is emitted while candump is ON.
+static constexpr uint32_t STATS_INTERVAL_MS = 10000;
+
+// Start a fresh accounting window. Called when candump is ENABLED so `rx` means
+// "frames received during this capture" (not since boot) and the
+// `rx == logged + throttled` invariant is meaningful from the first line.
+static void reset_frame_stats() {
+  s_frames_rx = 0;
+  s_frames_logged = 0;
+  s_frames_throttled = 0;
+  s_frames_parsed = 0;
+  s_frames_skipped_unowned = 0;
+  s_frames_skipped_paused = 0;
+}
+
+// Emit the frame accounting. Uses raw ESP_LOGI (NOT the TT_LOG* macros) so it
+// stays visible even while candump silences the normal toptronic output.
+//
+// `final` is true for the record emitted when candump turns OFF: the counters are
+// then settled, so the capture/parse verdicts are authoritative. Periodic records
+// (while running) print raw counters only — a mid-frame snapshot can be off by one
+// for `parsed`, which is counted in the receive-routing callback.
+static void log_frame_stats(const char *context, bool final) {
+  if (final) {
+    const bool capture_ok = (s_frames_rx == s_frames_logged + s_frames_throttled);
+    const bool parse_ok = (s_frames_parsed + s_frames_skipped_unowned + s_frames_skipped_paused == s_frames_rx);
+    ESP_LOGI(TAG, "[STATS] %s: rx=%u logged=%u throttled=%u | parsed=%u unowned=%u paused=%u | capture=%s parse=%s",
+             context, (unsigned) s_frames_rx, (unsigned) s_frames_logged, (unsigned) s_frames_throttled,
+             (unsigned) s_frames_parsed, (unsigned) s_frames_skipped_unowned, (unsigned) s_frames_skipped_paused,
+             capture_ok ? "OK" : "LOSSY", parse_ok ? "OK" : "GAP");
+  } else {
+    ESP_LOGI(TAG, "[STATS] %s: rx=%u logged=%u throttled=%u | parsed=%u unowned=%u paused=%u", context,
+             (unsigned) s_frames_rx, (unsigned) s_frames_logged, (unsigned) s_frames_throttled,
+             (unsigned) s_frames_parsed, (unsigned) s_frames_skipped_unowned, (unsigned) s_frames_skipped_paused);
+  }
+}
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 // Auto-off deadlines: debug modes are intended to be temporary. Both candump
@@ -64,7 +118,7 @@ static constexpr uint32_t CANDUMP_AUTO_OFF_MS = 120000;
 static constexpr uint32_t FIND_CAN_ID_AUTO_OFF_MS = 120000;
 
 // Behavioral constants — named per §5.4 (no magic numbers).
-static constexpr uint32_t CANDUMP_MIN_LOG_GAP_MS = 33;    // min ms between candump log lines
+static constexpr uint32_t CANDUMP_MIN_LOG_GAP_MS = 0;     // min ms between candump log lines (0 = log every frame)
 static constexpr uint32_t BURST_STALL_TIMEOUT_MS = 5000;  // refresh burst watchdog idle threshold
 static constexpr UBaseType_t COMMAND_QUEUE_LENGTH = 8;    // producer/consumer bridge depth
 
@@ -121,11 +175,24 @@ TopTronic::TopTronic(canbus::Canbus *canbus) : canbus_(canbus) {
     s_receive_callback_registered = true;
     this->canbus_->add_callback([](uint32_t can_id, bool, bool rtr, const std::vector<uint8_t> &data) {
       uint32_t device_id = (can_id >> 11) & 0x7FF;
+      bool owned = false;
       for (TopTronic *hub : s_all_instances) {
         // owns_device_() checks the hub's full devices_ map (every device it has
         // registered), so the sender is never limited to a single address.
-        if (hub->owns_device_(device_id))
+        if (hub->owns_device_(device_id)) {
+          owned = true;
           hub->parse_frame(data, can_id, rtr);
+        }
+      }
+      if (!owned) {
+        if (s_candump_enabled) {
+          s_frames_skipped_unowned++;
+        } else {
+          // Raw ESP_LOGD (the TT_LOG* macros are declared further down this file) so
+          // a DEBUG capture shows exactly which frames were not parsed, and why.
+          ESP_LOGD(TAG, "[SKIP] node 0x%03X not owned by any configured hub (Can-ID 0x%08X)", (unsigned) device_id,
+                   (unsigned) can_id);
+        }
       }
     });
   }
@@ -1058,10 +1125,13 @@ static void set_candump_flag(bool enabled) {
   s_candump_enabled = enabled;
   if (enabled) {
     s_candump_start_ms = millis();
-    ESP_LOGW(TAG, "CANDUMP debug ENABLED — logging CAN frames (auto-off in %us, or turn off switch)",
+    s_last_stats_ms = millis();
+    reset_frame_stats();  // `rx` = frames during THIS capture, so the invariant is meaningful
+    ESP_LOGW(TAG, "CANDUMP debug ENABLED — logging every CAN frame (auto-off in %us, or turn off switch)",
              (unsigned) (CANDUMP_AUTO_OFF_MS / 1000));
   } else {
     ESP_LOGW(TAG, "CANDUMP debug DISABLED");
+    log_frame_stats("candump off", true);
   }
   TopTronic::candump_update_callbacks.call(s_candump_enabled);
 }
@@ -1095,16 +1165,34 @@ static void set_find_can_id_flag(bool enabled) {
 // may be starved while frames still arrive. Checking the deadline per frame
 // guarantees a debug mode always self-disables even under full flood.
 static void debug_log_frame(const std::vector<uint8_t> &data, uint32_t can_id) {
+  // All frame logging AND accounting happens ONLY while a debug mode is active:
+  // with both flags off this is a single predicate, so normal operation pays
+  // nothing per frame (and no counters move).
+  if (!s_candump_enabled && !s_find_can_id_enabled)
+    return;
   const uint32_t now = millis();
 
   if (s_candump_enabled) {
     if (now - s_candump_start_ms > CANDUMP_AUTO_OFF_MS) {
+      // This frame arrived but is NOT logged (the capture ends here), so count it
+      // before the final verdict -- otherwise it would look like a lost frame.
+      s_frames_rx++;
+      s_frames_throttled++;
       set_candump_flag(false);
     } else {
-      // Rate limit to max 30 frames/sec (33ms minimum gap) to prevent saturating
-      // the ESPHome API logger socket and causing TCP disconnects in Home Assistant.
+      // Periodic completeness summary. Emitted BEFORE this frame is counted so a
+      // running snapshot is internally consistent (rx == logged + throttled).
+      if (now - s_last_stats_ms >= STATS_INTERVAL_MS) {
+        s_last_stats_ms = now;
+        log_frame_stats("candump running", false);
+      }
+      s_frames_rx++;
+      // Minimum gap between candump lines. CANDUMP_MIN_LOG_GAP_MS = 0 logs EVERY
+      // frame (a complete capture); any throttling is reported by [STATS]
+      // (rx == logged + throttled), so a lossy capture is never silent.
       if (now - s_last_candump_log_ms >= CANDUMP_MIN_LOG_GAP_MS) {
         s_last_candump_log_ms = now;
+        s_frames_logged++;
         static const char *const HEX = "0123456789ABCDEF";
         char hex_payload[32];
         size_t pos = 0;
@@ -1115,6 +1203,8 @@ static void debug_log_frame(const std::vector<uint8_t> &data, uint32_t can_id) {
         }
         hex_payload[pos] = '\0';
         ESP_LOGI("candump", "0x%08X : %s", (unsigned int) can_id, hex_payload);
+      } else {
+        s_frames_throttled++;
       }
     }
   }
@@ -1237,6 +1327,9 @@ void TopTronicDebugSwitch::dump_config() {
 // number of continuation frames has arrived the message is dispatched.
 void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, bool remote_transmission_request) {
   if (this->paused_) {
+    if (s_candump_enabled)
+      s_frames_skipped_paused++;  // accounting is live only during a candump capture
+    TT_LOGD("[SKIP] hub 0x%04X paused (OTA) - frame dropped", (unsigned) this->get_device_id());
     return;  // OTA in progress — drop frames to keep the main loop and logging free
   }
 
@@ -1251,8 +1344,10 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
   // or dispatch work (the same decision interpret_message_() would make later).
   // owns_device_() covers EVERY device registered on this hub, not one address.
   if (!this->owns_device_(device_id)) {
-    return;
+    return;  // not this hub's device (the receive callback counted it as unowned)
   }
+  if (s_candump_enabled)
+    s_frames_parsed++;  // accounting is live only during a candump capture
 
   if (msg_id == START_OF_MESSAGE_ID) {
     // First frame of a message. data[0] upper 5 bits = number of remaining frames.

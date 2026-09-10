@@ -148,6 +148,25 @@ capture order.
 See [`toptronic_internals.md`](toptronic_internals.md) §3 for the output sections
 and caveats.
 
+> **Completeness.** Candump logs **every** frame (no rate limit) and does so
+> **only while the switch is on** — normal operation is untouched. The component
+> emits a `[STATS]` line every 10 s and once when candump turns off:
+> `[STATS] candump off: rx=… logged=… throttled=… | parsed=… unowned=… paused=… | capture=OK parse=OK`.
+> Counters start when candump is enabled. A capture is complete when
+> `rx == logged + throttled`, and every frame was examined when
+> `parsed + unowned + paused == rx`; the `candump off` line reports `capture=` and
+> `parse=` directly. `replay_candump.py` checks both for you; a `[SKIP]` line
+> (DEBUG) names any frame that was not parsed.
+>
+> **Capture tuning (optional).** Two buffers sit between the bus and the log, and
+> both can silently truncate a busy capture: the CAN driver RX queue
+> (`rx_queue_len`, set in `packages/canbus.yaml`) and the ESPHome logger task
+> buffer (`logger: task_log_buffer_size:`, default 768 bytes — raise it to e.g.
+> `4096` for capture sessions). The `[STATS]` line tells you if either dropped
+> anything: `throttled > 0` means the capture is lossy, and
+> `replay_candump.py` warns when the file holds fewer lines than the firmware
+> logged.
+
 [issue #41]: https://github.com/nliaudat/esp_canbus/issues/41
 
 ---
