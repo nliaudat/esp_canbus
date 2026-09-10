@@ -403,6 +403,7 @@ TopTronicBase = toptronic.class_("TopTronicBase", cg.PollingComponent)
 - All predefined `CONF_*` constants live in `__init__.py` (shared by the five platform files) — do not scatter new constants into `sensor.py`/`number.py`/`select.py`/`text_sensor.py`/`button.py`.
 - Platform files import shared pieces (`CONFIG_SCHEMA_BASE`, `CONF_TT_ID`, `CONF_FUNCTION_GROUP`, `CONF_FUNCTION_NUMBER`, `CONF_DATAPOINT`, `TT_TYPE_OPTIONS`) from the package — keep this DRY.
 - `_resolve_hub_prefix()` prefixes every generated entity `name` with the hub's device type when more than one hub is configured (the address is appended when two hubs share a type, an explicit `name_prefix` wins, and it returns `None` for a single hub). This is REQUIRED because ESPHome validates entity names build-wide and preset names are only unique per device type.
+- `_sanitize_entity_name()` rewrites `/` to `_` in generated names (ESPHome bans `/` as a URL path separator; an error from 2027.7). `_` keeps the computed object_id identical, so existing Home Assistant entities are preserved.
 
 ### 6.3 Type Mappings
 

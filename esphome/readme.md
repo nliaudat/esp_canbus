@@ -92,6 +92,9 @@ toptronic:
 > entities are prefixed with the device type whenever more than one hub is
 > configured (see `name_prefix`). A single-hub build is left unchanged, so its
 > entity names and object ids are unaffected.
+>
+> Generated entity names never contain `/` (ESPHome's reserved URL path
+> separator) — any `/` in a preset name is rewritten to `_`.
 
 ---
 

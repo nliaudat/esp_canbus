@@ -125,6 +125,17 @@ def _resolve_hub_prefix(config):
     return device_type
 
 
+def _sanitize_entity_name(name: str) -> str:
+    """Replace '/' with '_' in a generated entity name.
+
+    ESPHome reserves '/' as a URL path separator: 2026.x only warns and
+    substitutes a Unicode fraction slash, but 2027.7 makes it an error. '_' is
+    chosen over '-' because ``sanitize()`` maps both '/' and '_' to '_', so the
+    computed object_id (and therefore the Home Assistant entity) is unchanged.
+    """
+    return name.replace("/", "_")
+
+
 def _validate_preset(config):
     device_type = config["device_type"]
     if device_type not in _device_types:
@@ -303,9 +314,14 @@ async def _generate_entities(hub, config):
         hub_ref.is_declaration = False
         entity_conf[CONF_TOPTRONIC_ID] = hub_ref
 
-        # Keep generated names unique build-wide (see _resolve_hub_prefix).
-        if prefix and entity_conf.get(CONF_NAME):
-            entity_conf[CONF_NAME] = f"{prefix} {entity_conf[CONF_NAME]}"
+        # Unique build-wide (see _resolve_hub_prefix) and free of '/' (ESPHome's
+        # reserved URL path separator — see _sanitize_entity_name).
+        name = entity_conf.get(CONF_NAME)
+        if name:
+            name = _sanitize_entity_name(name)
+            if prefix:
+                name = f"{prefix} {name}"
+            entity_conf[CONF_NAME] = name
 
         schema, codegen = platforms[platform_name]
         validated = schema(entity_conf)

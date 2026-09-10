@@ -227,6 +227,7 @@ python:
     - "All CONF_* constants live in __init__.py (shared by 5 platform files)"
     - "Platform files import shared pieces (CONFIG_SCHEMA_BASE, CONF_TT_ID, CONF_FUNCTION_GROUP, CONF_FUNCTION_NUMBER, CONF_DATAPOINT, TT_TYPE_OPTIONS)"
     - "_resolve_hub_prefix() prefixes generated entity names with the device type when >1 hub is configured (addr appended on same-type clash; explicit name_prefix wins; None for single hub) --- ESPHome validates entity names build-wide, preset names are only unique per device type"
+    - "_sanitize_entity_name() rewrites '/' to '_' in generated names (ESPHome URL path separator ban; error from 2027.7); '_' keeps the object_id identical so HA entities are preserved"
   type_mapping:
     - "TT_TYPE_OPTIONS (U8/U16/U32/S8/S16/S32/S64 -> TypeName) is the ONLY source --- no duplicates"
 
