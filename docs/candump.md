@@ -127,6 +127,50 @@ always be turned back OFF.
 
 ---
 
+## Step 4b — Replay a capture offline (issue diagnosis)
+
+Raw frames are only half the story: the other half is what the firmware does
+with them. `tests/replay_candump.py` feeds a saved candump through the same
+framing / CRC / value-decoding logic as `toptronic.cpp` and prints the parser's
+view of the capture:
+
+```bash
+python tests/replay_candump.py my_capture.log --hubs WEZ:1,HV:8,BM:8
+```
+
+It reports the decoded values, the responses the parser dropped (truncated value
+/ bad CRC / no registered sensor), the multi-frame messages that were *started
+but never completed*, and — for [issue #41] — the registered datapoints that
+never received a value at all (these are the entities that stay stuck at their
+previous, usually `0`, value). Add `--timeline` to print every dispatch in
+capture order.
+
+See [`toptronic_internals.md`](toptronic_internals.md) §3 for the output sections
+and caveats.
+
+> **Completeness.** Candump logs **every** frame (no rate limit) and does so
+> **only while the switch is on** — normal operation is untouched. The component
+> emits a `[STATS]` line every 10 s and once when candump turns off:
+> `[STATS] candump off: rx=… logged=… throttled=… | parsed=… unowned=… paused=… | capture=OK parse=OK`.
+> Counters start when candump is enabled. A capture is complete when
+> `rx == logged + throttled`, and every frame was examined when
+> `parsed + unowned + paused == rx`; the `candump off` line reports `capture=` and
+> `parse=` directly. `replay_candump.py` checks both for you; a `[SKIP]` line
+> (DEBUG) names any frame that was not parsed.
+>
+> **Capture tuning (optional).** Two buffers sit between the bus and the log, and
+> both can silently truncate a busy capture: the CAN driver RX queue
+> (`rx_queue_len`, set in `packages/canbus.yaml`) and the ESPHome logger task
+> buffer (`logger: task_log_buffer_size:`, default 768 bytes — raise it to e.g.
+> `4096` for capture sessions). The `[STATS]` line tells you if either dropped
+> anything: `throttled > 0` means the capture is lossy, and
+> `replay_candump.py` warns when the file holds fewer lines than the firmware
+> logged.
+
+[issue #41]: https://github.com/nliaudat/esp_canbus/issues/41
+
+---
+
 ## Step 5 — Disable before production
 
 Candump is **debug only**:

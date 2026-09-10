@@ -62,7 +62,7 @@ esp_canbus/
 │   ├── config.yaml                    # Main entrypoint: toptronic hubs + packages
 │   ├── packages/                      # ESPHome packages (wifi/board/time/canbus/...)
 │   │   ├── board.yaml                 # esp32: esp-idf, sdkconfig, logger, api, ota
-│   │   ├── canbus.yaml                # esp32_can platform, 50kbps, candump on_frame (debug)
+│   │   ├── canbus.yaml                # esp32_can platform, 50kbps, rx_queue_len (candump is a runtime switch)
 │   │   ├── wifi.yaml / time.yaml / sensors_others.yaml / switch.yaml / debug.yaml
 │   └── components/toptronic/          # External ESPHome component (AUTO_LOAD'd platforms)
 │       ├── __init__.py                # Hub schema, preset loading, entity generation
@@ -165,9 +165,9 @@ Message layout **after** CAN framing bytes are stripped:
 ### 3.5 Multi-Frame Reassembly
 
 - **Single-frame:** first byte of frame payload is `0x01` (length/flags). `num_remaining = data[0] >> 3 == 0` → interpret immediately, skipping byte 0.
-- **Start frame** (`msg_id == 0x1f`): `[frame_count<<3 | 0x01, msg_header, payload[0..5]]` — up to 6 payload bytes. `frame_count` (upper 5 bits of byte 0) = number of continuation frames expected. Reassembly key = `(device_id << 8) | msg_header`.
+- **Start frame** (`msg_id == 0x1f`): `[frame_count<<3 | 0x01, msg_header, payload[0..5]]` — up to 6 payload bytes. `frame_count` (upper 5 bits of byte 0) = **TOTAL frame count** (first frame + continuations), so the reassembler waits for `frame_count - 1` continuation frames. Reassembly key = `(device_id << 8) | msg_header`. A start frame whose first payload byte is not a TopTronic command (`0x40`/`0x42`/`0x46`/`0x56`) is a register-block broadcast (`0x50`/`0x70`/`0x74`/...) and is rejected before reassembly.
 - **Continuation frames** (any other `msg_id`, i.e. bits 28-22 cleared): `[msg_header, payload[6..12], ...]` — up to 7 payload bytes per frame.
-- **Bounded buffer:** `MAX_PENDING_MESSAGES = 16`. When full and a *new* start frame arrives, the whole pending map is cleared (stale-fragment heuristics).
+- **Bounded buffer:** `MAX_PENDING_MESSAGES = 32`. When full and a *new* start frame arrives, the single oldest entry is evicted (LRU), not the whole map.
 - **Stale expiry:** pending entries older than `MAX_PENDING_AGE_MS = 2000` ms are evicted by a throttled sweep in `loop()` (`CLEANUP_INTERVAL_MS = 2000`).
 - **Completion:** when `remaining_frames` hits 0, the last 2 bytes of the reassembled payload are the CRC-16 (big-endian).
 
@@ -402,8 +402,10 @@ TopTronicBase = toptronic.class_("TopTronicBase", cg.PollingComponent)
 - `_generate_entities()` loads `presets/<device>/sensors_<lang>.yaml` and `inputs_<lang>.yaml`, strips `platform`/`device_type`/`device_addr`, injects the hub reference, and runs each platform's own schema + codegen.
 - All predefined `CONF_*` constants live in `__init__.py` (shared by the five platform files) — do not scatter new constants into `sensor.py`/`number.py`/`select.py`/`text_sensor.py`/`button.py`.
 - Platform files import shared pieces (`CONFIG_SCHEMA_BASE`, `CONF_TT_ID`, `CONF_FUNCTION_GROUP`, `CONF_FUNCTION_NUMBER`, `CONF_DATAPOINT`, `TT_TYPE_OPTIONS`) from the package — keep this DRY.
-- `_resolve_hub_prefix()` prefixes every generated entity `name` with the hub's device type when more than one hub is configured (the address is appended when two hubs share a type, an explicit `name_prefix` wins, and it returns `None` for a single hub). This is REQUIRED because ESPHome validates entity names build-wide and preset names are only unique per device type.
-- `_sanitize_entity_name()` rewrites `/` to `_` in generated names (ESPHome bans `/` as a URL path separator; an error from 2027.7). `_` keeps the computed object_id identical, so existing Home Assistant entities are preserved.
+- `_resolve_hub_prefix()` prefixes every generated entity `name` when more than one hub is configured: the device type when it is unique, `"<TYPE> <addr>"` when two hubs share a type, and `"<TYPE> <addr> <canbus_id>"` when they also share the address on different CAN buses; an explicit `name_prefix` wins and a single hub returns `None`. This is REQUIRED because ESPHome validates entity names build-wide and preset names are only unique per device type.
+- `_validate_hub_uniqueness()` raises `cv.Invalid` when two hubs share `(canbus_id, device_type, device_addr)` — that is the same physical device, so no prefix can disambiguate it and it would double-poll the bus.
+- `_sanitize_entity_name()` rewrites `/` to `_` and is applied to the **composed** name (prefix + preset name), so an explicit `name_prefix` containing `/` is sanitized too. `_` keeps the computed object_id identical, so existing Home Assistant entities are preserved.
+- Two hubs of the same device type load the same preset files, whose entities carry hard-coded `id:`s (e.g. `HV_50_0_40651`). `_generate_entities()` keeps the first hub's ids verbatim and prefixes only an actual collision with `"<TYPE>_<addr>_"`, so same-type hubs compile without breaking existing lambdas. See `docs/toptronic_internals.md` §1 for the rationale and examples.
 
 ### 6.3 Type Mappings
 
@@ -571,6 +573,7 @@ void on_can_frame(...) {
 - NEVER add per-frame heap allocation to `parse_frame()` / `interpret_message()` — keep the single-frame path allocation-free.
 - Keep `hex_str()` SSO-friendly (`reserve()`, no `stringstream`); do not grow log payloads.
 - Keep DEBUG/candump sessions bounded (auto-off 120 s) — they are the only heap-churn logging path.
+- **Frame accounting is the completeness contract for debug captures.** It is live **only while candump is ON** (every increment is guarded by `s_candump_enabled`; `debug_log_frame()` early-returns when both debug flags are off, so normal operation pays nothing) and is reset on enable, so `rx` = frames during *this* capture. The final record must satisfy `rx == logged + throttled` and `parsed + unowned + paused == rx`; the `candump off` line carries the authoritative `capture=`/`parse=` verdict. `throttled` also counts the frame that ended the capture. `rx`/`logged`/`throttled` are all counted in the RX logging callback (running snapshots are therefore exact; `parsed` lives in the receive callback, so only it can differ by one mid-frame). Candump logs every frame (`CANDUMP_MIN_LOG_GAP_MS = 0`); TX frames are exported candump-only by `debug_log_tx_frame()`. Do not remove/re-order these counters.
 - If long-uptime fragmentation is ever measured (free heap steadily decreasing over days despite an idle bus), move `pending_messages_` to a fixed-capacity pool (`std::array`/StaticVector per §9.1) — NOT required today.
 
 ---

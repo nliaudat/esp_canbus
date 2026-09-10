@@ -97,10 +97,48 @@ def _shared_used_ids():
     return CORE.data[_IDS_KEY]
 
 
+def _hub_entries():
+    """Return the configured toptronic hub entries as a list.
+
+    ``CORE.config`` holds the raw config, where a single ``toptronic:`` block is
+    a mapping rather than a list, so normalise before iterating.
+    """
+    hubs = CORE.config.get("toptronic", []) if CORE.config else []
+    if isinstance(hubs, dict):
+        hubs = [hubs]
+    return hubs
+
+
 def get_device_type(t: str) -> int:
     if t not in _device_types:
         raise ValueError(f'device type "{t}" not found')
     return _device_types.get(t)
+
+
+def _hub_bus_id(hub):
+    """Return a hub's canbus_id as a plain string.
+
+    ``CORE.config`` may hold the canbus id as a validated ``ID`` object or as the
+    raw string, so normalise both to the underlying identifier.
+    """
+    bus = hub.get(CONF_CANBUS_ID)
+    return getattr(bus, "id", bus)
+
+
+def _hub_identity(hub):
+    """Normalise a hub entry to its (canbus_id, device_type, device_addr) identity.
+
+    Works for both the validated hub config and the raw entries in
+    ``CORE.config`` (where device_type may still be lower-case and device_addr a
+    substituted string).
+    """
+    device_type = str(hub.get("device_type", "")).upper()
+    addr = hub.get(CONF_DEVICE_ADDR)
+    try:
+        addr = int(addr)
+    except (TypeError, ValueError):
+        pass
+    return (_hub_bus_id(hub), device_type, addr)
 
 
 def _resolve_hub_prefix(config):
@@ -109,20 +147,30 @@ def _resolve_hub_prefix(config):
     ESPHome validates entity names build-wide (keyed on the sub-device id, the
     platform and the hash of the sanitized name), but the preset names are only
     unique within a single device type. Prefixing with the device type keeps
-    every generated entity unique when several hubs are configured. Single-hub
-    builds return None so existing entity names (and their object_ids) are
-    unchanged; an explicit ``name_prefix`` always wins.
+    every generated entity unique when several hubs are configured:
+
+      * one hub              -> ``None`` (existing names/object_ids unchanged)
+      * repeated device type -> ``"<TYPE> <addr>"``
+      * repeated type + addr -> ``"<TYPE> <addr> <canbus_id>"`` (two CAN buses)
+
+    An explicit ``name_prefix`` always wins.
     """
     explicit = config.get(CONF_NAME_PREFIX)
     if explicit:
         return explicit.strip()
-    hubs = CORE.config.get("toptronic", []) if CORE.config else []
+    hubs = _hub_entries()
     if len(hubs) <= 1:
         return None
-    device_type = config["device_type"]
-    if sum(1 for h in hubs if h.get("device_type") == device_type) > 1:
-        return f"{device_type} {config[CONF_DEVICE_ADDR]}"
-    return device_type
+    _bus, device_type, addr = _hub_identity(config)
+    identities = [_hub_identity(h) for h in hubs]
+    if sum(1 for i in identities if i[1] == device_type) <= 1:
+        return device_type
+    prefix = f"{device_type} {addr}"
+    if sum(1 for i in identities if i[1] == device_type and i[2] == addr) > 1:
+        # Same device type *and* address on another CAN bus: only the bus id can
+        # tell the two hubs (and their identically named entities) apart.
+        prefix = f"{prefix} {_hub_bus_id(config)}"
+    return prefix
 
 
 def _sanitize_entity_name(name: str) -> str:
@@ -151,6 +199,27 @@ def _validate_preset(config):
         raise cv.Invalid(
             f"No preset directory found for device type '{device_type}'. "
             f"Available presets: {', '.join(available)}"
+        )
+    return config
+
+
+def _validate_hub_uniqueness(config):
+    """Reject two hubs polling the same device on the same CAN bus.
+
+    A duplicate ``(canbus_id, device_type, device_addr)`` is the same physical
+    device: no name prefix can disambiguate it and it would double-poll the bus.
+    ``CORE.config`` holds the raw hub entries, so normalise before counting (the
+    validator receives a validated *copy*, hence ``count > 1`` rather than an
+    object-identity comparison).
+    """
+    hubs = _hub_entries()
+    identity = _hub_identity(config)
+    if sum(1 for h in hubs if _hub_identity(h) == identity) > 1:
+        bus, device_type, addr = identity
+        raise cv.Invalid(
+            f"Duplicate toptronic hub for {device_type} address {addr} on CAN bus "
+            f"'{bus}': each device must be polled by exactly one hub. Use a "
+            f"distinct device_addr, or name_prefix if the two buses really differ."
         )
     return config
 
@@ -238,6 +307,7 @@ CONFIG_SCHEMA = cv.All(
         }
     ).extend(cv.COMPONENT_SCHEMA),
     _validate_preset,
+    _validate_hub_uniqueness,
 )
 
 
@@ -299,6 +369,14 @@ async def _generate_entities(hub, config):
     }
 
     prefix = _resolve_hub_prefix(config)
+    # Qualifier for colliding preset ids: the hub's device type + address, plus the
+    # CAN bus id when two hubs share both (only the bus tells them apart — matching
+    # the name prefix). Computed once per hub.
+    identity = _hub_identity(config)  # (bus_id, device_type, device_addr)
+    identities = [_hub_identity(h) for h in _hub_entries()]
+    id_qualifier = f"{identity[1]}_{identity[2]}"
+    if sum(1 for i in identities if i[1] == identity[1] and i[2] == identity[2]) > 1:
+        id_qualifier = f"{id_qualifier}_{identity[0]}"
     used_ids = _shared_used_ids()
     for platform_name, entity_conf in _load_entities(
         config["device_type"], config[CONF_LANGUAGE]
@@ -314,14 +392,25 @@ async def _generate_entities(hub, config):
         hub_ref.is_declaration = False
         entity_conf[CONF_TOPTRONIC_ID] = hub_ref
 
+        # Hubs of the same device type load the same preset files, which carry
+        # hard-coded `id:`s (e.g. HV_50_0_40651). The first hub keeps them
+        # verbatim so existing lambdas keep working; only an actual collision is
+        # prefixed with `id_qualifier` (type + address, plus the bus id when two
+        # hubs also share the address, so 3+ buses stay unique). `used_ids` only
+        # ever holds toptronic-generated ids, so this never renames an entity
+        # because of an unrelated user id.
+        entity_id = entity_conf.get(CONF_ID)
+        if isinstance(entity_id, str) and entity_id in used_ids:
+            entity_conf[CONF_ID] = f"{id_qualifier}_{entity_id}"
+
         # Unique build-wide (see _resolve_hub_prefix) and free of '/' (ESPHome's
-        # reserved URL path separator — see _sanitize_entity_name).
+        # reserved URL path separator — see _sanitize_entity_name). The prefix is
+        # composed first so an explicit name_prefix is sanitized too.
         name = entity_conf.get(CONF_NAME)
         if name:
-            name = _sanitize_entity_name(name)
             if prefix:
                 name = f"{prefix} {name}"
-            entity_conf[CONF_NAME] = name
+            entity_conf[CONF_NAME] = _sanitize_entity_name(name)
 
         schema, codegen = platforms[platform_name]
         validated = schema(entity_conf)

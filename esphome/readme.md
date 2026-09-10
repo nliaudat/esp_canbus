@@ -70,7 +70,7 @@ toptronic:
 | `device_type` | yes | — | One of `WEZ`, `SOL`, `PS`, `FW`, `HK`, `MWA`, `GLT`, `HV`, `BM`, `GW` (`BD` is an alias for `BM`; use `BM`). |
 | `device_addr` | yes | — | Bus address (typical defaults: `HV=8`, `BM=8`, `WEZ=1` — find it on the room control unit). |
 | `language` | no | `en` | Preset language: `de`, `en`, `fr`, `it`. |
-| `name_prefix` | no | device type | Prefix prepended to every entity name generated from this hub's presets. Defaults to the device type when more than one hub is configured (the address is appended when two hubs share a type) and is empty for a single-hub build. Set it explicitly to override. |
+| `name_prefix` | no | device type | Prefix prepended to every entity name generated from this hub's presets. Defaults to the device type when more than one hub is configured (the address is appended when two hubs share a type) and is empty for a single-hub build. Set it explicitly to override. See [`docs/toptronic_internals.md`](../docs/toptronic_internals.md) §1 for the full resolution order. |
 | `boot_refresh_delay` | no | `30s` | One-shot full refresh after boot; `0` disables it. |
 | `max_pending_messages` | no | `32` | Max concurrently reassembled multi-frame messages (per hub). Raise on a large multi-hub bus. |
 | `max_pending_age` | no | `5000ms` | A pending message with no continuation frame this long is considered lost. |
@@ -95,6 +95,10 @@ toptronic:
 >
 > Generated entity names never contain `/` (ESPHome's reserved URL path
 > separator) — any `/` in a preset name is rewritten to `_`.
+>
+> See [`docs/toptronic_internals.md`](../docs/toptronic_internals.md) §1 for the
+> full prefix rules, unique entity ids for same-type hubs, and the
+> duplicate-hub validation.
 
 ---
 

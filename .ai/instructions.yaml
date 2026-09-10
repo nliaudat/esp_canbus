@@ -93,11 +93,11 @@ protocol:
   get_device_id: "device_type | device_addr"
   multiframe:
     single: "data[0]==0x01 (num_remaining=data[0]>>3 == 0) -> interpret immediately skipping byte 0"
-    start_frame: "msg_id 0x1f: [frame_count<<3|0x01, msg_header, payload[0..5]] up to 6 bytes"
+    start_frame: "msg_id 0x1f: [frame_count<<3|0x01, msg_header, payload[0..5]] up to 6 bytes; frame_count = TOTAL frames -> wait frame_count-1 continuations; reject a start frame whose payload[0] (data[2]) is not a TopTronic command 0x40/0x42/0x46/0x56 (register-block broadcasts 0x50/0x70/0x74/...)"
     continuation: "other msg_id: [msg_header, payload[6..12]] up to 7 bytes"
     reassembly_key: "(device_id << 8) | msg_header"
-    max_pending: 16
-    max_pending_age_ms: 2000
+    max_pending: 32
+    max_pending_age_ms: 5000
     cleanup_interval_ms: 2000
     completion: "last 2 bytes of reassembled payload = CRC-16 big-endian"
   crc16:
@@ -226,8 +226,10 @@ python:
     - "strip platform/device_type/device_addr, inject hub reference, run platform schema + codegen"
     - "All CONF_* constants live in __init__.py (shared by 5 platform files)"
     - "Platform files import shared pieces (CONFIG_SCHEMA_BASE, CONF_TT_ID, CONF_FUNCTION_GROUP, CONF_FUNCTION_NUMBER, CONF_DATAPOINT, TT_TYPE_OPTIONS)"
-    - "_resolve_hub_prefix() prefixes generated entity names with the device type when >1 hub is configured (addr appended on same-type clash; explicit name_prefix wins; None for single hub) --- ESPHome validates entity names build-wide, preset names are only unique per device type"
-    - "_sanitize_entity_name() rewrites '/' to '_' in generated names (ESPHome URL path separator ban; error from 2027.7); '_' keeps the object_id identical so HA entities are preserved"
+    - "_resolve_hub_prefix() prefixes generated entity names when >1 hub: type if unique, '<TYPE> <addr>' on same-type clash, '<TYPE> <addr> <canbus_id>' when type+addr clash on different buses; explicit name_prefix wins; None for single hub --- ESPHome validates entity names build-wide, preset names are only unique per device type"
+    - "_validate_hub_uniqueness() raises cv.Invalid for two hubs sharing (canbus_id, device_type, device_addr) --- same physical device, no prefix can disambiguate"
+    - "_sanitize_entity_name() rewrites '/' to '_' and is applied to the COMPOSED name (prefix + preset name) so an explicit name_prefix is sanitized too; '_' keeps the object_id identical so HA entities are preserved"
+    - "same-type hubs share preset hard-coded ids: keep the first hub's ids verbatim, prefix only a colliding id with '<TYPE>_<addr>_' so same-type hubs compile without breaking lambdas"
   type_mapping:
     - "TT_TYPE_OPTIONS (U8/U16/U32/S8/S16/S32/S64 -> TypeName) is the ONLY source --- no duplicates"
 
@@ -313,6 +315,7 @@ memory_perf:
       - "NEVER add per-frame heap allocation to parse_frame()/interpret_message()"
       - "Keep hex_str() SSO-friendly (reserve(), no stringstream); do not grow log payloads"
       - "Keep DEBUG/candump sessions bounded (auto-off 120s) --- only heap-churn logging path"
+      - "Frame accounting = completeness contract, live ONLY while candump is ON (increments guarded by s_candump_enabled; debug_log_frame early-returns when both debug flags off) and reset on enable (rx = per capture); final record must satisfy rx == logged + throttled AND parsed + unowned + paused == rx; 'candump off' line carries authoritative capture=/parse= verdict; throttled also counts the frame that ended the capture; rx/logged/throttled all in the RX logging callback (running snapshots exact; parsed in the receive callback -> can differ by 1); CANDUMP_MIN_LOG_GAP_MS=0 logs every frame; TX exported candump-only by debug_log_tx_frame; do not remove/re-order counters"
       - "If long-uptime fragmentation is measured: move pending_messages_ to fixed-capacity pool (std::array/StaticVector) --- NOT required today"
 
 # =============================================================================
@@ -369,7 +372,7 @@ anti_patterns:
     ok: "if (received_crc != computed_crc) { log + erase; return; }"
   - id: AP-UNBOUNDED
     bad: "pending_messages_[header_key] = pending;"
-    ok: "if (size >= MAX_PENDING_MESSAGES && not existing) clear(); + stale eviction"
+    ok: "LRU-evict the single oldest entry when full + stale eviction; reject non-TopTronic start frames before insert"
   - id: AP-DUP-MAPPING
     bad: "value = to_text_.at(...); // plus separate text_to_value_ elsewhere"
     ok: "single add_option() registers both directions"
