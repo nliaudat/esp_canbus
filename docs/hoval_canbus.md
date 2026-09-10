@@ -188,6 +188,9 @@ and validated against the captured samples in both forms.
 
 Typical bus addresses: `HV=8`, `BM=8`, `WEZ=1`.
 
+Full list of supported device types with default bus addresses:
+[`devices.md`](devices.md).
+
 The gateway presents itself on the bus as a **GW** device
 (`GATEWAY_DEVICE_TYPE = 1153`) and addresses devices per configured hub.
 
