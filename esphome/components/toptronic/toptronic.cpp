@@ -27,6 +27,17 @@ static constexpr uint8_t START_OF_MESSAGE_ID = 0x1F;
 // Minimum decodable TopTronic message: cmd | function_group | function_number | dp_hi | dp_lo.
 static constexpr size_t MIN_MESSAGE_LEN = 5;
 
+// Command bytes that may legally begin a TopTronic message payload. A multi-frame
+// start frame's first payload byte is the command, so a start frame whose payload
+// does not begin with one of these is NOT a datapoint response — it is one of the
+// boiler's register-block broadcasts (0x50/0x70/0x74/...; see docs/candump_base.log
+// and the issue-#41 capture, where ~80 of them per capture would otherwise sit in
+// pending_messages_ until the stale sweep and evict real in-progress responses
+// whose continuations are still on their way).
+static bool is_toptronic_command(uint8_t cmd) {
+  return cmd == GET_REQ || cmd == SET_REQ || cmd == RESPONSE || cmd == RESPONSE_EXT;
+}
+
 // Debug frame logging features. Each is an independent build-wide boolean flag,
 // NOT per-hub and NOT mutually exclusive: with multiple toptronic hubs every hub
 // receives every CAN frame, so logging must be deduplicated (see the single debug
@@ -1275,6 +1286,15 @@ void TopTronic::parse_frame(const std::vector<uint8_t> &data, uint32_t can_id, b
       this->interpret_message_(data.data() + 1, data.size() - 1, can_id, remote_transmission_request);
     } else {
       // Multi-frame message: save the first fragment and wait for the rest.
+      // Only reassemble frames that actually carry a TopTronic command ahead of
+      // the payload. Register-block broadcasts (0x50/0x70/0x74/...) never send the
+      // continuations the reassembler waits for, so admitting them only fills
+      // pending_messages_ and evicts real in-progress datapoint responses.
+      if (data.size() < 3 || !is_toptronic_command(data[2])) {
+        TT_LOGD("Dropping non-TopTronic start frame (cmd=0x%02X, header 0x%02X)",
+                data.size() < 3 ? 0u : (unsigned) data[2], (unsigned) data[1]);
+        return;
+      }
       uint8_t msg_header = data[1];  // reassembly key shared across all frames of this message
       uint32_t header_key = (device_id << 8) | msg_header;
       TT_LOGD("     - Start of message with id: %d with length %d (Can-ID: 0x%08X, Data: 0x%s)", msg_header,

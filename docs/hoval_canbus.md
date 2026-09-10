@@ -274,6 +274,12 @@ registers that Hoval's own control panel / Loxone cyclic writers overwrite.
   - Stale entries expired after `MAX_PENDING_AGE_MS = 5000` ms in `loop()`.
   - Start frames claiming an implausible frame count (> 8) are rejected outright.
   - Duplicate / extra continuation frames are discarded.
+  - Start frames whose first payload byte is not a TopTronic command
+    (`0x40`/`0x42`/`0x46`/`0x56`) are rejected before reassembly. Register-block
+    broadcasts (`0x50`/`0x70`/`0x74`/...) never send the continuations the
+    reassembler waits for; admitting them only filled `pending_messages_` until
+    the stale sweep and evicted real in-progress responses (issue #41). See
+    [`toptronic_internals.md`](toptronic_internals.md) §2.
 - **OTA safety** — `pause()` / `resume()` drop frames during OTA updates.
 - **Post-boot refresh** — a one-shot `update_all()` fires after
   `boot_refresh_delay` (default 30 s, `0` disables it).

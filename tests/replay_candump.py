@@ -24,6 +24,10 @@ Usage:
     python tests/replay_candump.py <candump.log> [--hubs WEZ:1,HV:8,BM:8]
                                    [--language de] [--timeline]
 
+--hubs takes ``<device_type>:<device_addr>`` pairs and resolves each to the CAN
+node id actually seen on the wire (``device_type | device_addr``), e.g. WEZ:1 ->
+1, HV:8 -> 520, BM:8 -> 1032.
+
 The candump format is the one produced by the "candump debug" switch, e.g.
     [12:00:00.000][I][candump:026]: 0x1FD047FF : 01 42 32 00 9E EE 1E
 """
@@ -206,7 +210,8 @@ class Replayer:
             return
 
         raw = int.from_bytes(data[value_off:value_off + width], "big", signed=signed)
-        self.dispatches.append((ts, key, name, type_name, raw, raw * multiply, single))
+        self.dispatches.append(
+            (ts, preset_dir, key, name, type_name, raw, raw * multiply, single))
 
     # --- parse_frame() -------------------------------------------------------
     def feed(self, can_id, data, ts):
@@ -295,16 +300,59 @@ class Replayer:
 # ---------------------------------------------------------------------------
 # Log parsing + reporting
 # ---------------------------------------------------------------------------
+# Device-type bit values (mirror of the component's DeviceType enum). The CAN node
+# id used on the wire is ``device_type | device_addr``, e.g. WEZ@1 -> 1,
+# HV@8 -> 520 (512|8), BM@8 -> 1032 (1024|8). BM/BD and HK/HKW are aliases.
+DEVICE_TYPE_IDS = {
+    "WEZ": 0,
+    "SOL": 64,
+    "PS": 128,
+    "FW": 192,
+    "HK": 256,
+    "HKW": 256,
+    "MWA": 384,
+    "GLT": 448,
+    "HV": 512,
+    "BM": 1024,
+    "BD": 1024,
+    "GW": 1153,
+}
+
+# Preset directory aliases (the on-wire type name differs from the dir name).
+_PRESET_ALIAS = {"HKW": "HK", "BD": "BM"}
+
+
 def parse_hubs(spec, presets):
+    """Map ``<preset_dir>:<device_addr>`` pairs to CAN node ids.
+
+    Frames are matched on the encoded node id ``device_type | device_addr``
+    (e.g. HV@8 -> 520), never the bare address, so the address alone would match
+    no frame and silently drop that hub's traffic.
+    """
     hubs = {}
     for item in spec.split(","):
         item = item.strip()
         if not item:
             continue
-        preset_dir, _, addr = item.partition(":")
+        type_name, _, addr = item.partition(":")
+        type_name = type_name.upper()
+        if type_name not in DEVICE_TYPE_IDS:
+            print("warning: unknown device type %r in --hubs" % type_name,
+                  file=sys.stderr)
+            continue
+        preset_dir = _PRESET_ALIAS.get(type_name, type_name)
         if preset_dir not in presets:
             print("warning: no presets found for %r" % preset_dir, file=sys.stderr)
-        hubs[int(addr)] = preset_dir
+        try:
+            node = DEVICE_TYPE_IDS[type_name] | int(addr)
+        except ValueError:
+            print("warning: bad address %r for %s" % (addr, type_name),
+                  file=sys.stderr)
+            continue
+        if node in hubs:
+            print("warning: node 0x%03X mapped twice (%s and %s)"
+                  % (node, hubs[node], preset_dir), file=sys.stderr)
+        hubs[node] = preset_dir
     return hubs
 
 
@@ -329,24 +377,29 @@ def report(replayer, timeline):
     print("=" * 78)
 
     if timeline:
-        for ts, _key, name, type_name, raw, value, single in replayer.dispatches:
-            print("  %s %-40s %-4s raw=%-12d value=%s%s"
-                  % (ts, name[:40], type_name, raw, value, "" if single else " (multi)"))
+        for ts, preset_dir, _key, name, type_name, raw, value, single in replayer.dispatches:
+            print("  %s %-4s %-38s %-4s raw=%-12d value=%s%s"
+                  % (ts, preset_dir, name[:38], type_name, raw, value,
+                     "" if single else " (multi)"))
 
-    # Group dispatches per datapoint: how often decoded, last value.
+    # Group dispatches per (hub, datapoint): same-named entities on different
+    # hubs are distinct datapoints and must not be merged.
     per_key = {}
-    for ts, _key, name, _type_name, value, value_scaled, _single in replayer.dispatches:
-        stat = per_key.setdefault((name,), {"n": 0, "last": value_scaled, "ts": ts})
+    for (ts, preset_dir, key, name, _type_name, _raw, value_scaled,
+         _single) in replayer.dispatches:
+        stat = per_key.setdefault(
+            (preset_dir, key), {"name": name, "n": 0, "last": value_scaled, "ts": ts})
         stat["n"] += 1
         stat["last"] = value_scaled
         stat["ts"] = ts
 
     print("\n-- decoded datapoints (%d dispatches, %d distinct) --"
           % (len(replayer.dispatches), len(per_key)))
-    for (name,) in sorted(per_key):
-        stat = per_key[(name,)]
-        print("  %-44s n=%-4d last=%s (@%s)"
-              % (name[:44], stat["n"], stat["last"], stat["ts"]))
+    for (preset_dir, (fg, fn, dp)) in sorted(per_key):
+        stat = per_key[(preset_dir, (fg, fn, dp))]
+        print("  %-4s fg=%-3d fn=%-3d dp=%-6d %-38s n=%-4d last=%s (@%s)"
+              % (preset_dir, fg, fn, dp, stat["name"][:38], stat["n"],
+                 stat["last"], stat["ts"]))
 
     print("\n-- drops (%d) --" % len(replayer.drops))
     reasons = {}
@@ -378,22 +431,25 @@ def report(replayer, timeline):
                      entry["remaining"], entry["len"], "; ".join(hint)))
 
     print("\n-- registered datapoints that NEVER decoded --")
-    decoded_names = {name for (name,) in per_key}
+    decoded = set(per_key)
     missing = []
     for preset_dir, entities in replayer.presets.items():
         if preset_dir not in set(replayer.hubs.values()):
             continue
-        for _key, (name, type_name, _mult) in entities.items():
-            if name not in decoded_names:
-                missing.append((preset_dir, name, type_name))
-    for preset_dir, name, type_name in sorted(missing)[:60]:
-        print("  %-4s %-44s %s" % (preset_dir, name[:44], type_name))
+        for key, (name, type_name, _mult) in entities.items():
+            if (preset_dir, key) not in decoded:
+                missing.append((preset_dir, key[0], key[1], key[2], name, type_name))
+    for preset_dir, fg, fn, dp, name, type_name in sorted(missing)[:60]:
+        print("  %-4s fg=%-3d fn=%-3d dp=%-6d %-38s %s"
+              % (preset_dir, fg, fn, dp, name[:38], type_name))
     if len(missing) > 60:
         print("  ... %d more" % (len(missing) - 60))
     print("  total: %d" % len(missing))
     print("\nNOTE: 'registered datapoints that NEVER decoded' is the issue-#41")
     print("      shortlist -- these entities never received a value during the")
     print("      capture, so they hold whatever they had before (usually 0).")
+    print("      ('multiply' filters are applied; lambda/clamp filters are not, so")
+    print("       the device's 0x8000 'invalid' sentinel shows as -3276.8.)")
 
 
 def main(argv=None):
@@ -401,7 +457,8 @@ def main(argv=None):
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("log", help="candump log file")
     parser.add_argument("--hubs", default="WEZ:1,HV:8,BM:8",
-                        help="device node map, e.g. WEZ:1,HV:8,BM:8 (default)")
+                        help="hub map as TYPE:ADDR (node id = device_type|addr), "
+                             "e.g. WEZ:1,HV:8,BM:8 (default)")
     parser.add_argument("--language", default="de",
                         help="preset language: de/en/fr/it (default de)")
     parser.add_argument("--timeline", action="store_true",

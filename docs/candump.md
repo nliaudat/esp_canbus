@@ -127,6 +127,31 @@ always be turned back OFF.
 
 ---
 
+## Step 4b — Replay a capture offline (issue diagnosis)
+
+Raw frames are only half the story: the other half is what the firmware does
+with them. `tests/replay_candump.py` feeds a saved candump through the same
+framing / CRC / value-decoding logic as `toptronic.cpp` and prints the parser's
+view of the capture:
+
+```bash
+python tests/replay_candump.py my_capture.log --hubs WEZ:1,HV:8,BM:8
+```
+
+It reports the decoded values, the responses the parser dropped (truncated value
+/ bad CRC / no registered sensor), the multi-frame messages that were *started
+but never completed*, and — for [issue #41] — the registered datapoints that
+never received a value at all (these are the entities that stay stuck at their
+previous, usually `0`, value). Add `--timeline` to print every dispatch in
+capture order.
+
+See [`toptronic_internals.md`](toptronic_internals.md) §3 for the output sections
+and caveats.
+
+[issue #41]: https://github.com/nliaudat/esp_canbus/issues/41
+
+---
+
 ## Step 5 — Disable before production
 
 Candump is **debug only**:

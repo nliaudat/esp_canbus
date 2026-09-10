@@ -568,7 +568,7 @@ def test_reassembly_requires_matching_header():
     Reference sample (docs/candump_base.log §2): a 3-frame 0x56 response with
     header 0x5F reassembles to 52. The issue-#41 capture instead shows
     continuations whose header is start_header + 1, which the current matching
-    rule (correctly, per the reference capture) refuses to complete — the
+    rule (correctly, per the reference capture) refuses to complete: the
     datapoint then never publishes and the sensor keeps its stale/zero value.
     """
     start = 0x1F5047FF
@@ -583,7 +583,7 @@ def test_reassembly_requires_matching_header():
     assert compute_crc16(done[0]) == 0x10B3, "reassembled CRC must validate"
 
     # Same start frame, but the continuation carries header+1 (0x60): the
-    # message must stay pending — this is the issue-#41 failure mode.
+    # message must stay pending - this is the issue-#41 failure mode.
     frames = [
         (start, bytes.fromhex("195F5600 00A28D80".replace(" ", ""))),
         (0x1E1047FF, bytes.fromhex("60000000 00000000".replace(" ", ""))),
