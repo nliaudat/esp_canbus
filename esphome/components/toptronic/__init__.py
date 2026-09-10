@@ -31,6 +31,7 @@ CONF_DATAPOINT = "datapoint"
 CONF_DECIMAL = "decimal"
 CONF_VALUES = "values"
 CONF_LANGUAGE = "language"
+CONF_NAME_PREFIX = "name_prefix"
 CONF_BOOT_REFRESH_DELAY = "boot_refresh_delay"
 CONF_MAX_PENDING_MESSAGES = "max_pending_messages"
 CONF_MAX_PENDING_AGE = "max_pending_age"
@@ -102,6 +103,39 @@ def get_device_type(t: str) -> int:
     return _device_types.get(t)
 
 
+def _resolve_hub_prefix(config):
+    """Return the name prefix for this hub's generated entities, or None.
+
+    ESPHome validates entity names build-wide (keyed on the sub-device id, the
+    platform and the hash of the sanitized name), but the preset names are only
+    unique within a single device type. Prefixing with the device type keeps
+    every generated entity unique when several hubs are configured. Single-hub
+    builds return None so existing entity names (and their object_ids) are
+    unchanged; an explicit ``name_prefix`` always wins.
+    """
+    explicit = config.get(CONF_NAME_PREFIX)
+    if explicit:
+        return explicit.strip()
+    hubs = CORE.config.get("toptronic", []) if CORE.config else []
+    if len(hubs) <= 1:
+        return None
+    device_type = config["device_type"]
+    if sum(1 for h in hubs if h.get("device_type") == device_type) > 1:
+        return f"{device_type} {config[CONF_DEVICE_ADDR]}"
+    return device_type
+
+
+def _sanitize_entity_name(name: str) -> str:
+    """Replace '/' with '_' in a generated entity name.
+
+    ESPHome reserves '/' as a URL path separator: 2026.x only warns and
+    substitutes a Unicode fraction slash, but 2027.7 makes it an error. '_' is
+    chosen over '-' because ``sanitize()`` maps both '/' and '_' to '_', so the
+    computed object_id (and therefore the Home Assistant entity) is unchanged.
+    """
+    return name.replace("/", "_")
+
+
 def _validate_preset(config):
     device_type = config["device_type"]
     if device_type not in _device_types:
@@ -167,6 +201,7 @@ CONFIG_SCHEMA = cv.All(
             ),
             cv.Required(CONF_DEVICE_ADDR): cv.uint8_t,
             cv.Optional(CONF_LANGUAGE, default="en"): cv.one_of(*LANGS, lower=True),
+            cv.Optional(CONF_NAME_PREFIX): cv.string,
             cv.Optional(
                 CONF_BOOT_REFRESH_DELAY, default="30s"
             ): cv.positive_time_period_milliseconds,
@@ -263,6 +298,7 @@ async def _generate_entities(hub, config):
         "button": (button.CONFIG_SCHEMA, button.to_code),
     }
 
+    prefix = _resolve_hub_prefix(config)
     used_ids = _shared_used_ids()
     for platform_name, entity_conf in _load_entities(
         config["device_type"], config[CONF_LANGUAGE]
@@ -277,6 +313,15 @@ async def _generate_entities(hub, config):
         hub_ref = config[CONF_ID].copy()
         hub_ref.is_declaration = False
         entity_conf[CONF_TOPTRONIC_ID] = hub_ref
+
+        # Unique build-wide (see _resolve_hub_prefix) and free of '/' (ESPHome's
+        # reserved URL path separator — see _sanitize_entity_name).
+        name = entity_conf.get(CONF_NAME)
+        if name:
+            name = _sanitize_entity_name(name)
+            if prefix:
+                name = f"{prefix} {name}"
+            entity_conf[CONF_NAME] = name
 
         schema, codegen = platforms[platform_name]
         validated = schema(entity_conf)

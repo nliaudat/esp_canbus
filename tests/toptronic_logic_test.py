@@ -482,6 +482,120 @@ def test_refresh_burst_stall_aborted():
     print("OK  stalled burst is aborted by the watchdog; a fresh refresh can start")
 
 
+# ---------------------------------------------------------------------------
+# Issue #41 — multi-frame reassembly / start-frame filtering
+# ---------------------------------------------------------------------------
+# Command bytes that may start a TopTronic message payload (mirror of
+# is_toptronic_command() in toptronic.cpp).
+TOP_TRONIC_COMMANDS = (GET_REQ, SET_REQ, 0x42, 0x56)
+
+
+def is_toptronic_command(cmd):
+    return cmd in TOP_TRONIC_COMMANDS
+
+
+def reassemble(frames):
+    """Mirror of parse_frame(): returns (dispatched_payloads, pending_keys).
+
+    ``frames`` is a list of ``(can_id, data_bytes)``. Both single-frame
+    dispatches and completed multi-frame reassemblies are returned as the
+    payload bytes with the trailing 2 CRC bytes already stripped.
+    """
+    pending = {}   # (device_id, header) -> [bytearray, remaining]
+    dropped = 0
+    done = []
+    for can_id, data in frames:
+        msg_id = can_id >> 24
+        device_id = (can_id >> 11) & 0x7FF
+        if msg_id == 0x1F:
+            if len(data) < 2:
+                continue
+            num_remaining = data[0] >> 3
+            if num_remaining > 8 or num_remaining == 1:
+                dropped += 1
+                continue
+            if num_remaining == 0:
+                done.append(bytes(data[1:]))
+                continue
+            if len(data) < 3 or not is_toptronic_command(data[2]):
+                dropped += 1
+                continue
+            pending[(device_id, data[1])] = [bytearray(data[2:]), num_remaining - 1]
+        else:
+            if len(data) < 2:
+                continue
+            key = (device_id, data[0])
+            entry = pending.get(key)
+            if entry is None:
+                continue
+            entry[0] += data[1:]
+            entry[1] -= 1
+            if entry[1] == 0:
+                buf, _remaining = pending.pop(key)
+                done.append(bytes(buf)[:-2])
+    return done, pending, dropped
+
+
+def test_start_frame_command_filter():
+    """Non-TopTronic register-block broadcasts must not enter the pending map.
+
+    The issue-#41 capture contains ~80 start frames whose payload begins with
+    0x50/0x70/0x74 etc. (register blocks). They never send the continuations the
+    reassembler waits for, so admitting them only fills pending_messages_ and
+    evicts real in-progress datapoint responses.
+    """
+    for cmd in (GET_REQ, SET_REQ, 0x42, 0x56):
+        assert is_toptronic_command(cmd), f"0x{cmd:02X} must be accepted"
+    for cmd in (0x50, 0x70, 0x74, 0x61, 0x52, 0x08):
+        assert not is_toptronic_command(cmd), f"0x{cmd:02X} must be rejected"
+
+    # Real captures: keep the 0x42/0x56 datapoint responses, drop the rest.
+    frames = [
+        (0x1F400FFF, bytes.fromhex("19 23 56 02 00 13 BA 80".replace(" ", ""))),  # 0x56 ext resp
+        (0x1F400FFF, bytes.fromhex("11 40 56 3C FE 00 2D F5".replace(" ", ""))),  # 0x56 ext resp
+        (0x1F400FFF, bytes.fromhex("19 C5 70 A1 00 01 52 08".replace(" ", ""))),  # 0x70 block
+        (0x1F400FFF, bytes.fromhex("11 5C 74 04 FF 00 00 00".replace(" ", ""))),  # 0x74 block
+    ]
+    _done, pending, dropped = reassemble(frames)
+    assert dropped == 2, f"expected 2 dropped register blocks, got {dropped}"
+    assert len(pending) == 2, f"expected 2 pending responses, got {len(pending)}"
+    print("OK  register-block start frames are rejected before reassembly")
+
+
+def test_reassembly_requires_matching_header():
+    """A continuation only completes the message whose header it repeats.
+
+    Reference sample (docs/candump_base.log §2): a 3-frame 0x56 response with
+    header 0x5F reassembles to 52. The issue-#41 capture instead shows
+    continuations whose header is start_header + 1, which the current matching
+    rule (correctly, per the reference capture) refuses to complete — the
+    datapoint then never publishes and the sensor keeps its stale/zero value.
+    """
+    start = 0x1F5047FF
+    frames = [
+        (start, bytes.fromhex("195F5600 00A28D80".replace(" ", ""))),
+        (0x1E1047FF, bytes.fromhex("5F000000 00000000".replace(" ", ""))),
+        (0x1D9047FF, bytes.fromhex("5F3410B3".replace(" ", ""))),
+    ]
+    done, pending, _dropped = reassemble(frames)
+    assert len(done) == 1, f"expected 1 reassembly, got {len(done)}"
+    assert done[0].hex() == "560000a28d800000000000000034", done[0].hex()
+    assert compute_crc16(done[0]) == 0x10B3, "reassembled CRC must validate"
+
+    # Same start frame, but the continuation carries header+1 (0x60): the
+    # message must stay pending — this is the issue-#41 failure mode.
+    frames = [
+        (start, bytes.fromhex("195F5600 00A28D80".replace(" ", ""))),
+        (0x1E1047FF, bytes.fromhex("60000000 00000000".replace(" ", ""))),
+        (0x1D9047FF, bytes.fromhex("603410B3".replace(" ", ""))),
+    ]
+    done, pending, _dropped = reassemble(frames)
+    assert done == [], "a mismatching header must not complete the message"
+    # start can_id 0x1F5047FF -> sender node 0x208 (HV@8); header stays 0x5F.
+    assert (0x208, 0x5F) in pending, "the 0x5F message must still be pending"
+    print("OK  continuation must repeat the start frame header to complete")
+
+
 if __name__ == "__main__":
     test_crc16_samples()
     test_build_can_id()
@@ -495,4 +609,6 @@ if __name__ == "__main__":
     test_refresh_retry_unanswered_get_retried_then_give_up()
     test_refresh_coalesce_during_burst()
     test_refresh_burst_stall_aborted()
+    test_start_frame_command_filter()
+    test_reassembly_requires_matching_header()
     print("\nAll logic tests passed.")
