@@ -402,6 +402,7 @@ TopTronicBase = toptronic.class_("TopTronicBase", cg.PollingComponent)
 - `_generate_entities()` loads `presets/<device>/sensors_<lang>.yaml` and `inputs_<lang>.yaml`, strips `platform`/`device_type`/`device_addr`, injects the hub reference, and runs each platform's own schema + codegen.
 - All predefined `CONF_*` constants live in `__init__.py` (shared by the five platform files) — do not scatter new constants into `sensor.py`/`number.py`/`select.py`/`text_sensor.py`/`button.py`.
 - Platform files import shared pieces (`CONFIG_SCHEMA_BASE`, `CONF_TT_ID`, `CONF_FUNCTION_GROUP`, `CONF_FUNCTION_NUMBER`, `CONF_DATAPOINT`, `TT_TYPE_OPTIONS`) from the package — keep this DRY.
+- `_resolve_hub_prefix()` prefixes every generated entity `name` with the hub's device type when more than one hub is configured (the address is appended when two hubs share a type, an explicit `name_prefix` wins, and it returns `None` for a single hub). This is REQUIRED because ESPHome validates entity names build-wide and preset names are only unique per device type.
 
 ### 6.3 Type Mappings
 
@@ -471,6 +472,7 @@ toptronic:
 
 - The CAN bus `bit_rate` MUST stay 50 kbps (`bit_rate: 50kbps`).
 - `secrets.yaml` is gitignored — never commit it.
+- `name_prefix` (optional) overrides the auto device-type prefix applied to generated entity names when multiple hubs are configured.
 
 ### 8.2 Presets are generated artifacts
 

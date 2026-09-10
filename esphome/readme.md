@@ -70,6 +70,7 @@ toptronic:
 | `device_type` | yes | — | One of `WEZ`, `SOL`, `PS`, `FW`, `HK`, `MWA`, `GLT`, `HV`, `BM`, `GW` (`BD` is an alias for `BM`; use `BM`). |
 | `device_addr` | yes | — | Bus address (typical defaults: `HV=8`, `BM=8`, `WEZ=1` — find it on the room control unit). |
 | `language` | no | `en` | Preset language: `de`, `en`, `fr`, `it`. |
+| `name_prefix` | no | device type | Prefix prepended to every entity name generated from this hub's presets. Defaults to the device type when more than one hub is configured (the address is appended when two hubs share a type) and is empty for a single-hub build. Set it explicitly to override. |
 | `boot_refresh_delay` | no | `30s` | One-shot full refresh after boot; `0` disables it. |
 | `max_pending_messages` | no | `32` | Max concurrently reassembled multi-frame messages (per hub). Raise on a large multi-hub bus. |
 | `max_pending_age` | no | `5000ms` | A pending message with no continuation frame this long is considered lost. |
@@ -84,6 +85,13 @@ toptronic:
 | `update_interval` | no | `30s` | Polling interval for the read-only entities (`sensor`/`text_sensor`) generated from this hub's presets; each poll sends a GET_REQUEST. Entity-level key (configured in the preset files), not a hub configuration key — write entities never poll. |
 
 `MULTI_CONF = true` — declare as many hubs as you have devices.
+
+> **Multiple devices:** preset entity names are only unique within one device
+> type (e.g. `FW` and `WEZ` both expose `AF1 - outdoor sensor 1`). Because
+> ESPHome requires entity names to be unique build-wide, each hub's generated
+> entities are prefixed with the device type whenever more than one hub is
+> configured (see `name_prefix`). A single-hub build is left unchanged, so its
+> entity names and object ids are unaffected.
 
 ---
 

@@ -226,6 +226,7 @@ python:
     - "strip platform/device_type/device_addr, inject hub reference, run platform schema + codegen"
     - "All CONF_* constants live in __init__.py (shared by 5 platform files)"
     - "Platform files import shared pieces (CONFIG_SCHEMA_BASE, CONF_TT_ID, CONF_FUNCTION_GROUP, CONF_FUNCTION_NUMBER, CONF_DATAPOINT, TT_TYPE_OPTIONS)"
+    - "_resolve_hub_prefix() prefixes generated entity names with the device type when >1 hub is configured (addr appended on same-type clash; explicit name_prefix wins; None for single hub) --- ESPHome validates entity names build-wide, preset names are only unique per device type"
   type_mapping:
     - "TT_TYPE_OPTIONS (U8/U16/U32/S8/S16/S32/S64 -> TypeName) is the ONLY source --- no duplicates"
 
@@ -247,7 +248,7 @@ schema:
 # =============================================================================
 yaml_presets:
   hub_usage:
-    - "toptronic: [{id, canbus_id, device_type: HV/WEZ/BM (BD alias -> BM), device_addr: defaults HV=8 BM=8 WEZ=1, language: de/en/fr/it}]"
+    - "toptronic: [{id, canbus_id, device_type: HV/WEZ/BM (BD alias -> BM), device_addr: defaults HV=8 BM=8 WEZ=1, language: de/en/fr/it, name_prefix: optional override}]"
     - "canbus bit_rate MUST stay 50kbps"
     - "secrets.yaml gitignored --- never commit"
     - "write safety: write_min_interval (default 2s, 0=off) rate-limits SETs per datapoint; reject_writes_before_read (default true) blocks SETs until the datapoint answered a GET since boot (buttons exempt)"

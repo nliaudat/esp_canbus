@@ -26,3 +26,18 @@ toptronic:
     device_type: HV
     device_addr: 8
     language: en
+
+  # Multi-hub regression guard: WEZ and HK share several preset entity names
+  # (e.g. "Normal room temp. heating oper. (1)"), which must not collide once
+  # the hub name prefix is applied.
+  - id: tt_wez
+    canbus_id: canbus_toptronic
+    device_type: WEZ
+    device_addr: 1
+    language: en
+
+  - id: tt_hk
+    canbus_id: canbus_toptronic
+    device_type: HK
+    device_addr: 9
+    language: en
