@@ -367,6 +367,271 @@ sensor:
     device_class: temperature
     state_class: measurement
     internal: true
+
+  # ---------------------------------------------------------------------------
+  # Verified on an independent UltraSource B comfort C17 (TTE-WEZ, commissioned
+  # 2021) via CAN GET plus 5-minute long-term logging, cross-checked against the
+  # energy counters and Hoval's own Modbus register list.
+  # Evidence and raw CSVs: https://github.com/newstedaut/hoval_datapoints
+  # ---------------------------------------------------------------------------
+  - platform: toptronic
+    name: COP current
+    device_type: WEZ
+    function_group: 60
+    function_number: 254
+    datapoint: 45
+    id: WEZ_60_254_45
+    type: U8
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+    icon: mdi:gauge
+    state_class: measurement
+    # Live COP while the compressor runs; reads 0 when idle.
+  - platform: toptronic
+    name: Heat quantity cooling
+    device_type: WEZ
+    function_group: 60
+    function_number: 254
+    datapoint: 51
+    id: WEZ_60_254_51
+    type: U32
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+    unit_of_measurement: MWh
+    icon: mdi:snowflake
+    device_class: energy
+    state_class: measurement
+    # Lifetime cooling energy counter -- the cooling counterpart to dp 47 / dp
+    # 55.
+  - platform: toptronic
+    name: Water pressure
+    device_type: WEZ
+    function_group: 60
+    function_number: 254
+    datapoint: 32
+    id: WEZ_60_254_32
+    type: S16
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+      - lambda: 'return (x < -3000.0f) ? NAN : x;'   # 0x8000 = invalid / no sensor
+    unit_of_measurement: bar
+    icon: mdi:gauge
+    state_class: measurement
+    # Reads 0x8000 (invalid) when no pressure sensor is wired; filtered to NaN
+    # below.
+  - platform: toptronic
+    name: Source flow (evaporator inlet)
+    device_type: WEZ
+    function_group: 60
+    function_number: 254
+    datapoint: 84
+    id: WEZ_60_254_84
+    type: S16
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+    unit_of_measurement: "\xB0C"
+    icon: mdi:thermometer
+    device_class: temperature
+    state_class: measurement
+  - platform: toptronic
+    name: Source return (evaporator surface)
+    device_type: WEZ
+    function_group: 60
+    function_number: 254
+    datapoint: 85
+    id: WEZ_60_254_85
+    type: S16
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+    unit_of_measurement: "\xB0C"
+    icon: mdi:thermometer
+    device_class: temperature
+    state_class: measurement
+  - platform: toptronic
+    name: Heating operation running time
+    device_type: WEZ
+    function_group: 60
+    function_number: 7
+    datapoint: 1033
+    id: WEZ_60_7_1033
+    type: S32
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+    unit_of_measurement: h
+    icon: mdi:clock-outline
+    device_class: duration
+    state_class: total_increasing
+    # Scale 0.1 h. Verified: 71.979 MWh / 10156.3 h = 7.1 kW mean output on a 17
+    # kW unit.
+  - platform: toptronic
+    name: Cooling operation running time
+    device_type: WEZ
+    function_group: 60
+    function_number: 7
+    datapoint: 1034
+    id: WEZ_60_7_1034
+    type: S32
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+    unit_of_measurement: h
+    icon: mdi:clock-outline
+    device_class: duration
+    state_class: total_increasing
+    # NOTE: Hoval's own list names this dp "Operating hours DHW" elsewhere --
+    # that name is wrong, the values say cooling.
+  - platform: toptronic
+    name: Hot water operation running time
+    device_type: WEZ
+    function_group: 60
+    function_number: 7
+    datapoint: 1035
+    id: WEZ_60_7_1035
+    type: S32
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+    unit_of_measurement: h
+    icon: mdi:clock-outline
+    device_class: duration
+    state_class: total_increasing
+    # NOTE: same name collision as dp 1034, in the other direction.
+  - platform: toptronic
+    name: Switching cycles heat generator (total)
+    device_type: WEZ
+    function_group: 10
+    function_number: 1
+    datapoint: 2080
+    id: WEZ_10_1_2080
+    type: U32
+    accuracy_decimals: 0
+    icon: mdi:counter
+    state_class: total_increasing
+    # TOTAL starts. Do not confuse with dp 2083, which only counts starts above
+    # 50 % modulation (~2.4x lower).
+  - platform: toptronic
+    name: Operating hours heat generator
+    device_type: WEZ
+    function_group: 10
+    function_number: 1
+    datapoint: 2081
+    id: WEZ_10_1_2081
+    type: U32
+    accuracy_decimals: 0
+    unit_of_measurement: h
+    icon: mdi:clock-outline
+    device_class: duration
+    state_class: total_increasing
+    # Appears twice in Hoval's register list (two mirrored register pairs), same
+    # value.
+  - platform: toptronic
+    name: Operating hours above 50% modulation
+    device_type: WEZ
+    function_group: 10
+    function_number: 1
+    datapoint: 2082
+    id: WEZ_10_1_2082
+    type: U32
+    accuracy_decimals: 0
+    unit_of_measurement: h
+    icon: mdi:clock-outline
+    device_class: duration
+    state_class: total_increasing
+  - platform: toptronic
+    name: Switching cycles above 50% modulation
+    device_type: WEZ
+    function_group: 10
+    function_number: 1
+    datapoint: 2083
+    id: WEZ_10_1_2083
+    type: U32
+    accuracy_decimals: 0
+    icon: mdi:counter
+    state_class: total_increasing
+  - platform: toptronic
+    name: System output setpoint heating
+    device_type: WEZ
+    function_group: 3
+    function_number: 0
+    datapoint: 2040
+    id: WEZ_3_0_2040
+    type: S16
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+      - lambda: 'return (x <= -126.5f) ? NAN : x;'   # -127.0 = invalid marker
+    unit_of_measurement: '%'
+    icon: mdi:percent
+    state_class: measurement
+    # -100.0 = this channel requests nothing (valid reading). -127.0 = invalid,
+    # filtered to NaN.
+  - platform: toptronic
+    name: System output setpoint DHW
+    device_type: WEZ
+    function_group: 3
+    function_number: 0
+    datapoint: 2041
+    id: WEZ_3_0_2041
+    type: S16
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+      - lambda: 'return (x <= -126.5f) ? NAN : x;'   # -127.0 = invalid marker
+    unit_of_measurement: '%'
+    icon: mdi:percent
+    state_class: measurement
+  - platform: toptronic
+    name: System output setpoint cooling
+    device_type: WEZ
+    function_group: 3
+    function_number: 0
+    datapoint: 2042
+    id: WEZ_3_0_2042
+    type: S16
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+      - lambda: 'return (x <= -126.5f) ? NAN : x;'   # -127.0 = invalid marker
+    unit_of_measurement: '%'
+    icon: mdi:percent
+    state_class: measurement
+  - platform: toptronic
+    name: Set value output heat generator
+    device_type: WEZ
+    function_group: 4
+    function_number: 0
+    datapoint: 1009
+    id: WEZ_4_0_1009
+    type: S16
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+      - lambda: 'return (x <= -126.5f) ? NAN : x;'   # -127.0 = invalid marker
+    unit_of_measurement: '%'
+    icon: mdi:percent
+    state_class: measurement
+    # Equals whichever of dp 2040/2041/2042 is active (99.1 % match over 6587
+    # samples).
+  - platform: toptronic
+    name: Current request on heat generator
+    device_type: WEZ
+    function_group: 4
+    function_number: 0
+    datapoint: 2043
+    id: WEZ_4_0_2043
+    type: U8
+    accuracy_decimals: 0
+    unit_of_measurement: '%'
+    icon: mdi:toggle-switch
+    state_class: measurement
+    # Despite the name this is binary: only 0 or 100 were ever observed.
+
 text_sensor:
   - platform: toptronic
     name: Heating operation choice (1)
@@ -699,3 +964,4 @@ text_sensor:
       - 1
       - 2
       - 3
+
