@@ -41,6 +41,30 @@ def build_can_id(sender_id, receiver_mask):
     return (0x7F << 22) | (sender_id << 11) | receiver_mask
 
 
+# Device-type bit values (mirror of the component's DeviceType enum). A hub's CAN
+# node id is ``device_type | device_addr`` — e.g. WEZ@1 -> 1, HV@8 -> 520
+# (512|8), BM@8 -> 1032 (1024|8). BM/BD and HK/HKW are aliases.
+DEVICE_TYPE_IDS = {
+    "WEZ": 0,
+    "SOL": 64,
+    "PS": 128,
+    "FW": 192,
+    "HK": 256,
+    "HKW": 256,
+    "MWA": 384,
+    "GLT": 448,
+    "HV": 512,
+    "BM": 1024,
+    "BD": 1024,
+    "GW": 1153,
+}
+
+
+def resolve_hub_node_id(device_type, device_addr):
+    """Node id a hub's frames carry: ``device_type | device_addr``."""
+    return DEVICE_TYPE_IDS[device_type.upper()] | int(device_addr)
+
+
 GET_REQ = 0x40
 SET_REQ = 0x46
 
@@ -596,6 +620,31 @@ def test_reassembly_requires_matching_header():
     print("OK  continuation must repeat the start frame header to complete")
 
 
+def test_hub_node_id_resolution():
+    """The documented --hubs defaults must resolve to the on-wire node ids.
+
+    Frames are matched on ``device_type | device_addr`` (HV@8 -> 520), never the
+    bare address, and two hubs must not collide on the same node id. This mirrors
+    ``parse_hubs()`` in ``tests/replay_candump.py`` — kept as a mirror because
+    that module imports PyYAML, which the CI logic-test job does not install.
+    """
+    # Documented default for the replay tool: "WEZ:1,HV:8,BM:8".
+    resolved = {
+        name: resolve_hub_node_id(name, addr)
+        for name, addr in (("WEZ", 1), ("HV", 8), ("BM", 8))
+    }
+    assert resolved == {"WEZ": 1, "HV": 520, "BM": 1032}, resolved
+    assert len(set(resolved.values())) == 3, "node ids must be distinct"
+
+    # Aliases and reference values.
+    assert resolve_hub_node_id("BD", 8) == 1032
+    assert resolve_hub_node_id("HKW", 9) == (256 | 9)
+    assert resolve_hub_node_id("GW", 12) == (1153 | 12)
+    # A same-type pair keeps distinct node ids (different addresses).
+    assert resolve_hub_node_id("HV", 8) != resolve_hub_node_id("HV", 9)
+    print("OK  hub node ids use device_type | device_addr (defaults are distinct)")
+
+
 if __name__ == "__main__":
     test_crc16_samples()
     test_build_can_id()
@@ -611,4 +660,5 @@ if __name__ == "__main__":
     test_refresh_burst_stall_aborted()
     test_start_frame_command_filter()
     test_reassembly_requires_matching_header()
+    test_hub_node_id_resolution()
     print("\nAll logic tests passed.")

@@ -228,6 +228,10 @@ id seen on the wire (`device_type | device_addr`, e.g. `HV:8` -> `520`). Aliases
 `HKW`->`HK` and `BD`->`BM` are accepted. Options: `--language de|en|fr|it`
 (default `de`) and `--timeline` (print every dispatch in capture order).
 
+An unknown device type, a missing preset directory, or two entries resolving to
+the same node id is reported as an **error and a non-zero exit** — the tool
+refuses to produce diagnostics from a hub map that would silently drop traffic.
+
 Output sections:
 
 | Section | Meaning |

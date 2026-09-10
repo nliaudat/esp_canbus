@@ -326,10 +326,13 @@ def parse_hubs(spec, presets):
     """Map ``<preset_dir>:<device_addr>`` pairs to CAN node ids.
 
     Frames are matched on the encoded node id ``device_type | device_addr``
-    (e.g. HV@8 -> 520), never the bare address, so the address alone would match
-    no frame and silently drop that hub's traffic.
+    (e.g. HV@8 -> 520), never the bare address, so using the address alone would
+    match no frame and silently drop that hub's traffic. Returns ``(hubs,
+    errors)`` — the caller exits non-zero on any error rather than producing
+    incomplete diagnostics.
     """
     hubs = {}
+    errors = []
     for item in spec.split(","):
         item = item.strip()
         if not item:
@@ -337,23 +340,23 @@ def parse_hubs(spec, presets):
         type_name, _, addr = item.partition(":")
         type_name = type_name.upper()
         if type_name not in DEVICE_TYPE_IDS:
-            print("warning: unknown device type %r in --hubs" % type_name,
-                  file=sys.stderr)
+            errors.append("unknown device type %r in --hubs" % type_name)
             continue
         preset_dir = _PRESET_ALIAS.get(type_name, type_name)
         if preset_dir not in presets:
-            print("warning: no presets found for %r" % preset_dir, file=sys.stderr)
+            errors.append("no presets found for %r" % preset_dir)
+            continue
         try:
             node = DEVICE_TYPE_IDS[type_name] | int(addr)
         except ValueError:
-            print("warning: bad address %r for %s" % (addr, type_name),
-                  file=sys.stderr)
+            errors.append("bad address %r for %s" % (addr, type_name))
             continue
         if node in hubs:
-            print("warning: node 0x%03X mapped twice (%s and %s)"
-                  % (node, hubs[node], preset_dir), file=sys.stderr)
+            errors.append("node 0x%03X mapped twice (%s and %s)"
+                          % (node, hubs[node], preset_dir))
+            continue
         hubs[node] = preset_dir
-    return hubs
+    return hubs, errors
 
 
 def replay(path, hubs, presets):
@@ -469,7 +472,12 @@ def main(argv=None):
     if not presets:
         print("error: no presets found under %s" % PRESETS_DIR, file=sys.stderr)
         return 2
-    hubs = parse_hubs(args.hubs, presets)
+    hubs, errors = parse_hubs(args.hubs, presets)
+    for message in errors:
+        print("error: %s" % message, file=sys.stderr)
+    if errors:
+        print("error: fix --hubs (e.g. WEZ:1,HV:8,BM:8) and retry", file=sys.stderr)
+        return 2
     replayer = replay(args.log, hubs, presets)
     report(replayer, args.timeline)
     return 0
