@@ -65,6 +65,19 @@ def resolve_hub_node_id(device_type, device_addr):
     return DEVICE_TYPE_IDS[device_type.upper()] | int(device_addr)
 
 
+def resolve_entity_id_qualifier(device_type, device_addr, shares_addr, bus_id):
+    """Qualifier prefixed to a *colliding* preset id (mirror of __init__.py).
+
+    ``shares_addr`` is True when another hub uses the same device type **and**
+    address (on a different CAN bus) — only then is the bus id needed, so the
+    common same-type/different-address case keeps the short ``<TYPE>_<addr>``.
+    """
+    qualifier = "%s_%s" % (device_type.upper(), device_addr)
+    if shares_addr:
+        qualifier = "%s_%s" % (qualifier, bus_id)
+    return qualifier
+
+
 GET_REQ = 0x40
 SET_REQ = 0x46
 
@@ -645,6 +658,51 @@ def test_hub_node_id_resolution():
     print("OK  hub node ids use device_type | device_addr (defaults are distinct)")
 
 
+def test_entity_id_qualifier_is_hub_unique():
+    """Colliding preset ids must stay unique for every hub, including 3+ buses.
+
+    Two hubs with the same device type and *different* addresses need no bus id;
+    two or more sharing both the type and the address (only possible on
+    different CAN buses) must include the bus id, otherwise the third hub would
+    recreate an id already registered by the second and the build would fail.
+    """
+    assert resolve_entity_id_qualifier("HV", 8, False, "cbus") == "HV_8"
+    assert resolve_entity_id_qualifier("HV", 9, False, "cbus") == "HV_9"
+
+    qualifiers = {
+        resolve_entity_id_qualifier("HV", 8, True, bus)
+        for bus in ("cbus_a", "cbus_b", "cbus_c")
+    }
+    assert qualifiers == {"HV_8_cbus_a", "HV_8_cbus_b", "HV_8_cbus_c"}, qualifiers
+    assert len(qualifiers) == 3, "three same-type+addr hubs must not collide"
+    print("OK  colliding preset ids get a hub-unique qualifier (bus id when shared)")
+
+
+def test_replay_keys_are_per_hub():
+    """The replay tool must key results by hub node id, not by preset dir.
+
+    Two hubs of the same device type at different addresses share one preset dir,
+    so keying only on ``(preset_dir, datapoint)`` would merge their values and
+    could hide a datapoint that never decoded on one of them.
+    """
+    import replay_candump as rc
+
+    presets = {"HV": {(50, 0, 37602): ("Temperatur Abluft", "S16", 0.1)}}
+    hubs, errors = rc.parse_hubs("HV:8,HV:9", presets)
+    assert not errors, errors
+    assert hubs == {520: "HV", 521: "HV"}, hubs
+
+    replayer = rc.Replayer(hubs, presets)
+    frame = bytes([0x01, 0x42, 50, 0, 0x92, 0xE2, 0x01, 0x18])  # (50,0,37602)=28.0
+    for node in (520, 521):
+        can_id = (0x1F << 24) | (node << 11) | 0x7FF
+        replayer.feed(can_id, frame, "00:00:00.000")
+
+    keys = {(d[1], d[3]) for d in replayer.dispatches}
+    assert keys == {(520, (50, 0, 37602)), (521, (50, 0, 37602))}, keys
+    print("OK  replay keys dispatches per hub node id (same-type hubs stay separate)")
+
+
 if __name__ == "__main__":
     test_crc16_samples()
     test_build_can_id()
@@ -661,4 +719,6 @@ if __name__ == "__main__":
     test_start_frame_command_filter()
     test_reassembly_requires_matching_header()
     test_hub_node_id_resolution()
+    test_entity_id_qualifier_is_hub_unique()
+    test_replay_keys_are_per_hub()
     print("\nAll logic tests passed.")

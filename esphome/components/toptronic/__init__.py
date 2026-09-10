@@ -369,6 +369,14 @@ async def _generate_entities(hub, config):
     }
 
     prefix = _resolve_hub_prefix(config)
+    # Qualifier for colliding preset ids: the hub's device type + address, plus the
+    # CAN bus id when two hubs share both (only the bus tells them apart — matching
+    # the name prefix). Computed once per hub.
+    identity = _hub_identity(config)  # (bus_id, device_type, device_addr)
+    identities = [_hub_identity(h) for h in _hub_entries()]
+    id_qualifier = f"{identity[1]}_{identity[2]}"
+    if sum(1 for i in identities if i[1] == identity[1] and i[2] == identity[2]) > 1:
+        id_qualifier = f"{id_qualifier}_{identity[0]}"
     used_ids = _shared_used_ids()
     for platform_name, entity_conf in _load_entities(
         config["device_type"], config[CONF_LANGUAGE]
@@ -384,17 +392,16 @@ async def _generate_entities(hub, config):
         hub_ref.is_declaration = False
         entity_conf[CONF_TOPTRONIC_ID] = hub_ref
 
-        # Two hubs of the same device type load the same preset files, which
-        # carry hard-coded `id:`s (e.g. HV_50_0_40651). The first hub keeps them
-        # verbatim so existing lambdas keep working; only an actual collision --
-        # i.e. a second same-type hub -- is qualified with the hub's type and
-        # address. `used_ids` only ever holds toptronic-generated ids, so this
-        # never renames an entity because of an unrelated user id.
+        # Hubs of the same device type load the same preset files, which carry
+        # hard-coded `id:`s (e.g. HV_50_0_40651). The first hub keeps them
+        # verbatim so existing lambdas keep working; only an actual collision is
+        # prefixed with `id_qualifier` (type + address, plus the bus id when two
+        # hubs also share the address, so 3+ buses stay unique). `used_ids` only
+        # ever holds toptronic-generated ids, so this never renames an entity
+        # because of an unrelated user id.
         entity_id = entity_conf.get(CONF_ID)
         if isinstance(entity_id, str) and entity_id in used_ids:
-            entity_conf[CONF_ID] = (
-                f"{config['device_type']}_{config[CONF_DEVICE_ADDR]}_{entity_id}"
-            )
+            entity_conf[CONF_ID] = f"{id_qualifier}_{entity_id}"
 
         # Unique build-wide (see _resolve_hub_prefix) and free of '/' (ESPHome's
         # reserved URL path separator — see _sanitize_entity_name). The prefix is

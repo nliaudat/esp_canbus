@@ -37,11 +37,8 @@ import os
 import re
 import sys
 
-try:
-    import yaml
-except ImportError:  # pragma: no cover - PyYAML ships with ESPHome
-    print("PyYAML is required (pip install pyyaml)", file=sys.stderr)
-    raise SystemExit(2)
+# NOTE: PyYAML is imported lazily inside load_presets() so the parser mirror
+# below can be imported (and unit-tested) without PyYAML installed.
 
 # ---------------------------------------------------------------------------
 # Protocol constants (mirror toptronic.cpp)
@@ -118,6 +115,11 @@ def _multiply_of(entry):
 
 def load_presets(language):
     """Return {preset_dir: {(fg, fn, dp): (name, type, multiply)}}."""
+    try:
+        import yaml
+    except ImportError:  # pragma: no cover - PyYAML ships with ESPHome
+        raise SystemExit("PyYAML is required to load presets (pip install pyyaml)")
+
     table = {}
     if not os.path.isdir(PRESETS_DIR):
         return table
@@ -211,7 +213,8 @@ class Replayer:
 
         raw = int.from_bytes(data[value_off:value_off + width], "big", signed=signed)
         self.dispatches.append(
-            (ts, preset_dir, key, name, type_name, raw, raw * multiply, single))
+            (ts, device_id, preset_dir, key, name, type_name, raw,
+             raw * multiply, single))
 
     # --- parse_frame() -------------------------------------------------------
     def feed(self, can_id, data, ts):
@@ -380,28 +383,30 @@ def report(replayer, timeline):
     print("=" * 78)
 
     if timeline:
-        for ts, preset_dir, _key, name, type_name, raw, value, single in replayer.dispatches:
-            print("  %s %-4s %-38s %-4s raw=%-12d value=%s%s"
-                  % (ts, preset_dir, name[:38], type_name, raw, value,
+        for (ts, device_id, preset_dir, _key, name, type_name, raw, value,
+             single) in replayer.dispatches:
+            print("  %s node=0x%03X %-4s %-34s %-4s raw=%-12d value=%s%s"
+                  % (ts, device_id, preset_dir, name[:34], type_name, raw, value,
                      "" if single else " (multi)"))
 
-    # Group dispatches per (hub, datapoint): same-named entities on different
-    # hubs are distinct datapoints and must not be merged.
+    # Group dispatches per (hub node id, datapoint): two hubs of the same device
+    # type at different addresses are distinct datapoints and must not be merged.
     per_key = {}
-    for (ts, preset_dir, key, name, _type_name, _raw, value_scaled,
+    for (ts, device_id, preset_dir, key, name, _type_name, _raw, value_scaled,
          _single) in replayer.dispatches:
         stat = per_key.setdefault(
-            (preset_dir, key), {"name": name, "n": 0, "last": value_scaled, "ts": ts})
+            (device_id, key),
+            {"dir": preset_dir, "name": name, "n": 0, "last": value_scaled, "ts": ts})
         stat["n"] += 1
         stat["last"] = value_scaled
         stat["ts"] = ts
 
     print("\n-- decoded datapoints (%d dispatches, %d distinct) --"
           % (len(replayer.dispatches), len(per_key)))
-    for (preset_dir, (fg, fn, dp)) in sorted(per_key):
-        stat = per_key[(preset_dir, (fg, fn, dp))]
-        print("  %-4s fg=%-3d fn=%-3d dp=%-6d %-38s n=%-4d last=%s (@%s)"
-              % (preset_dir, fg, fn, dp, stat["name"][:38], stat["n"],
+    for (device_id, (fg, fn, dp)) in sorted(per_key):
+        stat = per_key[(device_id, (fg, fn, dp))]
+        print("  node=0x%03X %-4s fg=%-3d fn=%-3d dp=%-6d %-34s n=%-4d last=%s (@%s)"
+              % (device_id, stat["dir"], fg, fn, dp, stat["name"][:34], stat["n"],
                  stat["last"], stat["ts"]))
 
     print("\n-- drops (%d) --" % len(replayer.drops))
@@ -433,18 +438,18 @@ def report(replayer, timeline):
                   % (entry["ts"], entry["device_id"], entry["header"],
                      entry["remaining"], entry["len"], "; ".join(hint)))
 
-    print("\n-- registered datapoints that NEVER decoded --")
+    print("\n-- registered datapoints that NEVER decoded (per hub) --")
     decoded = set(per_key)
     missing = []
-    for preset_dir, entities in replayer.presets.items():
-        if preset_dir not in set(replayer.hubs.values()):
-            continue
+    for device_id, preset_dir in sorted(replayer.hubs.items()):
+        entities = replayer.presets.get(preset_dir, {})
         for key, (name, type_name, _mult) in entities.items():
-            if (preset_dir, key) not in decoded:
-                missing.append((preset_dir, key[0], key[1], key[2], name, type_name))
-    for preset_dir, fg, fn, dp, name, type_name in sorted(missing)[:60]:
-        print("  %-4s fg=%-3d fn=%-3d dp=%-6d %-38s %s"
-              % (preset_dir, fg, fn, dp, name[:38], type_name))
+            if (device_id, key) not in decoded:
+                missing.append((device_id, preset_dir, key[0], key[1], key[2],
+                                name, type_name))
+    for device_id, preset_dir, fg, fn, dp, name, type_name in sorted(missing)[:60]:
+        print("  node=0x%03X %-4s fg=%-3d fn=%-3d dp=%-6d %-34s %s"
+              % (device_id, preset_dir, fg, fn, dp, name[:34], type_name))
     if len(missing) > 60:
         print("  ... %d more" % (len(missing) - 60))
     print("  total: %d" % len(missing))

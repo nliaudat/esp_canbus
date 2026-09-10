@@ -88,6 +88,16 @@ This keeps existing `id(...)` references in your lambdas working for the origina
 hub while letting same-type hubs compile at all (before this they failed with
 `ERROR ID HV_50_0_40651 is already registered`).
 
+When two hubs share both the type **and** the address (only possible on
+different CAN buses — the same-bus case is rejected below), the CAN bus id is
+appended to the qualifier too, so three or more such hubs still get distinct ids:
+
+```text
+HV 8 on cbus_a:  HV_8_cbus_a_HV_50_0_40651
+HV 8 on cbus_b:  HV_8_cbus_b_HV_50_0_40651
+HV 8 on cbus_c:  HV_8_cbus_c_HV_50_0_40651
+```
+
 ### 1.6 Validation rules
 
 Two hubs may **not** poll the same device on the same bus. A duplicate
@@ -236,13 +246,14 @@ Output sections:
 
 | Section | Meaning |
 |---|---|
-| decoded datapoints | per **(hub, fg, fn, dp)** — value, dispatch count, last timestamp |
+| decoded datapoints | per **(hub node id, fg, fn, dp)** — value, dispatch count, last timestamp |
 | drops | `truncated`, `crc_fail`, `no_sensor`, `non_toptronic_start`, `bad_start`, … |
 | started but never completed | multi-frame messages still waiting for continuations, with an exact-header / `header+1` hint |
-| registered datapoints that NEVER decoded | the issue-#41 shortlist — entities that received no value during the capture, so they keep their previous (usually `0`) value |
+| registered datapoints that NEVER decoded | per-hub issue-#41 shortlist — entities that received no value during the capture, so they keep their previous (usually `0`) value |
 
-Same-named entities on different hubs are reported separately (keyed by hub +
-datapoint), so one hub's value never masks another hub's stuck datapoint.
+Every section is keyed by the hub's **node id**, so two hubs of the same device
+type at different addresses are reported separately — one hub's value can never
+mask a datapoint that never decoded on the other.
 
 Caveats:
 
