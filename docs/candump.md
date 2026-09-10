@@ -151,12 +151,14 @@ and caveats.
 > **Completeness.** Candump logs **every** frame (no rate limit) and does so
 > **only while the switch is on** — normal operation is untouched. The component
 > emits a `[STATS]` line every 10 s and once when candump turns off:
-> `[STATS] candump off: rx=… logged=… throttled=… | parsed=… unowned=… paused=… | capture=OK parse=OK`.
+> `[STATS] candump off: rx=… logged=… throttled=… tx=… | parsed=… unowned=… paused=… | capture=OK parse=OK`.
 > Counters start when candump is enabled. A capture is complete when
 > `rx == logged + throttled`, and every frame was examined when
 > `parsed + unowned + paused == rx`; the `candump off` line reports `capture=` and
-> `parse=` directly. `replay_candump.py` checks both for you; a `[SKIP]` line
-> (DEBUG) names any frame that was not parsed.
+> `parse=` directly. `logged` counts frames handed to the logger, so the file-level
+> check is authoritative: it must hold exactly `logged + tx` candump lines.
+> `replay_candump.py` checks all of this for you; a `[SKIP]` line (DEBUG) names any
+> frame that was not parsed.
 >
 > **Capture tuning (optional).** Two buffers sit between the bus and the log, and
 > both can silently truncate a busy capture: the CAN driver RX queue

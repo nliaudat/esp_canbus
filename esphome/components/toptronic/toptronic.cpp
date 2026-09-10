@@ -39,17 +39,20 @@ static bool is_toptronic_command(uint8_t cmd) {
 }
 
 // Debug frame logging features. Each is an independent build-wide boolean flag,
-// NOT per-hub and NOT mutually exclusive: with multiple toptronic hubs every hub
-// receives every CAN frame, so logging must be deduplicated (see the single debug
-// callback registered in setup()). Both flags reset to OFF on every boot, so they
-// can never become permanent settings. The two debug switches are fully
-// independent — each controls exactly one flag, and both can be active at the
-// same time (candump floods the output, find_can_id still emits its WARN lines).
+// NOT per-hub and NOT mutually exclusive. The switch states are build-wide, while
+// the callbacks that consume them are registered once per CAN bus (see the
+// constructor), so a multi-bus build is fully logged without duplicate lines.
+// Both flags reset to OFF on every boot, so they can never become permanent
+// settings. The two debug switches are fully independent — each controls exactly
+// one flag, and both can be active at the same time (candump floods the output,
+// find_can_id still emits its WARN lines).
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 static bool s_candump_enabled = false;
 static bool s_find_can_id_enabled = false;
-static bool s_debug_callback_registered = false;
-static bool s_receive_callback_registered = false;
+// One receive callback and one debug-logging callback per distinct CAN bus, so a
+// second bus is observed too (and a frame is never routed to a hub on another
+// bus). Several hubs sharing one bus still install a single callback each.
+static std::vector<canbus::Canbus *> s_registered_buses;
 static uint32_t s_candump_start_ms = 0;
 static uint32_t s_find_can_id_start_ms = 0;
 static uint32_t s_last_candump_log_ms = 0;
@@ -69,6 +72,9 @@ static uint32_t s_frames_throttled = 0;
 static uint32_t s_frames_parsed = 0;
 static uint32_t s_frames_skipped_unowned = 0;
 static uint32_t s_frames_skipped_paused = 0;
+// TX frames exported to the candump log (debug_log_tx_frame): the file contains
+// RX + TX lines, so this lets the offline check assert the file exactly.
+static uint32_t s_frames_tx_logged = 0;
 static uint32_t s_last_stats_ms = 0;
 
 // How often the [STATS] completeness summary is emitted while candump is ON.
@@ -84,6 +90,7 @@ static void reset_frame_stats() {
   s_frames_parsed = 0;
   s_frames_skipped_unowned = 0;
   s_frames_skipped_paused = 0;
+  s_frames_tx_logged = 0;
 }
 
 // Emit the frame accounting. Uses raw ESP_LOGI (NOT the TT_LOG* macros) so it
@@ -97,14 +104,16 @@ static void log_frame_stats(const char *context, bool final) {
   if (final) {
     const bool capture_ok = (s_frames_rx == s_frames_logged + s_frames_throttled);
     const bool parse_ok = (s_frames_parsed + s_frames_skipped_unowned + s_frames_skipped_paused == s_frames_rx);
-    ESP_LOGI(TAG, "[STATS] %s: rx=%u logged=%u throttled=%u | parsed=%u unowned=%u paused=%u | capture=%s parse=%s",
+    ESP_LOGI(TAG,
+             "[STATS] %s: rx=%u logged=%u throttled=%u tx=%u | parsed=%u unowned=%u paused=%u | capture=%s parse=%s",
              context, (unsigned) s_frames_rx, (unsigned) s_frames_logged, (unsigned) s_frames_throttled,
-             (unsigned) s_frames_parsed, (unsigned) s_frames_skipped_unowned, (unsigned) s_frames_skipped_paused,
-             capture_ok ? "OK" : "LOSSY", parse_ok ? "OK" : "GAP");
+             (unsigned) s_frames_tx_logged, (unsigned) s_frames_parsed, (unsigned) s_frames_skipped_unowned,
+             (unsigned) s_frames_skipped_paused, capture_ok ? "OK" : "LOSSY", parse_ok ? "OK" : "GAP");
   } else {
-    ESP_LOGI(TAG, "[STATS] %s: rx=%u logged=%u throttled=%u | parsed=%u unowned=%u paused=%u", context,
+    ESP_LOGI(TAG, "[STATS] %s: rx=%u logged=%u throttled=%u tx=%u | parsed=%u unowned=%u paused=%u", context,
              (unsigned) s_frames_rx, (unsigned) s_frames_logged, (unsigned) s_frames_throttled,
-             (unsigned) s_frames_parsed, (unsigned) s_frames_skipped_unowned, (unsigned) s_frames_skipped_paused);
+             (unsigned) s_frames_tx_logged, (unsigned) s_frames_parsed, (unsigned) s_frames_skipped_unowned,
+             (unsigned) s_frames_skipped_paused);
   }
 }
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
@@ -139,8 +148,8 @@ CallbackManager<void(bool)> TopTronic::find_can_id_update_callbacks;
 // ---------------------------------------------------------------------------
 static std::vector<TopTronic *> s_all_instances;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 static constexpr uint32_t REFRESH_STAGGER_MS = 15000;
-// Forward declaration: referenced by the deduplicated debug callback installed
-// in the constructor below (defined later in this file, next to the debug flags).
+// Forward declaration: referenced by the per-bus debug callback installed in the
+// constructor below (defined later in this file, next to the debug flags).
 static void debug_log_frame(const std::vector<uint8_t> &data, uint32_t can_id);
 // Forward declaration: logs the frames THIS gateway transmits (GET/SET requests)
 // while candump is active, so a capture also shows the requested frames. Defined
@@ -166,20 +175,33 @@ static uint32_t s_boot_refresh_start_ms = 0;
 TopTronic::TopTronic(canbus::Canbus *canbus) : canbus_(canbus) {
   s_all_instances.push_back(this);
 
-  // Receive path: one build-wide callback routes every CAN frame to the hub(s)
-  // that registered the sender node. This does NOT depend on device_/sensor
-  // configuration (frames are matched at receipt time), so it is safe to install
-  // before setup(). A single dispatch point (instead of one callback per hub)
-  // keeps the per-frame cost of foreign traffic to a single hash lookup.
-  if (!s_receive_callback_registered) {
-    s_receive_callback_registered = true;
-    this->canbus_->add_callback([](uint32_t can_id, bool, bool rtr, const std::vector<uint8_t> &data) {
+  // Receive + debug-logging callbacks are registered ONCE PER CAN BUS. A hub is
+  // bound to exactly one bus, and installing per bus (rather than a single
+  // build-wide callback) means a multi-bus build is fully observed: every bus gets
+  // a routing callback (parse) and a logging callback (candump / find can_id),
+  // while several hubs on one bus still install a single callback each.
+  // Installing from the constructor (before setup()) means frames are handled from
+  // the very first moment, independent of device_/sensor configuration.
+  canbus::Canbus *const bus = this->canbus_;
+  bool bus_registered = false;
+  for (canbus::Canbus *registered : s_registered_buses) {
+    if (registered == bus) {
+      bus_registered = true;
+      break;
+    }
+  }
+  if (!bus_registered) {
+    s_registered_buses.push_back(bus);
+
+    bus->add_callback([bus](uint32_t can_id, bool, bool rtr, const std::vector<uint8_t> &data) {
       uint32_t device_id = (can_id >> 11) & 0x7FF;
       bool owned = false;
       for (TopTronic *hub : s_all_instances) {
-        // owns_device_() checks the hub's full devices_ map (every device it has
-        // registered), so the sender is never limited to a single address.
-        if (hub->owns_device_(device_id)) {
+        // Only hubs on THIS bus may parse the frame. owns_device_() matches the
+        // sender node id (device_type | device_addr), which is unique per bus but
+        // may repeat across buses for the same device type + address — routing by
+        // node id alone would hand a frame to a hub on another bus.
+        if (hub->canbus_ == bus && hub->owns_device_(device_id)) {
           owned = true;
           hub->parse_frame(data, can_id, rtr);
         }
@@ -190,18 +212,15 @@ TopTronic::TopTronic(canbus::Canbus *canbus) : canbus_(canbus) {
         } else {
           // Raw ESP_LOGD (the TT_LOG* macros are declared further down this file) so
           // a DEBUG capture shows exactly which frames were not parsed, and why.
-          ESP_LOGD(TAG, "[SKIP] node 0x%03X not owned by any configured hub (Can-ID 0x%08X)", (unsigned) device_id,
+          ESP_LOGD(TAG, "[SKIP] node 0x%03X not owned by any hub on this bus (Can-ID 0x%08X)", (unsigned) device_id,
                    (unsigned) can_id);
         }
       }
     });
-  }
 
-  // Deduplicated optional debug logging (candump / find can_id). Installed here
-  // (once, build-wide) so it is also armed from the very first moment.
-  if (!s_debug_callback_registered) {
-    s_debug_callback_registered = true;
-    this->canbus_->add_callback(
+    // Deduplicated optional debug logging (candump / find can_id), armed from the
+    // very first frame on this bus.
+    bus->add_callback(
         [](uint32_t can_id, bool, bool, const std::vector<uint8_t> &data) { debug_log_frame(data, can_id); });
   }
 }
@@ -1151,7 +1170,7 @@ static void set_find_can_id_flag(bool enabled) {
 }
 
 // Optional per-frame debug logging (canbus.yaml candump / Find can_id blocks).
-// Registered exactly ONCE across all hubs (build-wide flags/s_debug_callback_registered);
+// Registered exactly ONCE PER CAN BUS (see the constructor / s_registered_buses);
 // called from a dedicated canbus callback, not from parse_frame(), so a frame is
 // logged once instead of once per hub. Each feature is an independent flag:
 //   CANDUMP      — log every frame as "0x%08X : %02X %02X ..."
@@ -1254,6 +1273,7 @@ static void debug_log_tx_frame(const std::vector<uint8_t> &data, uint32_t can_id
     hex_payload[pos++] = ' ';
   }
   hex_payload[pos] = '\0';
+  s_frames_tx_logged++;
   ESP_LOGI("candump", "0x%08X : %s", (unsigned int) can_id, hex_payload);
 }
 

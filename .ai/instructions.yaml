@@ -305,7 +305,7 @@ memory_perf:
       - "RAII-only ownership --- no raw new/delete/malloc/free anywhere"
       - "devices_ -> unique_ptr<TopTronicDevice> (hub destructor frees all)"
       - "cmd_queue_ xQueueCreate (configure_hub) / vQueueDelete (on_shutdown) paired + nullified"
-      - "Callbacks registered once (guarded statics); s_all_instances grows only at construction"
+      - "CAN receive + logging callbacks registered once PER CAN BUS (s_registered_buses registry, from the constructor); each frame routed only to hubs whose canbus_ is that bus (node ids may repeat across buses); s_all_instances grows only at construction"
     fragmentation:
       - "Single-frame receive path allocation-free (interpret_message reads data+1 directly)"
       - "Multi-frame: exactly ONE vector alloc per message (reserve at start frame); map bounded (32 default)"
@@ -315,7 +315,7 @@ memory_perf:
       - "NEVER add per-frame heap allocation to parse_frame()/interpret_message()"
       - "Keep hex_str() SSO-friendly (reserve(), no stringstream); do not grow log payloads"
       - "Keep DEBUG/candump sessions bounded (auto-off 120s) --- only heap-churn logging path"
-      - "Frame accounting = completeness contract, live ONLY while candump is ON (increments guarded by s_candump_enabled; debug_log_frame early-returns when both debug flags off) and reset on enable (rx = per capture); final record must satisfy rx == logged + throttled AND parsed + unowned + paused == rx; 'candump off' line carries authoritative capture=/parse= verdict; throttled also counts the frame that ended the capture; rx/logged/throttled all in the RX logging callback (running snapshots exact; parsed in the receive callback -> can differ by 1); CANDUMP_MIN_LOG_GAP_MS=0 logs every frame; TX exported candump-only by debug_log_tx_frame; do not remove/re-order counters"
+      - "Frame accounting = completeness contract, live ONLY while candump is ON (increments guarded by s_candump_enabled; debug_log_frame early-returns when both debug flags off) and reset on enable (rx = per capture); final record must satisfy rx == logged + throttled AND parsed + unowned + paused == rx; 'candump off' line carries authoritative capture=/parse= verdict; rx/logged/throttled/tx all in the logging callbacks (running snapshots exact; parsed in the receive callback -> can differ by 1); logged = handed to the logger so the offline file check is authoritative (file must hold exactly logged + tx candump lines, tx = debug_log_tx_frame count); CANDUMP_MIN_LOG_GAP_MS=0 logs every frame; do not remove/re-order counters"
       - "If long-uptime fragmentation is measured: move pending_messages_ to fixed-capacity pool (std::array/StaticVector) --- NOT required today"
 
 # =============================================================================

@@ -199,7 +199,7 @@ refin = true   refout = true   xorout = 0x0000
 
 **✅ REQUIRED:**
 - Own the device map with `std::unique_ptr<TopTronicDevice>` (no raw owning pointers, no leaks).
-- Register CAN callback exactly once in `setup()`.
+- Register the CAN receive + logging callbacks exactly once **per CAN bus** (from the constructor, via the `s_registered_buses` registry) — not once build-wide, so a multi-bus build is fully observed; route each frame only to hubs whose `canbus_` is that bus (node ids can repeat across buses).
 - Cache per-entity GET request payloads once at setup (`cache_request_data()`) — never rebuild per poll.
 - Use `unordered_map` for `devices_`/`pending_messages_` (O(1) lookup on every received frame).
 - Wire input→sensor linking in `setup()` via `link_inputs()` before registering callbacks.
@@ -573,7 +573,7 @@ void on_can_frame(...) {
 - NEVER add per-frame heap allocation to `parse_frame()` / `interpret_message()` — keep the single-frame path allocation-free.
 - Keep `hex_str()` SSO-friendly (`reserve()`, no `stringstream`); do not grow log payloads.
 - Keep DEBUG/candump sessions bounded (auto-off 120 s) — they are the only heap-churn logging path.
-- **Frame accounting is the completeness contract for debug captures.** It is live **only while candump is ON** (every increment is guarded by `s_candump_enabled`; `debug_log_frame()` early-returns when both debug flags are off, so normal operation pays nothing) and is reset on enable, so `rx` = frames during *this* capture. The final record must satisfy `rx == logged + throttled` and `parsed + unowned + paused == rx`; the `candump off` line carries the authoritative `capture=`/`parse=` verdict. `throttled` also counts the frame that ended the capture. `rx`/`logged`/`throttled` are all counted in the RX logging callback (running snapshots are therefore exact; `parsed` lives in the receive callback, so only it can differ by one mid-frame). Candump logs every frame (`CANDUMP_MIN_LOG_GAP_MS = 0`); TX frames are exported candump-only by `debug_log_tx_frame()`. Do not remove/re-order these counters.
+- **Frame accounting is the completeness contract for debug captures.** It is live **only while candump is ON** (every increment is guarded by `s_candump_enabled`; `debug_log_frame()` early-returns when both debug flags are off, so normal operation pays nothing) and is reset on enable, so `rx` = frames during *this* capture. The final record must satisfy `rx == logged + throttled` and `parsed + unowned + paused == rx`; the `candump off` line carries the authoritative `capture=`/`parse=` verdict. `rx`/`logged`/`throttled` are all counted in the RX logging callback (running snapshots are exact; `parsed` lives in the receive callback, so only it can differ by one mid-frame). `logged` = frames *handed to the logger*, so the offline file check is authoritative: the capture must hold exactly `logged + tx` candump lines (`tx` = `debug_log_tx_frame` count). Candump logs every frame (`CANDUMP_MIN_LOG_GAP_MS = 0`).
 - If long-uptime fragmentation is ever measured (free heap steadily decreasing over days despite an idle bus), move `pending_messages_` to a fixed-capacity pool (`std::array`/StaticVector per §9.1) — NOT required today.
 
 ---

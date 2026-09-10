@@ -713,11 +713,18 @@ def test_replay_stats_completeness():
     import replay_candump as rc
 
     running = ("[12:00:00.000][I][toptronic:077]: [STATS] candump running: "
-               "rx=100 logged=100 throttled=0 | parsed=99 unowned=1 paused=0")
+               "rx=100 logged=100 throttled=0 tx=12 | parsed=99 unowned=1 paused=0")
     stats = rc.parse_stats_line(running)
-    assert stats == {"ctx": "candump running", "rx": 100, "logged": 100, "throttled": 0,
+    assert stats == {"ctx": "candump running", "rx": 100, "logged": 100, "throttled": 0, "tx": 12,
                      "parsed": 99, "unowned": 1, "paused": 0, "capture": None, "parse": None}, stats
     assert rc.stats_verdict(stats) == (True, True)
+
+    # Older firmware omits tx= and the verdict: both must stay optional.
+    legacy = rc.parse_stats_line(
+        "[12:00:00.000][I][toptronic:077]: [STATS] candump running: "
+        "rx=100 logged=100 throttled=0 | parsed=99 unowned=1 paused=0")
+    assert legacy["tx"] is None and legacy["capture"] is None, legacy
+    assert rc.stats_verdict(legacy) == (True, True)
 
     final = running.replace("candump running", "candump off") + " | capture=OK parse=OK"
     stats = rc.parse_stats_line(final)

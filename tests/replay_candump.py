@@ -76,6 +76,7 @@ FRAME_RE = re.compile(r"candump:\d+\]:\s*(0x[0-9A-Fa-f]+)\s*:\s*([0-9A-Fa-f ]+?)
 #   [STATS] candump off: rx=N logged=N throttled=N | parsed=N unowned=N paused=N
 STATS_RE = re.compile(
     r"\[STATS\]\s+(?P<ctx>[^:]+):\s+rx=(?P<rx>\d+)\s+logged=(?P<logged>\d+)\s+throttled=(?P<throttled>\d+)"
+    r"(?:\s+tx=(?P<tx>\d+))?"
     r"\s+\|\s+parsed=(?P<parsed>\d+)\s+unowned=(?P<unowned>\d+)\s+paused=(?P<paused>\d+)"
     r"(?:\s+\|\s+capture=(?P<capture>OK|LOSSY)\s+parse=(?P<parse>OK|GAP))?"
 )
@@ -86,15 +87,15 @@ STATS_KEYS = ("rx", "logged", "throttled", "parsed", "unowned", "paused")
 def parse_stats_line(line):
     """Parse a firmware ``[STATS]`` record; return a dict or None.
 
-    The trailing ``| capture=OK parse=OK`` verdict is present only on the record
-    emitted when candump turns OFF (the authoritative one); running records and
-    older firmware omit it, so those two keys are then ``None``.
+    Optional fields (``None`` when absent): ``tx`` (TX frames exported to the log,
+    present only in newer firmware) and the ``capture``/``parse`` verdict (present
+    only on the record emitted when candump turns OFF — the authoritative one).
     """
     match = STATS_RE.search(line)
     if not match:
         return None
     return {
-        key: (value if key in ("ctx", "capture", "parse") else int(value))
+        key: value if key in ("ctx", "capture", "parse") else (int(value) if value is not None else None)
         for key, value in match.groupdict().items()
     }
 
@@ -461,7 +462,19 @@ def report(replayer, timeline):
         if s["unowned"]:
             print("  NOTE: %d frames came from nodes no hub owns (see [SKIP] lines at DEBUG)."
                   % s["unowned"])
-        if replayer.frame_lines < s["logged"]:
+        if s.get("tx") is not None:
+            expected = s["logged"] + s["tx"]
+            print("  candump lines in this file: %d (firmware logged %d RX + %d TX = %d)"
+                  % (replayer.frame_lines, s["logged"], s["tx"], expected))
+            if replayer.frame_lines < expected:
+                print("  WARNING: %d candump line(s) are MISSING from this file" % (expected - replayer.frame_lines))
+                print("           -> lost while COPYING the log (logger buffer/socket), not by the firmware.")
+            elif replayer.frame_lines > expected:
+                print("  NOTE: %d extra line(s) in this file (candump lines from outside this capture)."
+                      % (replayer.frame_lines - expected))
+            else:
+                print("  -> the file matches the firmware exactly: nothing was lost to the log sink.")
+        elif replayer.frame_lines < s["logged"]:
             print("  WARNING: this file holds %d candump lines but the firmware logged %d RX frames"
                   % (replayer.frame_lines, s["logged"]))
             print("           -> lines were lost while COPYING the log (logger buffer/socket), not by the firmware.")
