@@ -806,6 +806,30 @@ def test_replay_sessions_are_scoped():
     replayer = replay_lines([frame] * 7 + [off(7, 7)])
     assert len(replayer.sessions) == 1, replayer.sessions
     assert replayer.sessions[-1]["lines"] == 7, replayer.sessions[-1]
+
+    # Re-enable whose previous 'candump off' record is missing/trimmed: the
+    # 'CANDUMP debug ENABLED' marker (logged where the counters reset) delimits the
+    # new session, so its early frames are scoped correctly.
+    enabled = ("[12:00:00.000][W][toptronic:077]: CANDUMP debug ENABLED "
+               "- logging every CAN frame (auto-off in 120s, or turn off switch)")
+    replayer = replay_lines(
+        [enabled] + [frame] * 30 + [running(30, 30)]     # session 1 (no off record)
+        + [enabled] + [frame] * 60 + [off(60, 60)])      # session 2 (complete)
+    assert len(replayer.sessions) == 2, replayer.sessions
+    selected = replayer.sessions[-1]
+    assert selected["lines"] == 60, selected
+    assert selected["reliable"] is True, selected
+
+    # Re-enable whose off record AND enable marker are both missing: the boundary is
+    # only visible as an rx reset at the first snapshot, so the frames before it
+    # cannot be attributed to either session -> flagged unreliable, and the report
+    # skips the check instead of reporting every such frame as missing.
+    replayer = replay_lines([frame] * 100 + [running(100, 100)]
+                            + [frame] * 4 + [running(4, 4)]
+                            + [frame] * 56 + [off(60, 60)])
+    assert len(replayer.sessions) == 2, replayer.sessions
+    assert replayer.sessions[-1]["reliable"] is False, replayer.sessions[-1]
+    assert replayer.sessions[-1]["lines"] == 56, replayer.sessions[-1]
     print("OK  replay scopes the file-count check to the selected capture session")
 
 

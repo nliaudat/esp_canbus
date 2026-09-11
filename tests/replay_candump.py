@@ -83,6 +83,13 @@ STATS_RE = re.compile(
 
 STATS_KEYS = ("rx", "logged", "throttled", "parsed", "unowned", "paused")
 
+# Firmware re-enable marker, emitted via raw ESP_LOGW right where the frame
+# counters are reset (toptronic.cpp set_candump_flag()), so it delimits a new
+# capture session even when the previous session's 'candump off' record was lost
+# or trimmed while copying the log:
+#   [I]CANDUMP debug ENABLED — logging every CAN frame (auto-off in 120s, ...)
+ENABLED_RE = re.compile(r"CANDUMP debug ENABLED")
+
 
 def parse_stats_line(line):
     """Parse a firmware ``[STATS]`` record; return a dict or None.
@@ -217,7 +224,6 @@ class Replayer:
         self.drops = []                  # (ts, reason, detail)
         self.uncompleted = {}            # work_key -> report dict
         self.stats = None                # latest firmware [STATS] record (any session)
-        self.final_stats = None          # verdict of the CURRENT capture session (candump off)
         self.frame_lines = 0             # candump frame lines in the whole file
         # The firmware resets its frame counters every time candump is (re-)enabled,
         # so one log file can hold several capture sessions. Each session is
@@ -232,13 +238,23 @@ class Replayer:
         return self.hubs.get(device_id)
 
     # --- capture-session accounting -----------------------------------------
-    def _new_session(self):
-        """Start a fresh capture session (its counters reset when candump is enabled)."""
+    def _new_session(self, reliable=True):
+        """Start a fresh capture session (its counters reset when candump is enabled).
+
+        ``reliable`` is False when the session's start was only INFERRED from a
+        counter reset (a re-enable whose 'candump off' record AND 'CANDUMP debug
+        ENABLED' marker are both missing): the frames that preceded its first
+        [STATS] record cannot then be attributed with certainty, so the file-count
+        check must not trust this session's line count.
+        """
         if self._session is not None and (self._session["lines"] or self._session["stats"]):
             self.sessions.append(self._session)
-        self._session = {"lines": 0, "stats": None}
+        self._session = {"lines": 0, "stats": None, "reliable": reliable}
         self._last_rx = None
-        self.final_stats = None
+
+    def begin_session(self):
+        """Start a new session at an explicit re-enable marker (counters reset here)."""
+        self._new_session(reliable=True)
 
     def add_frame_line(self):
         """Count one candump frame line (whole file + the current session)."""
@@ -258,12 +274,15 @@ class Replayer:
               and self._session["stats"].get("capture") is not None):
             self._new_session()  # previous session ended with its 'candump off' verdict
         elif self._last_rx is not None and stats["rx"] < self._last_rx:
-            self._new_session()  # counters restarted (re-enabled); no off-record in the log
+            # Counters went backwards => candump was re-enabled, but with NEITHER the
+            # previous 'candump off' record NOR a 'CANDUMP debug ENABLED' marker in the
+            # log. The frames already seen since the last record cannot be split
+            # reliably between the two sessions, so mark the new one unreliable: its
+            # file-count check is skipped rather than reported as every-frame-missing.
+            self._new_session(reliable=False)
         self._session["stats"] = stats
         self._last_rx = stats["rx"]
         self.stats = stats
-        if stats.get("capture") is not None:
-            self.final_stats = stats
 
     # --- interpret_message_() ------------------------------------------------
     def interpret(self, data, can_id, ts, single):
@@ -464,6 +483,9 @@ def replay(path, hubs, presets):
             if stats is not None:
                 replayer.add_stats(stats)  # tracks the capture session + authoritative record
                 continue
+            if ENABLED_RE.search(line) is not None:
+                replayer.begin_session()  # explicit re-enable: counters reset right here
+                continue
             match = FRAME_RE.search(line)
             if not match:
                 continue
@@ -494,6 +516,7 @@ def report(replayer, timeline):
         session = replayer.sessions[-1] if replayer.sessions else None
         s = session["stats"] if session is not None else None
         lines = session["lines"] if session is not None else replayer.frame_lines
+        reliable = session["reliable"] if session is not None else True
         if s is None:
             print("  NOTE: the last capture session holds %d candump line(s) but no" % lines)
             print("        [STATS] record (shorter than the 10 s snapshot interval, or")
@@ -523,7 +546,12 @@ def report(replayer, timeline):
                       % len(replayer.sessions))
                 print("        to the LAST one (%d line(s); %d line(s) in the whole file)."
                       % (lines, replayer.frame_lines))
-            if s.get("tx") is not None:
+            if not reliable:
+                print("  NOTE: the start of this session could not be located (a re-enable")
+                print("        with no 'candump off' record and no 'CANDUMP debug ENABLED'")
+                print("        line), so lines logged before its first [STATS] record cannot")
+                print("        be attributed - the file-count check is skipped.")
+            elif s.get("tx") is not None:
                 expected = s["logged"] + s["tx"]
                 print("  candump lines in this capture: %d (firmware logged %d RX + %d TX = %d)"
                       % (lines, s["logged"], s["tx"], expected))
