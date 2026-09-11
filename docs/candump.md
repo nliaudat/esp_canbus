@@ -158,12 +158,12 @@ and caveats.
 > `parse=` directly. `logged` counts frames handed to the logger, so the file-level
 > check is authoritative: the capture must hold exactly `logged + tx` candump lines.
 > The counters reset on every enable, so a log can hold several candump sessions; the
-> file-count check applies to the **last** session only — an earlier session's lines
-> must never mask a line lost from the selected one. Sessions are delimited by the
-> `CANDUMP debug ENABLED` line (logged where the counters reset) or the previous
-> `candump off` record; if a re-enable leaves neither, or the file holds more
-> candump lines than the session's `logged + tx` (an earlier capture's frames
-> leaked in), the check is skipped rather than mis-attributing frames.
+> file-count check applies to the **last** session only, and only when its start is
+> anchored by an explicit `CANDUMP debug ENABLED` line (logged where the counters
+> reset) or a preceding `candump off` record. Otherwise — an unmarked start, a counter
+> reset seen without those lines, or a file holding more candump lines than the
+> session's `logged + tx` (an earlier capture's frames leaked in) — the check is
+> skipped rather than mis-attributing frames.
 > `replay_candump.py` checks all of this for you; a `[SKIP]` line (DEBUG) names any
 > frame that was not parsed.
 >

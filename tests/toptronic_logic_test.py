@@ -761,6 +761,8 @@ def test_replay_sessions_are_scoped():
     import replay_candump as rc
 
     frame = "[12:00:00.000][I][candump:026]: 0x1FD047FF : 01 42 32 00 9E EE 1E"
+    enabled = ("[12:00:00.000][W][toptronic:077]: CANDUMP debug ENABLED "
+               "- logging every CAN frame (auto-off in 120s, or turn off switch)")
 
     def off(rx, logged, tx=0):
         return ("[12:00:00.000][I][toptronic:077]: [STATS] candump off: "
@@ -802,16 +804,21 @@ def test_replay_sessions_are_scoped():
     assert selected["stats"]["ctx"] == "candump running", selected["stats"]
     assert selected["stats"]["capture"] is None, selected["stats"]
 
-    # A single-session file is unchanged: every candump line belongs to it.
-    replayer = replay_lines([frame] * 7 + [off(7, 7)])
+    # A single session whose start is explicitly marked by 'CANDUMP debug ENABLED':
+    # every candump line belongs to it and the check is trusted.
+    replayer = replay_lines([enabled] + [frame] * 7 + [off(7, 7)])
     assert len(replayer.sessions) == 1, replayer.sessions
     assert replayer.sessions[-1]["lines"] == 7, replayer.sessions[-1]
+    assert replayer.sessions[-1]["reliable"] is True, replayer.sessions[-1]
+
+    # The same file WITHOUT the enable marker has an unknown start (a re-enable could
+    # have merged frames in), so it is not trusted and the check is skipped.
+    replayer = replay_lines([frame] * 7 + [off(7, 7)])
+    assert replayer.sessions[-1]["reliable"] is False, replayer.sessions[-1]
 
     # Re-enable whose previous 'candump off' record is missing/trimmed: the
     # 'CANDUMP debug ENABLED' marker (logged where the counters reset) delimits the
     # new session, so its early frames are scoped correctly.
-    enabled = ("[12:00:00.000][W][toptronic:077]: CANDUMP debug ENABLED "
-               "- logging every CAN frame (auto-off in 120s, or turn off switch)")
     replayer = replay_lines(
         [enabled] + [frame] * 30 + [running(30, 30)]     # session 1 (no off record)
         + [enabled] + [frame] * 60 + [off(60, 60)])      # session 2 (complete)

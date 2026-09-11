@@ -90,6 +90,12 @@ STATS_KEYS = ("rx", "logged", "throttled", "parsed", "unowned", "paused")
 #   [I]CANDUMP debug ENABLED — logging every CAN frame (auto-off in 120s, ...)
 ENABLED_RE = re.compile(r"CANDUMP debug ENABLED")
 
+# Counters counted in the logging callbacks, so a running snapshot is EXACT for them
+# (unlike `parsed`, which lives in the receive callback and can lag by one mid-frame).
+# Used to spot a counter reset -- i.e. an undelimited re-enable -- from the [STATS]
+# sequence: within one session every one of these is non-decreasing.
+EXACT_COUNTER_KEYS = ("rx", "logged", "throttled", "tx")
+
 
 def parse_stats_line(line):
     """Parse a firmware ``[STATS]`` record; return a dict or None.
@@ -232,56 +238,64 @@ class Replayer:
         # otherwise an earlier session's lines offset a line missing from it.
         self.sessions = []               # completed sessions + the open one (see finish())
         self._session = None             # session currently being accumulated
-        self._last_rx = None             # previous rx, to spot a counter reset
+        self._last_counters = None       # previous exact counters, to spot a reset
 
     def hub_of(self, device_id):
         return self.hubs.get(device_id)
 
     # --- capture-session accounting -----------------------------------------
-    def _new_session(self, reliable=True):
+    def _new_session(self, reliable):
         """Start a fresh capture session (its counters reset when candump is enabled).
 
-        ``reliable`` is False when the session's start was only INFERRED from a
-        counter reset (a re-enable whose 'candump off' record AND 'CANDUMP debug
-        ENABLED' marker are both missing): the frames that preceded its first
-        [STATS] record cannot then be attributed with certainty, so the file-count
-        check must not trust this session's line count.
+        ``reliable`` is True ONLY when the session's start is anchored by an explicit
+        boundary -- a 'CANDUMP debug ENABLED' marker, or the line right after a
+        'candump off' verdict (nothing can be logged in between). A session opened
+        implicitly (first data of the file, or inferred from a counter reset) has an
+        unknown start: frames from an earlier capture may have been merged into it,
+        so the file-count check must not trust its line count.
         """
         if self._session is not None and (self._session["lines"] or self._session["stats"]):
             self.sessions.append(self._session)
         self._session = {"lines": 0, "stats": None, "reliable": reliable}
-        self._last_rx = None
+        self._last_counters = None
 
     def begin_session(self):
         """Start a new session at an explicit re-enable marker (counters reset here)."""
         self._new_session(reliable=True)
 
+    def _reset_detected(self, stats):
+        """True when any exact counter went BACKWARDS: candump was re-enabled."""
+        if self._last_counters is None:
+            return False
+        return any(prev is not None and stats.get(key) is not None and stats[key] < prev
+                   for key, prev in zip(EXACT_COUNTER_KEYS, self._last_counters))
+
     def add_frame_line(self):
         """Count one candump frame line (whole file + the current session)."""
         if self._session is None:
-            self._new_session()
+            self._new_session(reliable=False)  # no 'CANDUMP debug ENABLED' marker seen
         elif (self._session["stats"] is not None
               and self._session["stats"].get("capture") is not None):
-            self._new_session()  # a verdict closed the previous session
+            self._new_session(reliable=True)  # a verdict closed it; nothing can intervene
         self.frame_lines += 1
         self._session["lines"] += 1
 
     def add_stats(self, stats):
         """Account one [STATS] record, tracking capture-session boundaries."""
         if self._session is None:
-            self._new_session()
+            self._new_session(reliable=False)  # no 'CANDUMP debug ENABLED' marker seen
         elif (self._session["stats"] is not None
               and self._session["stats"].get("capture") is not None):
-            self._new_session()  # previous session ended with its 'candump off' verdict
-        elif self._last_rx is not None and stats["rx"] < self._last_rx:
-            # Counters went backwards => candump was re-enabled, but with NEITHER the
+            self._new_session(reliable=True)  # previous ended with its 'candump off' verdict
+        elif self._reset_detected(stats):
+            # A counter went backwards => candump was re-enabled, but with NEITHER the
             # previous 'candump off' record NOR a 'CANDUMP debug ENABLED' marker in the
             # log. The frames already seen since the last record cannot be split
             # reliably between the two sessions, so mark the new one unreliable: its
             # file-count check is skipped rather than reported as every-frame-missing.
             self._new_session(reliable=False)
         self._session["stats"] = stats
-        self._last_rx = stats["rx"]
+        self._last_counters = tuple(stats.get(key) for key in EXACT_COUNTER_KEYS)
         self.stats = stats
         # Invariant: within ONE session the file can never hold more candump lines
         # than the firmware logged (logged + tx) -- every line is emitted by a
@@ -556,11 +570,11 @@ def report(replayer, timeline):
                 print("        to the LAST one (%d line(s); %d line(s) in the whole file)."
                       % (lines, replayer.frame_lines))
             if not reliable:
-                print("  NOTE: this capture's session boundaries could not be established: a")
-                print("        re-enable with no 'candump off' record and no 'CANDUMP debug")
-                print("        ENABLED' line (whose frames then cannot be attributed), or the")
-                print("        file holds more candump lines than the firmware's logged + tx")
-                print("        account for - the file-count check is skipped.")
+                print("  NOTE: this capture's boundaries could not be established - the")
+                print("        session does not start at a 'CANDUMP debug ENABLED' line (or a")
+                print("        'candump off' record), a counter reset was seen without them, or")
+                print("        the file holds more candump lines than the firmware's logged +")
+                print("        tx account for - the file-count check is skipped.")
             elif s.get("tx") is not None:
                 expected = s["logged"] + s["tx"]
                 print("  candump lines in this capture: %d (firmware logged %d RX + %d TX = %d)"
