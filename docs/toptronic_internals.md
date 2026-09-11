@@ -253,8 +253,11 @@ ON but not written to the log — a rate-limited frame, or the frame that ended 
 capture. `logged` counts frames **handed to the ESPHome logger**, not frames the
 sink actually emitted — the logger's finite task buffer can still drop a line. The
 offline check closes that hole: `tx` counts the gateway's own transmitted frames
-(also logged), so the file must contain exactly `logged + tx` candump lines, and
+(also logged), so the capture must contain exactly `logged + tx` candump lines, and
 any shortfall is reported by `replay_candump.py` as loss while *copying* the log.
+Because the counters reset on every enable, a log may hold several capture
+sessions; `replay_candump.py` scopes the file-count check to the **last** one, so an
+earlier session cannot mask a missing line from the selected capture.
 
 `[SKIP] ...` DEBUG lines name the frames that were **not** parsed and why (sender
 node owned by no hub *on that bus*; hub paused for OTA). Receive and logging

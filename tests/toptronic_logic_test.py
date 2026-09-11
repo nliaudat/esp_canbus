@@ -747,6 +747,118 @@ def test_replay_stats_completeness():
     print("OK  replay [STATS] accounting parses and detects lossy captures")
 
 
+def test_replay_sessions_are_scoped():
+    """A multi-session log must check the SELECTED (last) capture, not the whole file.
+
+    The firmware resets its frame counters every time candump is (re-)enabled, so
+    one log can hold several captures. Counting every candump line in the file
+    while comparing against only the last session's counters lets an earlier
+    session offset a line missing from the selected one (or vice versa). See
+    docs/candump.md (Completeness).
+    """
+    import os
+    import tempfile
+    import replay_candump as rc
+
+    frame = "[12:00:00.000][I][candump:026]: 0x1FD047FF : 01 42 32 00 9E EE 1E"
+    enabled = ("[12:00:00.000][W][toptronic:077]: CANDUMP debug ENABLED "
+               "- logging every CAN frame (auto-off in 120s, or turn off switch)")
+
+    def off(rx, logged, tx=0):
+        return ("[12:00:00.000][I][toptronic:077]: [STATS] candump off: "
+                "rx=%d logged=%d throttled=0 tx=%d | parsed=%d unowned=0 paused=0 "
+                "| capture=OK parse=OK" % (rx, logged, tx, rx))
+
+    def running(rx, logged, tx=0):
+        return ("[12:00:00.000][I][toptronic:077]: [STATS] candump running: "
+                "rx=%d logged=%d throttled=0 tx=%d | parsed=%d unowned=0 paused=0"
+                % (rx, logged, tx, rx))
+
+    def replay_lines(all_lines):
+        fd, path = tempfile.mkstemp(suffix=".log")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                handle.write("\n".join(all_lines) + "\n")
+            # Empty hubs/presets: the frames are still counted as candump lines.
+            return rc.replay(path, {}, {})
+        finally:
+            os.remove(path)
+
+    # Session 1 (10 lines, complete) + session 2 (firmware logged 50, but only 40
+    # lines reached the file -> 10 lost while copying). The whole-file count
+    # (10 + 40 = 50) equals the selected session's expected 50, so a whole-file
+    # check would WRONGLY report "nothing was lost".
+    replayer = replay_lines([frame] * 10 + [off(10, 10)] + [frame] * 40 + [off(50, 50)])
+    assert replayer.frame_lines == 50, replayer.frame_lines
+    assert len(replayer.sessions) == 2, replayer.sessions
+    selected = replayer.sessions[-1]
+    assert selected["lines"] == 40, selected
+    assert selected["stats"]["logged"] == 50, selected["stats"]
+
+    # Session 2 still running (no 'candump off'): the running snapshot is selected
+    # and only ITS lines are compared.
+    replayer = replay_lines([frame] * 10 + [off(10, 10)] + [frame] * 45 + [running(50, 50)])
+    assert len(replayer.sessions) == 2, replayer.sessions
+    selected = replayer.sessions[-1]
+    assert selected["lines"] == 45, selected
+    assert selected["stats"]["ctx"] == "candump running", selected["stats"]
+    assert selected["stats"]["capture"] is None, selected["stats"]
+
+    # A single session whose start is explicitly marked by 'CANDUMP debug ENABLED':
+    # every candump line belongs to it and the check is trusted.
+    replayer = replay_lines([enabled] + [frame] * 7 + [off(7, 7)])
+    assert len(replayer.sessions) == 1, replayer.sessions
+    assert replayer.sessions[-1]["lines"] == 7, replayer.sessions[-1]
+    assert replayer.sessions[-1]["reliable"] is True, replayer.sessions[-1]
+
+    # The same file WITHOUT the enable marker has an unknown start (a re-enable could
+    # have merged frames in), so it is not trusted and the check is skipped.
+    replayer = replay_lines([frame] * 7 + [off(7, 7)])
+    assert replayer.sessions[-1]["reliable"] is False, replayer.sessions[-1]
+
+    # Re-enable whose previous 'candump off' record is missing/trimmed: the
+    # 'CANDUMP debug ENABLED' marker (logged where the counters reset) delimits the
+    # new session, so its early frames are scoped correctly.
+    replayer = replay_lines(
+        [enabled] + [frame] * 30 + [running(30, 30)]     # session 1 (no off record)
+        + [enabled] + [frame] * 60 + [off(60, 60)])      # session 2 (complete)
+    assert len(replayer.sessions) == 2, replayer.sessions
+    selected = replayer.sessions[-1]
+    assert selected["lines"] == 60, selected
+    assert selected["reliable"] is True, selected
+
+    # Re-enable whose off record AND enable marker are both missing: the boundary is
+    # only visible as an rx reset at the first snapshot, so the frames before it
+    # cannot be attributed to either session -> flagged unreliable, and the report
+    # skips the check instead of reporting every such frame as missing.
+    replayer = replay_lines([frame] * 100 + [running(100, 100)]
+                            + [frame] * 4 + [running(4, 4)]
+                            + [frame] * 56 + [off(60, 60)])
+    assert len(replayer.sessions) == 2, replayer.sessions
+    assert replayer.sessions[-1]["reliable"] is False, replayer.sessions[-1]
+    assert replayer.sessions[-1]["lines"] == 56, replayer.sessions[-1]
+
+    # Re-enable whose counters happen to MATCH the previous snapshot (snapshots are
+    # every 10 s and the counters reset, so the new capture's first snapshot can be
+    # equal): rx does NOT decrease, so the two captures merge into one session. The
+    # merge is still caught because the file then holds more candump lines than the
+    # session's logged + tx account for -> flagged unreliable, check skipped (rather
+    # than wrongly reporting complete/lost).
+    replayer = replay_lines([enabled] + [frame] * 30 + [running(30, 30)]
+                            + [frame] * 30 + [running(30, 30)]
+                            + [frame] * 30 + [off(60, 60)])
+    assert len(replayer.sessions) == 1, replayer.sessions
+    assert replayer.sessions[-1]["lines"] == 90, replayer.sessions[-1]
+    assert replayer.sessions[-1]["reliable"] is False, replayer.sessions[-1]
+
+    # Guard: a clean session (10 candump lines = 8 RX + 2 TX) keeps
+    # lines == logged + tx and must stay reliable (no invariant false positive).
+    replayer = replay_lines([enabled] + [frame] * 10 + [off(8, 8, tx=2)])
+    assert replayer.sessions[-1]["reliable"] is True, replayer.sessions[-1]
+    assert replayer.sessions[-1]["lines"] == 10, replayer.sessions[-1]
+    print("OK  replay scopes the file-count check to the selected capture session")
+
+
 if __name__ == "__main__":
     test_crc16_samples()
     test_build_can_id()
@@ -766,4 +878,5 @@ if __name__ == "__main__":
     test_entity_id_qualifier_is_hub_unique()
     test_replay_keys_are_per_hub()
     test_replay_stats_completeness()
+    test_replay_sessions_are_scoped()
     print("\nAll logic tests passed.")

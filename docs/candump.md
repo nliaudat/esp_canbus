@@ -156,7 +156,14 @@ and caveats.
 > `rx == logged + throttled`, and every frame was examined when
 > `parsed + unowned + paused == rx`; the `candump off` line reports `capture=` and
 > `parse=` directly. `logged` counts frames handed to the logger, so the file-level
-> check is authoritative: it must hold exactly `logged + tx` candump lines.
+> check is authoritative: the capture must hold exactly `logged + tx` candump lines.
+> The counters reset on every enable, so a log can hold several candump sessions; the
+> file-count check applies to the **last** session only, and only when its start is
+> anchored by an explicit `CANDUMP debug ENABLED` line (logged where the counters
+> reset) or a preceding `candump off` record. Otherwise — an unmarked start, a counter
+> reset seen without those lines, or a file holding more candump lines than the
+> session's `logged + tx` (an earlier capture's frames leaked in) — the check is
+> skipped rather than mis-attributing frames.
 > `replay_candump.py` checks all of this for you; a `[SKIP]` line (DEBUG) names any
 > frame that was not parsed.
 >
@@ -166,7 +173,7 @@ and caveats.
 > buffer (`logger: task_log_buffer_size:`, default 768 bytes — raise it to e.g.
 > `4096` for capture sessions). The `[STATS]` line tells you if either dropped
 > anything: `throttled > 0` means the capture is lossy, and
-> `replay_candump.py` warns when the file holds fewer lines than the firmware
+> `replay_candump.py` warns when the capture holds fewer lines than the firmware
 > logged.
 
 [issue #41]: https://github.com/nliaudat/esp_canbus/issues/41
