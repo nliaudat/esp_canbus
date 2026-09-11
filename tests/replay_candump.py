@@ -283,6 +283,15 @@ class Replayer:
         self._session["stats"] = stats
         self._last_rx = stats["rx"]
         self.stats = stats
+        # Invariant: within ONE session the file can never hold more candump lines
+        # than the firmware logged (logged + tx) -- every line is emitted by a
+        # counted frame. More means frames from an earlier capture leaked in, i.e.
+        # an undetected re-enable whose counters happened to MATCH (so the
+        # rx-decrease test above missed it). Mark the session unreliable so the
+        # report skips the file-count check instead of claiming complete/lost.
+        if (stats.get("tx") is not None
+                and self._session["lines"] > stats["logged"] + stats["tx"]):
+            self._session["reliable"] = False
 
     # --- interpret_message_() ------------------------------------------------
     def interpret(self, data, can_id, ts, single):
@@ -547,10 +556,11 @@ def report(replayer, timeline):
                 print("        to the LAST one (%d line(s); %d line(s) in the whole file)."
                       % (lines, replayer.frame_lines))
             if not reliable:
-                print("  NOTE: the start of this session could not be located (a re-enable")
-                print("        with no 'candump off' record and no 'CANDUMP debug ENABLED'")
-                print("        line), so lines logged before its first [STATS] record cannot")
-                print("        be attributed - the file-count check is skipped.")
+                print("  NOTE: this capture's session boundaries could not be established: a")
+                print("        re-enable with no 'candump off' record and no 'CANDUMP debug")
+                print("        ENABLED' line (whose frames then cannot be attributed), or the")
+                print("        file holds more candump lines than the firmware's logged + tx")
+                print("        account for - the file-count check is skipped.")
             elif s.get("tx") is not None:
                 expected = s["logged"] + s["tx"]
                 print("  candump lines in this capture: %d (firmware logged %d RX + %d TX = %d)"

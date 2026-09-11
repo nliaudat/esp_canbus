@@ -830,6 +830,25 @@ def test_replay_sessions_are_scoped():
     assert len(replayer.sessions) == 2, replayer.sessions
     assert replayer.sessions[-1]["reliable"] is False, replayer.sessions[-1]
     assert replayer.sessions[-1]["lines"] == 56, replayer.sessions[-1]
+
+    # Re-enable whose counters happen to MATCH the previous snapshot (snapshots are
+    # every 10 s and the counters reset, so the new capture's first snapshot can be
+    # equal): rx does NOT decrease, so the two captures merge into one session. The
+    # merge is still caught because the file then holds more candump lines than the
+    # session's logged + tx account for -> flagged unreliable, check skipped (rather
+    # than wrongly reporting complete/lost).
+    replayer = replay_lines([enabled] + [frame] * 30 + [running(30, 30)]
+                            + [frame] * 30 + [running(30, 30)]
+                            + [frame] * 30 + [off(60, 60)])
+    assert len(replayer.sessions) == 1, replayer.sessions
+    assert replayer.sessions[-1]["lines"] == 90, replayer.sessions[-1]
+    assert replayer.sessions[-1]["reliable"] is False, replayer.sessions[-1]
+
+    # Guard: a clean session (10 candump lines = 8 RX + 2 TX) keeps
+    # lines == logged + tx and must stay reliable (no invariant false positive).
+    replayer = replay_lines([enabled] + [frame] * 10 + [off(8, 8, tx=2)])
+    assert replayer.sessions[-1]["reliable"] is True, replayer.sessions[-1]
+    assert replayer.sessions[-1]["lines"] == 10, replayer.sessions[-1]
     print("OK  replay scopes the file-count check to the selected capture session")
 
 

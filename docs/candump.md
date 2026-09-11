@@ -161,8 +161,9 @@ and caveats.
 > file-count check applies to the **last** session only — an earlier session's lines
 > must never mask a line lost from the selected one. Sessions are delimited by the
 > `CANDUMP debug ENABLED` line (logged where the counters reset) or the previous
-> `candump off` record; if a re-enable leaves neither, the check is skipped rather
-> than mis-attributing frames.
+> `candump off` record; if a re-enable leaves neither, or the file holds more
+> candump lines than the session's `logged + tx` (an earlier capture's frames
+> leaked in), the check is skipped rather than mis-attributing frames.
 > `replay_candump.py` checks all of this for you; a `[SKIP]` line (DEBUG) names any
 > frame that was not parsed.
 >
