@@ -747,6 +747,68 @@ def test_replay_stats_completeness():
     print("OK  replay [STATS] accounting parses and detects lossy captures")
 
 
+def test_replay_sessions_are_scoped():
+    """A multi-session log must check the SELECTED (last) capture, not the whole file.
+
+    The firmware resets its frame counters every time candump is (re-)enabled, so
+    one log can hold several captures. Counting every candump line in the file
+    while comparing against only the last session's counters lets an earlier
+    session offset a line missing from the selected one (or vice versa). See
+    docs/candump.md (Completeness).
+    """
+    import os
+    import tempfile
+    import replay_candump as rc
+
+    frame = "[12:00:00.000][I][candump:026]: 0x1FD047FF : 01 42 32 00 9E EE 1E"
+
+    def off(rx, logged, tx=0):
+        return ("[12:00:00.000][I][toptronic:077]: [STATS] candump off: "
+                "rx=%d logged=%d throttled=0 tx=%d | parsed=%d unowned=0 paused=0 "
+                "| capture=OK parse=OK" % (rx, logged, tx, rx))
+
+    def running(rx, logged, tx=0):
+        return ("[12:00:00.000][I][toptronic:077]: [STATS] candump running: "
+                "rx=%d logged=%d throttled=0 tx=%d | parsed=%d unowned=0 paused=0"
+                % (rx, logged, tx, rx))
+
+    def replay_lines(all_lines):
+        fd, path = tempfile.mkstemp(suffix=".log")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                handle.write("\n".join(all_lines) + "\n")
+            # Empty hubs/presets: the frames are still counted as candump lines.
+            return rc.replay(path, {}, {})
+        finally:
+            os.remove(path)
+
+    # Session 1 (10 lines, complete) + session 2 (firmware logged 50, but only 40
+    # lines reached the file -> 10 lost while copying). The whole-file count
+    # (10 + 40 = 50) equals the selected session's expected 50, so a whole-file
+    # check would WRONGLY report "nothing was lost".
+    replayer = replay_lines([frame] * 10 + [off(10, 10)] + [frame] * 40 + [off(50, 50)])
+    assert replayer.frame_lines == 50, replayer.frame_lines
+    assert len(replayer.sessions) == 2, replayer.sessions
+    selected = replayer.sessions[-1]
+    assert selected["lines"] == 40, selected
+    assert selected["stats"]["logged"] == 50, selected["stats"]
+
+    # Session 2 still running (no 'candump off'): the running snapshot is selected
+    # and only ITS lines are compared.
+    replayer = replay_lines([frame] * 10 + [off(10, 10)] + [frame] * 45 + [running(50, 50)])
+    assert len(replayer.sessions) == 2, replayer.sessions
+    selected = replayer.sessions[-1]
+    assert selected["lines"] == 45, selected
+    assert selected["stats"]["ctx"] == "candump running", selected["stats"]
+    assert selected["stats"]["capture"] is None, selected["stats"]
+
+    # A single-session file is unchanged: every candump line belongs to it.
+    replayer = replay_lines([frame] * 7 + [off(7, 7)])
+    assert len(replayer.sessions) == 1, replayer.sessions
+    assert replayer.sessions[-1]["lines"] == 7, replayer.sessions[-1]
+    print("OK  replay scopes the file-count check to the selected capture session")
+
+
 if __name__ == "__main__":
     test_crc16_samples()
     test_build_can_id()
@@ -766,4 +828,5 @@ if __name__ == "__main__":
     test_entity_id_qualifier_is_hub_unique()
     test_replay_keys_are_per_hub()
     test_replay_stats_completeness()
+    test_replay_sessions_are_scoped()
     print("\nAll logic tests passed.")

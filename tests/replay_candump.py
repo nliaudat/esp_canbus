@@ -216,12 +216,54 @@ class Replayer:
         self.dispatches = []             # (ts, key, name, type, raw, value, single)
         self.drops = []                  # (ts, reason, detail)
         self.uncompleted = {}            # work_key -> report dict
-        self.stats = None                # latest firmware [STATS] record
-        self.final_stats = None          # latest [STATS] record with a verdict (candump off)
-        self.frame_lines = 0             # candump frame lines read from the file
+        self.stats = None                # latest firmware [STATS] record (any session)
+        self.final_stats = None          # verdict of the CURRENT capture session (candump off)
+        self.frame_lines = 0             # candump frame lines in the whole file
+        # The firmware resets its frame counters every time candump is (re-)enabled,
+        # so one log file can hold several capture sessions. Each session is
+        # {"lines": <candump lines>, "stats": <last [STATS] record or None>}; the
+        # file-level completeness check must use the SELECTED (last) session only,
+        # otherwise an earlier session's lines offset a line missing from it.
+        self.sessions = []               # completed sessions + the open one (see finish())
+        self._session = None             # session currently being accumulated
+        self._last_rx = None             # previous rx, to spot a counter reset
 
     def hub_of(self, device_id):
         return self.hubs.get(device_id)
+
+    # --- capture-session accounting -----------------------------------------
+    def _new_session(self):
+        """Start a fresh capture session (its counters reset when candump is enabled)."""
+        if self._session is not None and (self._session["lines"] or self._session["stats"]):
+            self.sessions.append(self._session)
+        self._session = {"lines": 0, "stats": None}
+        self._last_rx = None
+        self.final_stats = None
+
+    def add_frame_line(self):
+        """Count one candump frame line (whole file + the current session)."""
+        if self._session is None:
+            self._new_session()
+        elif (self._session["stats"] is not None
+              and self._session["stats"].get("capture") is not None):
+            self._new_session()  # a verdict closed the previous session
+        self.frame_lines += 1
+        self._session["lines"] += 1
+
+    def add_stats(self, stats):
+        """Account one [STATS] record, tracking capture-session boundaries."""
+        if self._session is None:
+            self._new_session()
+        elif (self._session["stats"] is not None
+              and self._session["stats"].get("capture") is not None):
+            self._new_session()  # previous session ended with its 'candump off' verdict
+        elif self._last_rx is not None and stats["rx"] < self._last_rx:
+            self._new_session()  # counters restarted (re-enabled); no off-record in the log
+        self._session["stats"] = stats
+        self._last_rx = stats["rx"]
+        self.stats = stats
+        if stats.get("capture") is not None:
+            self.final_stats = stats
 
     # --- interpret_message_() ------------------------------------------------
     def interpret(self, data, can_id, ts, single):
@@ -334,7 +376,10 @@ class Replayer:
         self.interpret(msg[:-2], can_id, ts, False)
 
     def finish(self):
-        """Record everything still waiting for continuations."""
+        """Close the open capture session and record anything still reassembling."""
+        if self._session is not None and (self._session["lines"] or self._session["stats"]):
+            self.sessions.append(self._session)
+            self._session = None
         for work_key, entry in self.pending.items():
             device_id, header = entry["device_id"], entry["header"]
             self.uncompleted[work_key] = {
@@ -417,14 +462,12 @@ def replay(path, hubs, presets):
         for line in handle:
             stats = parse_stats_line(line)
             if stats is not None:
-                replayer.stats = stats           # keep the latest record
-                if stats.get("capture") is not None:
-                    replayer.final_stats = stats  # ...and the authoritative one (candump off)
+                replayer.add_stats(stats)  # tracks the capture session + authoritative record
                 continue
             match = FRAME_RE.search(line)
             if not match:
                 continue
-            replayer.frame_lines += 1
+            replayer.add_frame_line()  # whole-file + per-session line counts
             ts = line[1:13] if line.startswith("[") else "?"
             can_id = int(match.group(1), 16)
             data = bytearray(int(tok, 16) for tok in match.group(2).split())
@@ -445,42 +488,60 @@ def report(replayer, timeline):
         print("    - firmware older than the frame-accounting change, or")
         print("    - candump was not used (the record is emitted while candump is ON / on OFF).")
     else:
-        s = replayer.final_stats or replayer.stats
-        print("  source: %s" % ("[STATS] candump off (authoritative)"
-                                if replayer.final_stats is not None else
-                                "[STATS] running snapshot (may be off by one - turn candump off for the final record)"))
-        print("  %s: rx=%d logged=%d throttled=%d | parsed=%d unowned=%d paused=%d"
-              % (s["ctx"], s["rx"], s["logged"], s["throttled"], s["parsed"],
-                 s["unowned"], s["paused"]))
-        capture_ok, parse_ok = stats_verdict(s)
-        print("  capture: rx == logged + throttled        -> %s"
-              % ("OK (complete)" if capture_ok else "FAIL (capture is LOSSY)"))
-        print("  parsing: parsed + unowned + paused == rx -> %s"
-              % ("OK (every frame accounted for)" if parse_ok else "FAIL (frames unaccounted)"))
-        if s["throttled"]:
-            print("  WARNING: %d frames were throttled OUT of the capture." % s["throttled"])
-        if s["unowned"]:
-            print("  NOTE: %d frames came from nodes no hub owns (see [SKIP] lines at DEBUG)."
-                  % s["unowned"])
-        if s.get("tx") is not None:
-            expected = s["logged"] + s["tx"]
-            print("  candump lines in this file: %d (firmware logged %d RX + %d TX = %d)"
-                  % (replayer.frame_lines, s["logged"], s["tx"], expected))
-            if replayer.frame_lines < expected:
-                print("  WARNING: %d candump line(s) are MISSING from this file" % (expected - replayer.frame_lines))
-                print("           -> lost while COPYING the log (logger buffer/socket), not by the firmware.")
-            elif replayer.frame_lines > expected:
-                print("  NOTE: %d extra line(s) in this file (candump lines from outside this capture)."
-                      % (replayer.frame_lines - expected))
-            else:
-                print("  -> the file matches the firmware exactly: nothing was lost to the log sink.")
-        elif replayer.frame_lines < s["logged"]:
-            print("  WARNING: this file holds %d candump lines but the firmware logged %d RX frames"
-                  % (replayer.frame_lines, s["logged"]))
-            print("           -> lines were lost while COPYING the log (logger buffer/socket), not by the firmware.")
+        # Check the LAST capture session only: a (re-)enable resets the firmware
+        # counters, so an earlier session's lines must never offset a line lost
+        # from the selected one (and vice versa).
+        session = replayer.sessions[-1] if replayer.sessions else None
+        s = session["stats"] if session is not None else None
+        lines = session["lines"] if session is not None else replayer.frame_lines
+        if s is None:
+            print("  NOTE: the last capture session holds %d candump line(s) but no" % lines)
+            print("        [STATS] record (shorter than the 10 s snapshot interval, or")
+            print("        candump was not turned off) - the file count cannot be checked.")
+            if replayer.frame_lines != lines:
+                print("  candump lines in this file: %d (%d capture session(s))"
+                      % (replayer.frame_lines, len(replayer.sessions)))
         else:
-            print("  candump lines in this file: %d (RX frames logged: %d; TX lines add to the file count)"
-                  % (replayer.frame_lines, s["logged"]))
+            print("  source: %s" % ("[STATS] candump off (authoritative)"
+                                    if s.get("capture") is not None else
+                                    "[STATS] running snapshot (may be off by one - turn candump off for the final record)"))
+            print("  %s: rx=%d logged=%d throttled=%d | parsed=%d unowned=%d paused=%d"
+                  % (s["ctx"], s["rx"], s["logged"], s["throttled"], s["parsed"],
+                     s["unowned"], s["paused"]))
+            capture_ok, parse_ok = stats_verdict(s)
+            print("  capture: rx == logged + throttled        -> %s"
+                  % ("OK (complete)" if capture_ok else "FAIL (capture is LOSSY)"))
+            print("  parsing: parsed + unowned + paused == rx -> %s"
+                  % ("OK (every frame accounted for)" if parse_ok else "FAIL (frames unaccounted)"))
+            if s["throttled"]:
+                print("  WARNING: %d frames were throttled OUT of the capture." % s["throttled"])
+            if s["unowned"]:
+                print("  NOTE: %d frames came from nodes no hub owns (see [SKIP] lines at DEBUG)."
+                      % s["unowned"])
+            if len(replayer.sessions) > 1:
+                print("  NOTE: %d capture sessions in this file; the file-count check applies"
+                      % len(replayer.sessions))
+                print("        to the LAST one (%d line(s); %d line(s) in the whole file)."
+                      % (lines, replayer.frame_lines))
+            if s.get("tx") is not None:
+                expected = s["logged"] + s["tx"]
+                print("  candump lines in this capture: %d (firmware logged %d RX + %d TX = %d)"
+                      % (lines, s["logged"], s["tx"], expected))
+                if lines < expected:
+                    print("  WARNING: %d candump line(s) are MISSING from this capture"
+                          % (expected - lines))
+                    print("           -> lost while COPYING the log (logger buffer/socket), not by the firmware.")
+                elif lines > expected:
+                    print("  NOTE: %d extra line(s) in this capture." % (lines - expected))
+                else:
+                    print("  -> the capture matches the firmware exactly: nothing was lost to the log sink.")
+            elif lines < s["logged"]:
+                print("  WARNING: this capture holds %d candump lines but the firmware logged %d RX frames"
+                      % (lines, s["logged"]))
+                print("           -> lines were lost while COPYING the log (logger buffer/socket), not by the firmware.")
+            else:
+                print("  candump lines in this capture: %d (RX frames logged: %d; TX lines add to the count)"
+                      % (lines, s["logged"]))
 
     if timeline:
         for (ts, device_id, preset_dir, _key, name, type_name, raw, value,
