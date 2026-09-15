@@ -46,7 +46,7 @@ ESP32 CAN bus firmware and the Hoval TopTronic integration.
 | Post-boot refresh | 30 000 ms | One-shot `update_all()` after `setup()` (config `boot_refresh_delay`, `0` = off) |
 | Throttled refresh | 6.25 ms / GET | `max_refresh_per_loop` GETs (default 8) spread across `refresh_gap_ms` (default `50ms`); spacing = `refresh_gap_ms / max_refresh_per_loop` |
 | CRC-16 | poly `0x1021`, init `0xB006`, ref in/out `true`, xorout `0` | Multi-frame checksum (lookup-table form) |
-| `0x56` value offset | 7 | Extended RESPONSE value starts at byte 7 (2 extra `0x80 0x00` bytes) |
+| `0x56` value offset | 7 | Extended RESPONSE value starts at byte 7. The 2 extra bytes are a record tag, **not** a constant (`80 00` counters, `70 00` fan speed, `F0 00` zero placeholder); an all-zero value span is a placeholder record and is ignored (see `toptronic_internals.md` §2.4) |
 
 ## Testing
 

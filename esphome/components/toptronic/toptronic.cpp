@@ -1605,6 +1605,33 @@ void TopTronic::interpret_message_(const uint8_t *data, size_t len, uint32_t can
     return;
   }
 
+  // A zero-filled extended (0x56) record carries no measurement: a device
+  // answers some datapoints with a SECOND record whose value field is all zero
+  // (e.g. 56 00 00 00 00 F0 00 00 00 00 for the outdoor sensor), a few ms after
+  // the plain 0x42 record that carried the real value. Publishing it would
+  // overwrite that value with 0 on every poll -- the "wrong value 0 most of the
+  // time" symptom of issue #41 (see docs/toptronic_internals.md §2.4).
+  //
+  // The WHOLE value span is scanned, never just the width the entity decodes: an
+  // extended value is right-aligned / zero-padded, so the cleaning/maint counter
+  // 52 sits in the LAST byte of its 0x56 payload and a width-only check would
+  // see padding and reject a genuine value.
+  if (data[0] == RESPONSE_EXT) {
+    bool value_all_zero = true;
+    for (size_t i = value_off; i < len; ++i) {
+      if (data[i] != 0) {
+        value_all_zero = false;
+        break;
+      }
+    }
+    if (value_all_zero) {
+      TT_LOGD("[SKIP] zero-filled 0x56 record for %s (fg=%u fn=%u dp=%u) - keeping previous value",
+              sensor_base->get_name().c_str(), data[1], data[2], (unsigned) datapoint);
+      // Not a value: publish nothing and leave the cold-cache write guard locked.
+      return;
+    }
+  }
+
   // A RESPONSE with a complete value for this datapoint arrived, so the
   // cold-cache write guard (reject_writes_before_read_) may let SET requests
   // through from now on.

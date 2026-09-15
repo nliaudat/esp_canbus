@@ -573,6 +573,84 @@ def reassemble(frames):
     return done, pending, dropped
 
 
+RESPONSE_EXT = 0x56  # extended RESPONSE (see docs/hoval_canbus.md §3.3)
+
+
+def is_zero_extended_placeholder(cmd, value_bytes):
+    """Mirror of the zero-filled 0x56 guard in TopTronic::interpret_message_().
+
+    A 0x56 (extended RESPONSE) record whose value span is entirely zero carries no
+    measurement: a device answers some datapoints with such a placeholder a few ms
+    after the plain 0x42 record that carried the real value (e.g. the outdoor
+    sensor), so publishing it would overwrite the value with 0 on every poll --
+    the "wrong value 0 most of the time" symptom of issue #41. The WHOLE value
+    span is checked, never just the width an entity decodes: an extended value is
+    right-aligned / zero-padded inside its field.
+    """
+    return cmd == RESPONSE_EXT and not any(value_bytes)
+
+
+def test_extended_zero_record_is_ignored():
+    """A zero-filled 0x56 record must be ignored; every real value must publish.
+
+    Field capture (WEZ@1, fg=0 fn=0 dp=0 = "AF1 - Aussenfühler 1", S16 x0.1):
+        17.058  0x1FC00FFF : 01 42 00 00 00 00 00 BC   plain -> 0x00BC = 188 (18.8 °C)
+        17.079  0x1F400FFF : 11 7F 56 00 00 00 00 F0   0x56 ext, header 0x7F
+        17.083  0x1E800FFF : 7F 00 00 00 00 10 95      continuation repeats it -> completes
+    """
+    done, pending, dropped = reassemble([
+        (0x1FC00FFF, bytes.fromhex("01420000000000BC")),   # plain 0x42 response
+        (0x1F400FFF, bytes.fromhex("117F5600000000F0")),   # 0x56 start frame
+        (0x1E800FFF, bytes.fromhex("7F000000001095")),     # matching continuation
+    ])
+    assert not pending and dropped == 0, (pending, dropped)
+    assert len(done) == 2, [d.hex() for d in done]
+
+    plain, extended = done
+    assert plain.hex() == "420000000000bc", plain.hex()
+    # Every byte after [5] in the extended record is zero -> placeholder.
+    assert extended.hex() == "5600000000f000000000", extended.hex()
+    assert compute_crc16(extended) == 0x1095, "the 0x56 record's CRC must validate"
+
+    def publish_state(message):
+        """Value the firmware would publish (S16 x0.1), or None when skipped."""
+        if is_zero_extended_placeholder(message[0], message[7:]):
+            return None
+        return int.from_bytes(message[5:7], "big", signed=True)
+
+    # The placeholder is skipped, so the datapoint keeps the plain record's value.
+    assert publish_state(plain) == 188, publish_state(plain)
+    assert publish_state(extended) is None, "a zero-filled 0x56 must not publish"
+
+    # Reference capture (docs/candump_base.log §2): here the 0x56 record IS the
+    # value carrier for a U32 counter. Its value is right-aligned, so a "zero"
+    # test over the decoded width alone would wrongly drop 52.
+    counter = bytes.fromhex("560000a28d800000000000000034")
+    assert compute_crc16(counter) == 0x10B3, "counter sample CRC must validate"
+    assert not is_zero_extended_placeholder(counter[0], counter[7:])
+    assert int.from_bytes(counter[7:], "big") & 0xFFFFFFFF == 52
+
+    # A plain 0x42 value of 0 is a real measurement and must still publish.
+    zero_plain = bytes.fromhex("0142010003EA0000")
+    assert not is_zero_extended_placeholder(zero_plain[0], zero_plain[5:])
+    # The annotated reference-capture lines (trailing `<- comment`) must still be
+    # read: the whole log in docs/ is annotated, and a skipped frame is invisible
+    # in the report (no drop is recorded for a line that never matched).
+    import replay_candump as rc
+
+    annotated = ("[I][candump:026]: 0x1F5047FF : 19 5F 56 00 00 A2 8D 80"
+                 "   <- byte0=0x19 -> 3 TOTAL frames")
+    match = rc.FRAME_RE.search(annotated)
+    assert match is not None, "an annotated candump line must still match"
+    assert match.group(1) == "0x1F5047FF", match.group(1)
+    assert match.group(2).split() == "19 5F 56 00 00 A2 8D 80".split(), match.group(2)
+    plain_line = "[I][candump:1224]: 0x1FC00FFF : 01 42 00 00 00 00 00 BC"
+    match = rc.FRAME_RE.search(plain_line)
+    assert match is not None and match.group(2).split()[-1] == "BC", match
+
+    print("OK  zero-filled 0x56 records are ignored (issue #41); annotated lines parse")
+
+
 def test_start_frame_command_filter():
     """Non-TopTronic register-block broadcasts must not enter the pending map.
 
@@ -874,6 +952,7 @@ if __name__ == "__main__":
     test_refresh_burst_stall_aborted()
     test_start_frame_command_filter()
     test_reassembly_requires_matching_header()
+    test_extended_zero_record_is_ignored()
     test_hub_node_id_resolution()
     test_entity_id_qualifier_is_hub_unique()
     test_replay_keys_are_per_hub()

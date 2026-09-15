@@ -221,7 +221,46 @@ Pinning this down needs a **`toptronic: DEBUG`** capture (candump off) rather
 than raw frames, so the component's own `[RES]` / `[DROP]` / truncation / CRC
 lines are visible — see [`candump.md`](candump.md) Step 5 and Part 3 below.
 
-### 2.4 Frame accounting — proving a capture is complete
+### 2.4 Zero-filled extended (`0x56`) records are placeholders
+
+A device may answer one GET with **two** records: the plain `0x42` RESPONSE that
+carries the measurement, and an extended `0x56` RESPONSE a few milliseconds
+later. For some datapoints that second record is a **placeholder** whose value
+field is entirely zero — the *completing* form of the issue-#41 symptom in §2.3
+(the continuation repeats the header, the CRC validates, and the zero payload is
+then published on top of the real value). Field capture for the outdoor sensor
+(`WEZ` fg=0 fn=0 dp=0 = `AF1 - Aussenfühler 1`, `S16`, ×0.1):
+
+| time | frame | decode |
+|---|---|---|
+| `17.039` TX | `0x1FE40801 : 01 40 00 00 00 00` | GET fg=0 fn=0 dp=0 |
+| `17.058` RX | `0x1FC00FFF : 01 42 00 00 00 00 00 BC` | plain `0x42`, value `00 BC` = **188 → 18.8 °C** |
+| `17.079` RX | `0x1F400FFF : 11 7F 56 00 00 00 00 F0` | extended `0x56` start (`0x11` = 2 TOTAL, header `0x7F`) |
+| `17.083` RX | `0x1E800FFF : 7F 00 00 00 00 10 95` | continuation repeats header `0x7F` → completes, CRC `0x1095` valid |
+| → message | `56 00 00 00 00 F0 00 00 00 00` | every byte after `[5]` is zero: **no value** |
+
+The two bytes the extended layout inserts between the datapoint and the value are
+**not** a constant `0x80 0x00` (the code comment generalised from a single
+sample). Captures show `80 00` (operating-week counters → 52), `70 00` (fan-speed
+registers → 100) and `F0 00` (the zero placeholders above), so they behave like a
+record variant/tag — and they are ignored by the fixed `value_off = 7`.
+
+`interpret_message_()` therefore **ignores a `0x56` record whose value field is
+entirely zero**:
+
+- the whole value span is scanned (`value_off … len`), never just the width the
+  entity decodes — an extended value is right-aligned / zero-padded, so the
+  counter 52 lives in the **last** byte of its payload;
+- the record logs `[SKIP] zero-filled 0x56 record for <entity> (fg=… fn=… dp=…)`
+  at DEBUG, publishes nothing, and does **not** unlock the cold-cache write guard
+  (`reject_writes_before_read_`) nor clear the refresh-retry entry;
+- plain `0x42` values of `0` are real measurements and keep publishing.
+
+Pinning down any *further* variant still needs a **`toptronic: DEBUG`** capture
+(candump off), so the component's own `[RES]` / `[DROP]` / `[SKIP]` / truncation
+/ CRC lines are visible — see [`candump.md`](candump.md) Step 5 and Part 3 below.
+
+### 2.5 Frame accounting — proving a capture is complete
 
 Every received frame is now **logged** in candump mode (`CANDUMP_MIN_LOG_GAP_MS
 = 0`; it is still a tunable constant) and **accounted for** whether or not it is
