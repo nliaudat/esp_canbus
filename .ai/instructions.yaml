@@ -100,6 +100,7 @@ protocol:
     max_pending_age_ms: 5000
     cleanup_interval_ms: 2000
     completion: "last 2 bytes of reassembled payload = CRC-16 big-endian"
+    response_ext: "0x56 = extended RESPONSE: same layout, but 2 extra bytes [5..6] between datapoint and value so the value starts at byte 7; those 2 bytes are a RECORD TAG, not a constant (80 00 counters, 70 00 fan speed, F0 00 zero placeholder); the value is right-aligned/zero-padded inside its field -> fold the WHOLE span (value_off..len), never just the type width; a 0x56 whose whole value span is zero is a PLACEHOLDER -> ignore it (DEBUG [SKIP]), publish nothing, do NOT unlock the cold-cache write guard"
   crc16:
     class: "CRC-16/ARC family (non-standard init)"
     poly: "0x1021"
@@ -315,6 +316,7 @@ memory_perf:
       - "NEVER add per-frame heap allocation to parse_frame()/interpret_message()"
       - "Keep hex_str() SSO-friendly (reserve(), no stringstream); do not grow log payloads"
       - "Keep DEBUG/candump sessions bounded (auto-off 120s) --- only heap-churn logging path"
+      - "A zero-filled 0x56 record stays ignored: scan the WHOLE value span (value_off..len), never just the decoded width (extended values are right-aligned/zero-padded: 80 00 counters must publish, F0 00 placeholders must not)"
       - "Frame accounting = completeness contract, live ONLY while candump is ON (increments guarded by s_candump_enabled; debug_log_frame early-returns when both debug flags off) and reset on enable (rx = per capture); final record must satisfy rx == logged + throttled AND parsed + unowned + paused == rx; 'candump off' line carries authoritative capture=/parse= verdict; rx/logged/throttled/tx all in the logging callbacks (running snapshots exact; parsed in the receive callback -> can differ by 1); logged = handed to the logger so the offline file check is authoritative (file must hold exactly logged + tx candump lines, tx = debug_log_tx_frame count); CANDUMP_MIN_LOG_GAP_MS=0 logs every frame; counters reset on every enable so a log may hold several capture sessions --- the offline file check applies to the LAST session only, and only when its start is anchored by the 'CANDUMP debug ENABLED' line logged at reset or the preceding 'candump off' record; it skips the check otherwise (unmarked start, a counter reset without those lines, or more lines than the session's logged + tx); do not remove/re-order counters"
       - "If long-uptime fragmentation is measured: move pending_messages_ to fixed-capacity pool (std::array/StaticVector) --- NOT required today"
 
@@ -326,6 +328,7 @@ security:
     - "len >= MIN_MESSAGE_LEN (5) before reading cmd/fg/fn/dp in interpret_message()"
     - "Frame payload length checks (data.size() < 2) in parse_frame()"
     - "CRC-16 verified before dispatching multi-frame messages"
+    - "Reject a 0x56 extended RESPONSE whose value span is all zero (placeholder) instead of publishing 0 over the plain 0x42 value"
     - "Pending map capped at MAX_PENDING_MESSAGES (16) + stale eviction"
     - "Reject continuation frames for unknown/expired keys"
     - "Ignore messages from unregistered devices and self-echoed GET/SET"

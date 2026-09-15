@@ -109,6 +109,16 @@ so the same 8-bit `msg_header` used by two different CAN devices cannot collide.
 The last **two bytes of the reassembled multi-frame payload** are the CRC-16
 checksum (big-endian) over all preceding payload bytes.
 
+**Extended (`0x56`) records.** The two bytes inserted between the datapoint and
+the value (`[5..6]`) are **not** a constant: captures show `80 00` (operating-week
+counters), `70 00` (fan-speed registers) and `F0 00` (zero-filled placeholders
+sent for ordinary datapoints such as the outdoor sensor) — treat them as a record
+variant/tag. The value itself is right-aligned inside its field (zero-padded on the
+left), so a decoder must fold the **whole** value span, never just the type width.
+An extended record whose value span is entirely zero is a placeholder, not a
+measurement, and is ignored — see
+[`toptronic_internals.md`](toptronic_internals.md) §2.4.
+
 ---
 
 ## 4. Value types
@@ -280,6 +290,11 @@ registers that Hoval's own control panel / Loxone cyclic writers overwrite.
     reassembler waits for; admitting them only filled `pending_messages_` until
     the stale sweep and evicted real in-progress responses (issue #41). See
     [`toptronic_internals.md`](toptronic_internals.md) §2.
+- **`0x56` placeholder records** — an extended RESPONSE whose value span is
+  entirely zero carries no measurement: the boiler sends it right after the real
+  `0x42` answer for some datapoints (e.g. the outdoor sensor). It is ignored
+  (DEBUG `[SKIP]`) so it cannot overwrite the real value with `0`. See
+  [`toptronic_internals.md`](toptronic_internals.md) §2.4.
 - **OTA safety** — `pause()` / `resume()` drop frames during OTA updates.
 - **Post-boot refresh** — a one-shot `update_all()` fires after
   `boot_refresh_delay` (default 30 s, `0` disables it).

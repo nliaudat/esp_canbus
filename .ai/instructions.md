@@ -188,7 +188,7 @@ refin = true   refout = true   xorout = 0x0000
 
 - **GET:** `build_get_request(fg, fn, dp)` = `{0x01, 0x40, fg, fn, dp_hi, dp_lo}`. Sent on each entity's polling interval (`polling_component_schema("30s")` per-entity) from `update()` callbacks.
 - **SET (number/select):** `control()` builds `build_set_request(fg, fn, dp, value_bytes)` = `{0x01, 0x46, fg, fn, dp_hi, dp_lo, ...value}` and dispatches via `set_callback_`. `send_can_frames()` splits payloads > 8 bytes.
-- **Response:** device answers with RESPONSE `0x42`; `interpret_message()` matches `rx_device_id` + reconstructed key to a registered entity and calls `publish_state()`.
+- **Response:** device answers with RESPONSE `0x42`; `interpret_message()` matches `rx_device_id` + reconstructed key to a registered entity and calls `publish_state()`. An extended RESPONSE `0x56` (value at byte 7) is matched the same way, **but** a `0x56` whose whole value span is `0x00` is a placeholder record: it is ignored (`[SKIP]` at DEBUG), publishes nothing and does not unlock the cold-cache write guard (see `docs/toptronic_internals.md` §2.4).
 - Self-echoed GET/SET frames (from the bus) are logged and ignored (never dispatched).
 
 ---
@@ -573,6 +573,7 @@ void on_can_frame(...) {
 - NEVER add per-frame heap allocation to `parse_frame()` / `interpret_message()` — keep the single-frame path allocation-free.
 - Keep `hex_str()` SSO-friendly (`reserve()`, no `stringstream`); do not grow log payloads.
 - Keep DEBUG/candump sessions bounded (auto-off 120 s) — they are the only heap-churn logging path.
+- A zero-filled extended (`0x56`) record MUST stay ignored: scan the WHOLE value span (`value_off … len`), never just the decoded width — extended values are right-aligned/zero-padded, so the `80 00` counter records (value in the last byte) must still publish while the `F0 00` placeholders must not.
 - **Frame accounting is the completeness contract for debug captures.** It is live **only while candump is ON** (every increment is guarded by `s_candump_enabled`; `debug_log_frame()` early-returns when both debug flags are off, so normal operation pays nothing) and is reset on enable, so `rx` = frames during *this* capture. The final record must satisfy `rx == logged + throttled` and `parsed + unowned + paused == rx`; the `candump off` line carries the authoritative `capture=`/`parse=` verdict. `rx`/`logged`/`throttled` are all counted in the RX logging callback (running snapshots are exact; `parsed` lives in the receive callback, so only it can differ by one mid-frame). `logged` = frames *handed to the logger*, so the offline file check is authoritative: the capture must hold exactly `logged + tx` candump lines (`tx` = `debug_log_tx_frame` count). Candump logs every frame (`CANDUMP_MIN_LOG_GAP_MS = 0`). The counters reset on every enable, so a log may hold several capture sessions; the offline file check applies to the **last** session only, and only when its start is anchored by the `CANDUMP debug ENABLED` line logged at reset or the preceding `candump off` record; it skips the check otherwise (unmarked start, a counter reset without those lines, or more lines than the session's logged + tx).
 - If long-uptime fragmentation is ever measured (free heap steadily decreasing over days despite an idle bus), move `pending_messages_` to a fixed-capacity pool (`std::array`/StaticVector per §9.1) — NOT required today.
 
@@ -584,6 +585,7 @@ void on_can_frame(...) {
 - Validate `len >= MIN_MESSAGE_LEN (5)` before reading `cmd/fg/fn/dp` bytes in `interpret_message()`.
 - Validate frame payload lengths before indexing (`data.size() < 2` checks in `parse_frame()`).
 - Verify CRC-16 before dispatching any multi-frame message (single-frame messages carry no CRC).
+- Reject an extended RESPONSE (`0x56`) whose value span is all zero instead of publishing `0` over the value its plain `0x42` counterpart carried (issue #41 placeholder records).
 - Cap the pending-message map at `MAX_PENDING_MESSAGES` and evict stale entries (memory-exhaustion / stale-fragment protection).
 - Reject continuation frames for unknown/expired reassembly keys.
 - Ignore messages from devices with no registered entities (device-map lookup miss).

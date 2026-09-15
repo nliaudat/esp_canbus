@@ -13,7 +13,10 @@ candump log (see docs/candump.md) through a faithful reimplementation of
   * every multi-frame message that was *started but never completed* -- the
     signature of issue #41: a sensor whose value only ever arrives inside an
     extended (0x56) multi-frame response keeps its stale/zero value until a
-    plain single-frame (0x42) response for the same datapoint shows up.
+    plain single-frame (0x42) response for the same datapoint shows up,
+  * every zero-filled extended (0x56) placeholder record it ignored (see
+    docs/toptronic_internals.md §2.4): the boiler sends such a record right after
+    the real 0x42 answer, so publishing it would overwrite the value with 0.
 
 It also cross-checks each uncompleted start frame against the continuation
 frames actually present in the capture (exact header, header +/- 1), which
@@ -69,7 +72,7 @@ PRESETS_DIR = os.path.join(
     "esphome", "components", "toptronic", "presets",
 )
 
-FRAME_RE = re.compile(r"candump:\d+\]:\s*(0x[0-9A-Fa-f]+)\s*:\s*([0-9A-Fa-f ]+?)\s*$")
+FRAME_RE = re.compile(r"candump:\d+\]:\s*(0x[0-9A-Fa-f]+)\s*:\s*([0-9A-Fa-f ]+?)\s*(?:<-.*)?$")
 
 # Firmware frame-accounting record, emitted while candump is ON (every 10 s) and
 # once when it turns OFF:
@@ -228,6 +231,7 @@ class Replayer:
         self.continuation_headers = set()  # (device_id, first payload byte)
         self.dispatches = []             # (ts, key, name, type, raw, value, single)
         self.drops = []                  # (ts, reason, detail)
+        self.zero_ext = []               # (ts, detail) ignored 0x56 placeholder records
         self.uncompleted = {}            # work_key -> report dict
         self.stats = None                # latest firmware [STATS] record (any session)
         self.frame_lines = 0             # candump frame lines in the whole file
@@ -344,7 +348,25 @@ class Replayer:
                  % (name, value_len, width)))
             return
 
-        raw = int.from_bytes(data[value_off:value_off + width], "big", signed=signed)
+        # A zero-filled extended (0x56) record is a placeholder, not a value: the
+        # boiler sends it for datapoints whose extended value is unavailable (e.g.
+        # the outdoor sensor) right after the real 0x42 answer, and publishing it
+        # would overwrite that answer with 0. The WHOLE value span is checked, not
+        # just the decoded width -- an extended value is right-aligned/zero-padded
+        # (the counter 52 sits in the LAST byte of its 0x56 payload).
+        if data[0] == RESPONSE_EXT and not any(data[value_off:]):
+            self.zero_ext.append(
+                (ts, "%s node=0x%03X fg=%d fn=%d dp=%d"
+                 % (name, device_id, fg, fn, datapoint)))
+            return
+
+        # bytes_to_number() folds the WHOLE value span into a uint64_t and casts to
+        # the target type, so an extended value that is zero-padded on the left
+        # (and/or longer than the type width) decodes correctly.
+        mask = (1 << (width * 8)) - 1
+        raw = int.from_bytes(data[value_off:], "big") & mask
+        if signed and raw > mask >> 1:
+            raw -= mask + 1
         self.dispatches.append(
             (ts, device_id, preset_dir, key, name, type_name, raw,
              raw * multiply, single))
@@ -633,6 +655,13 @@ def report(replayer, timeline):
             print("      %s %s" % (ts, detail))
         if len(items) > 5:
             print("      ... %d more" % (len(items) - 5))
+
+    print("\n-- zero-filled 0x56 placeholder records ignored (%d) --"
+          % len(replayer.zero_ext))
+    for ts, detail in replayer.zero_ext[:5]:
+        print("      %s %s" % (ts, detail))
+    if len(replayer.zero_ext) > 5:
+        print("      ... %d more" % (len(replayer.zero_ext) - 5))
 
     print("\n-- multi-frame messages started but NEVER completed (%d) --"
           % len(replayer.uncompleted))

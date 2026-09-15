@@ -124,5 +124,21 @@ Format
   loop task. Remove/comment the canbus.yaml on_frame candump in production.
 
 -----------------------------------------------------------------------------
+9) 0x56 zero-filled placeholder - plain 0x42 real value vs. ext placeholder 0
+-----------------------------------------------------------------------------
+[I][candump:1277]: 0x1FE40801 : 01 40 00 00 00 00     <- TX GET fg=00 fn=00 dp=0000
+[I][candump:1224]: 0x1FC00FFF : 01 42 00 00 00 00 00 BC <- plain 0x42: 0x00BC = 188 -> 18.8 C
+[I][candump:1224]: 0x1F400FFF : 11 7F 56 00 00 00 00 F0 <- 0x56 start (0x11 = 2 TOTAL)
+[I][candump:1224]: 0x1E800FFF : 7F 00 00 00 00 10 95     <- continuation repeats header 0x7F
+
+  Reassembled payload : 56 00 00 00 00 F0 00 00 00 00 + CRC 0x1095 (valid)
+  Value at offset 7   : 00 00 00  ->  0        *** PLACEHOLDER, not a value ***
+  Result              : the extended record is ignored ([SKIP] at DEBUG), so the
+                        datapoint keeps the plain record's 188 (18.8 C).
+  Contrast            : the counter payloads in sections 2/3 use 80 00 and DO
+                        carry a value (... 00 34 = 52 weeks) - the 2 extra bytes
+                        are a record tag, not a constant 0x80 0x00.
+
+-----------------------------------------------------------------------------
 End of reference capture.
 -----------------------------------------------------------------------------
