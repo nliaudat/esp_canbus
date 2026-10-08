@@ -147,15 +147,27 @@ Set the HomeVent clock after boot and nightly:
 time:
   - platform: sntp
     id: sntp_time
+    # on_time_sync fires on every SNTP sync (every 15 min by default): only the first one after
+    # boot sets the clock.
     on_time_sync:
-      - delay: 150s            # let the unit's controller boot (ESP powered from the same bus)
-      - script.execute: set_hv_clock
+      - if:
+          condition:
+            lambda: return !id(hv_clock_boot_sync);
+          then:
+            - lambda: id(hv_clock_boot_sync) = true;
+            - delay: 150s      # let the unit's controller boot (ESP powered from the same bus)
+            - script.execute: set_hv_clock
     on_time:
       - seconds: 5
         minutes: 5
         hours: 3               # nightly, also covers DST changes
         then:
           - script.execute: set_hv_clock
+
+globals:
+  - id: hv_clock_boot_sync
+    type: bool
+    initial_value: "false"
 
 script:
   - id: set_hv_clock
