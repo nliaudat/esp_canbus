@@ -66,3 +66,19 @@ toptronic:
     device_addr: 16
     language: en
     name_prefix: "Floor/1"
+
+# Platform entities declared in YAML (not from a preset): they must get a poll
+# callback (hub configured after all platform entities are registered) and a
+# component slot. ignore_extended uses only plain 0x42 RESPONSE records.
+sensor:
+  - platform: toptronic
+    toptronic_id: tt_hv
+    name: "HV supply air fan set"
+    function_group: 50
+    function_number: 0
+    datapoint: 38601
+    type: U8
+    unit_of_measurement: "%"
+    ignore_extended: true
+  - platform: uptime
+    name: "Uptime"
