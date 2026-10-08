@@ -203,6 +203,24 @@ def _validate_preset(config):
     return config
 
 
+def _reserve_component_slots(config):
+    """Reserve ESPHome component slots for the entities synthesized from presets.
+
+    ESPHOME_COMPONENT_COUNT is emitted from len(CORE.component_ids) by the core's
+    to_code(), which runs before this component generates its preset entities in
+    _generate_entities(). Entities registered afterwards overflow the fixed-size
+    App.components_ table (StaticVector::push_back silently ignores them), so any
+    component registered late -- e.g. wifi_signal or internal_temperature -- is
+    never set up and never updates. Reserve one placeholder slot per preset entity
+    (plus the refresh button) at validation time so the count is large enough.
+    """
+    n = len(_load_entities(config["device_type"], config[CONF_LANGUAGE])) + 1
+    tag = f"{config['device_type']}_{config[CONF_DEVICE_ADDR]}"
+    for i in range(n):
+        CORE.component_ids.add(f"__toptronic_slot_{tag}_{i}")
+    return config
+
+
 def _validate_hub_uniqueness(config):
     """Reject two hubs polling the same device on the same CAN bus.
 
@@ -308,6 +326,7 @@ CONFIG_SCHEMA = cv.All(
     ).extend(cv.COMPONENT_SCHEMA),
     _validate_preset,
     _validate_hub_uniqueness,
+    _reserve_component_slots,
 )
 
 
