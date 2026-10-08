@@ -73,3 +73,9 @@ Do not fight them with automations — treat them as "best effort".
 *(23622/23626/23623 are HomeVent registers — register numbers from the same
 official datapoint list; the ESP32 component addresses them with
 `device_type: HV`, see `hoval_canbus.md`.)*
+
+With a **BG02 E** operating terminal on a HomeVent, the knob positions (ventilation modulation
+`50-0-40651`, humidity set value `50-0-40687`, party mode) are resent about every second: a SET of
+`50-0-40651` was reverted within the same second. Installer parameters such as `50-0-39613` are not
+rewritten. See
+[`homevent_datapoints.md`](homevent_datapoints.md).

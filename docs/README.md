@@ -16,6 +16,7 @@ ESP32 CAN bus firmware and the Hoval TopTronic integration.
 | [`candump_base.log`](candump_base.log) | **Reference bus capture** — annotated candump + toptronic debug showing single-frame GET/RES, `0x42` and `0x56` multi-frame reassembly (TOTAL frame count), 0x56 extended responses (cleaning/maint. counters), unknown traffic, and loop-latency notes. |
 | [`candump_party_mode.log`](candump_party_mode.log) | **Party mode (undocumented)** -- decoded SET frames: duration 0x07DA (hours x 10) + power 0x9F0A (percent). |
 | [`write_safety.md`](write_safety.md) | **Write safety** — per-datapoint SET rate limit and cold-cache guard (config options), the HoxPi-verified writable-register table with ranges, and the write-back table of registers that other writers overwrite. |
+| [`homevent_datapoints.md`](homevent_datapoints.md) | **HomeVent extra datapoints** — read-only scan results on an HV + BG02 E (fan set values and calibration, humidity limits, CoolVent candidates, date/time, serial/version), evidence that `0x56` records carry limits, BG02 E write-back behaviour, and ESPHome snippets (on-demand GET, scan, clock sync). |
 
 ## For later review — quick orientation
 
