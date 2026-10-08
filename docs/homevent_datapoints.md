@@ -105,7 +105,15 @@ compared with outside and extract air temperatures.
 `39615` = 100 / `39619` = 15 (modulation max/min?), `39616` = 30, `39618` = 0, `39620` = 4,
 `40689` = 0, `40690…40713` = 24 × 0/1 (hourly program?), `40714` = 100, `40715…40718` = 500 / 2000 / 3000 / 6000,
 `40719` = 70, `0-0-20003` = 1234, `0-0-20020/20021/20022/20027/20034`, `0-0-20126/20127`, `0-0-20200…20204`,
-`0-0-21054`, `0-0-21058` (0x7fffffd6), `0-0-21101/21102` (0x8000), `0-0-41604/41605/41610/41611/41612`.
+`0-0-21058` (0x7fffffd6), `0-0-21101/21102` (0x8000), `0-0-41604/41605/41610/41611/41612`.
+
+`0-0-21054` (*Acknowledge filter maintenance*, already a preset button: write 7 = filter
+maintenance, 8 = cleaning) also answers a GET, with 0.
+
+On TopTronic E heating controllers the datapoint id is the service-menu parameter number without the
+dash (`07-044` → `7044`, see [discussion #50](https://github.com/nliaudat/esp_canbus/discussions/50)).
+If this also holds for the HomeVent, `39601…39620` are the parameters `39-601…39-620` and their names
+can be read on a TopTronic E touch display. Not verified on a HomeVent yet.
 
 The rotary heat exchanger (enthalpy wheel) speed was **not** found in the scanned ranges.
 
