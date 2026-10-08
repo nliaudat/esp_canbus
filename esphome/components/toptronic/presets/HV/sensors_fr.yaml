@@ -119,6 +119,7 @@ sensor:
     function_group: 0
     function_number: 0
     datapoint: 20037
+    ignore_extended: true
     id: HV_0_0_20037
     type: U32
   - platform: toptronic
@@ -128,6 +129,7 @@ sensor:
     function_group: 0
     function_number: 0
     datapoint: 41613
+    ignore_extended: true
     id: HV_0_0_41613
     type: U32
 text_sensor:

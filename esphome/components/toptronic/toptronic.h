@@ -74,6 +74,9 @@ std::vector<uint8_t> build_set_request(uint8_t function_group, uint8_t function_
 // inherited by every entity registered on it.
 class TopTronicBase : public PollingComponent {
  public:
+  // Ignore 0x56 (extended) records for this entity and only use plain 0x42 responses.
+  void set_ignore_extended(bool v) { this->ignore_extended_ = v; }
+  bool ignore_extended() const { return this->ignore_extended_; }
   void set_function_group(uint8_t function_group) { this->function_group_ = function_group; }
   void set_function_number(uint8_t function_number) { this->function_number_ = function_number; }
   void set_datapoint(uint16_t datapoint) { this->datapoint_ = datapoint; }
@@ -99,6 +102,7 @@ class TopTronicBase : public PollingComponent {
   virtual const StringRef &get_name() const = 0;
 
  protected:
+  bool ignore_extended_{false};
   uint8_t function_group_;
   uint8_t function_number_;
   uint16_t datapoint_;
