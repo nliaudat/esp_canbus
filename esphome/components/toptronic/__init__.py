@@ -2,6 +2,7 @@ from enum import Enum
 import pathlib
 
 import esphome.codegen as cg
+from esphome.coroutine import CoroPriority, coroutine_with_priority
 from esphome.components import button as button_platform
 from esphome.components.canbus import CanbusComponent
 import esphome.config_validation as cv
@@ -470,6 +471,11 @@ async def _generate_refresh_button(hub_var):
     await cg.register_component(var, cfg)
 
 
+@coroutine_with_priority(CoroPriority.LATE)
+async def _configure_hub_late(var):
+    cg.add(var.configure_hub())
+
+
 async def to_code(config):
     cbus = await cg.get_variable(config[CONF_CANBUS_ID])
     var = cg.new_Pvariable(config[CONF_ID], cbus)
@@ -499,4 +505,7 @@ async def to_code(config):
     # computed from CORE.component_ids before preset entities are registered, so
     # a hub can be silently dropped from components_ and setup() never runs.
     # Config-phase statements always run for every hub.
-    cg.add(var.configure_hub())
+    # Emitted at LATE priority so that toptronic entities declared directly in YAML
+    # (sensor/number/select platforms, not presets) have already called add_sensor() /
+    # add_input() when register_sensor_callbacks() and link_inputs_() run.
+    CORE.add_job(_configure_hub_late, var)
