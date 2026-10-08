@@ -1582,8 +1582,8 @@ void TopTronic::interpret_message_(const uint8_t *data, size_t len, uint32_t can
     // Unregistered datapoint for a known device. Logged at DEBUG so preset key
     // mismatches (fg/fn/dp vs. what the device actually emits) are visible
     // instead of silently dropping the response.
-    TT_LOGD("[DROP] No sensor for key 0x%08X on node 0x%03X (fg=%u fn=%u dp=%u)", (unsigned) id,
-            (unsigned) rx_device_id, data[1], data[2], (unsigned) datapoint);
+    TT_LOGD("[DROP] No sensor for key 0x%08X on node 0x%03X (fg=%u fn=%u dp=%u) Data: 0x%s", (unsigned) id,
+            (unsigned) rx_device_id, data[1], data[2], (unsigned) datapoint, hex_str(data, len).c_str());
     return;
   }
   TopTronicBase *sensor_base = sensor_it->second;
