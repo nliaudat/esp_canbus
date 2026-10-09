@@ -7,6 +7,7 @@ from . import (
     CONF_DATAPOINT,
     CONF_FUNCTION_GROUP,
     CONF_FUNCTION_NUMBER,
+    CONF_IGNORE_EXTENDED,
     CONF_TOPTRONIC_ID,
     CONF_VALUES,
     TopTronicComponent,
@@ -29,6 +30,7 @@ CONFIG_SCHEMA = cv.All(
                 cv.ensure_list(cv.string_strict), cv.Length(min=1)
             ),
             cv.Required(CONF_VALUES): cv.All(cv.ensure_list(cv.int_), cv.Length(min=1)),
+            cv.Optional(CONF_IGNORE_EXTENDED, default=False): cv.boolean,
         }
     )
     .extend(text_sensor.text_sensor_schema(TopTronicTextSensor))
@@ -45,6 +47,8 @@ async def to_code(config):
     cg.add(sens.set_function_group(config[CONF_FUNCTION_GROUP]))
     cg.add(sens.set_function_number(config[CONF_FUNCTION_NUMBER]))
     cg.add(sens.set_datapoint(config[CONF_DATAPOINT]))
+    if config[CONF_IGNORE_EXTENDED]:
+        cg.add(sens.set_ignore_extended(True))
 
     for i in range(len(config[CONF_OPTIONS])):
         value = config[CONF_VALUES][i]

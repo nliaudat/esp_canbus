@@ -255,7 +255,7 @@ yaml_presets:
     - "toptronic: [{id, canbus_id, device_type: HV/WEZ/BM (BD alias -> BM), device_addr: defaults HV=8 BM=8 WEZ=1, language: de/en/fr/it, name_prefix: optional override}]"
     - "canbus bit_rate MUST stay 50kbps"
     - "secrets.yaml gitignored --- never commit"
-    - "write safety: write_min_interval (default 2s, 0=off) rate-limits SETs per datapoint; reject_writes_before_read (default true) blocks SETs until the datapoint answered a GET since boot (buttons exempt)"
+    - "write safety (handle_set_): write_min_interval (default 2s, 0=off) rate-limits SETs per datapoint, deferring an early write (last value wins); reject_writes_before_read (default true) blocks SETs until the datapoint answered a GET since boot (buttons exempt)"
   presets_generated:
     rule: "NEVER hand-edit presets/**/*.yaml --- regenerate via 'python hoval_data_processing/generate_presets.py ../esphome/components/toptronic/presets'"
     workflow:

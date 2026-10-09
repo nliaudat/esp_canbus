@@ -7,6 +7,7 @@ from . import (
     CONF_DATAPOINT,
     CONF_FUNCTION_GROUP,
     CONF_FUNCTION_NUMBER,
+    CONF_IGNORE_EXTENDED,
     CONF_TOPTRONIC_ID,
     TT_TYPE_OPTIONS,
     TopTronicComponent,
@@ -25,6 +26,7 @@ CONFIG_SCHEMA = (
         {
             cv.GenerateID(CONF_TOPTRONIC_ID): cv.use_id(TopTronicComponent),
             cv.Required(CONF_TYPE): cv.enum(TT_TYPE_OPTIONS),
+            cv.Optional(CONF_IGNORE_EXTENDED, default=False): cv.boolean,
         }
     )
     .extend(sensor.sensor_schema(TopTronicSensor))
@@ -41,5 +43,7 @@ async def to_code(config):
     cg.add(sens.set_function_number(config[CONF_FUNCTION_NUMBER]))
     cg.add(sens.set_datapoint(config[CONF_DATAPOINT]))
     cg.add(sens.set_type(config[CONF_TYPE]))
+    if config[CONF_IGNORE_EXTENDED]:
+        cg.add(sens.set_ignore_extended(True))
 
     cg.add(tt.add_sensor(sens))

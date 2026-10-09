@@ -256,6 +256,15 @@ entirely zero**:
   (`reject_writes_before_read_`) nor clear the refresh-retry entry;
 - plain `0x42` values of `0` are real measurements and keep publishing.
 
+Non-zero `0x56` records are not caught by this rule. On a HomeVent they carry the
+datapoint's limits rather than its value (e.g. 52, the maximum of the
+operating-week counters; see [`homevent_datapoints.md`](homevent_datapoints.md)),
+so the entity flips between the two values. The `ignore_extended: true` option
+makes an entity use only plain `0x42` records. It exists on `sensor` and
+`text_sensor`, the entities that receive RESPONSE records; `number` and `select`
+mirror their linked read entity (`link_inputs_()`), so set it on that entity. The
+HV presets set it for `0-0-20037` and `0-0-41613`.
+
 Pinning down any *further* variant still needs a **`toptronic: DEBUG`** capture
 (candump off), so the component's own `[RES]` / `[DROP]` / `[SKIP]` / truncation
 / CRC lines are visible — see [`candump.md`](candump.md) Step 5 and Part 3 below.

@@ -2,6 +2,7 @@ from enum import Enum
 import pathlib
 
 import esphome.codegen as cg
+from esphome.coroutine import CoroPriority, coroutine_with_priority
 from esphome.components import button as button_platform
 from esphome.components.canbus import CanbusComponent
 import esphome.config_validation as cv
@@ -43,6 +44,7 @@ CONF_MAX_REFRESH_RETRIES = "max_refresh_retries"
 CONF_REFRESH_RETRY_INTERVAL_MS = "refresh_retry_interval_ms"
 CONF_WRITE_MIN_INTERVAL = "write_min_interval"
 CONF_REJECT_WRITES_BEFORE_READ = "reject_writes_before_read"
+CONF_IGNORE_EXTENDED = "ignore_extended"
 
 LANGS = ("de", "en", "fr", "it")
 
@@ -203,6 +205,27 @@ def _validate_preset(config):
     return config
 
 
+def _reserve_component_slots(config):
+    """Reserve ESPHome component slots for the entities synthesized from presets.
+
+    ESPHOME_COMPONENT_COUNT is emitted from len(CORE.component_ids) by the core's
+    to_code(), which runs before this component generates its preset entities in
+    _generate_entities(). Entities registered afterwards overflow the fixed-size
+    App.components_ table (StaticVector::push_back silently ignores them), so any
+    component registered late -- e.g. wifi_signal or internal_temperature -- is
+    never set up and never updates. Reserve one placeholder slot per preset entity
+    (plus the refresh button) at validation time so the count is large enough.
+    """
+    bus, device_type, addr = _hub_identity(config)
+    n = len(_load_entities(config["device_type"], config[CONF_LANGUAGE])) + 1
+    # Keyed by the full hub identity: two hubs with the same type and address on
+    # different CAN buses each need their own slots.
+    tag = f"{bus}_{device_type}_{addr}"
+    for i in range(n):
+        CORE.component_ids.add(f"__toptronic_slot_{tag}_{i}")
+    return config
+
+
 def _validate_hub_uniqueness(config):
     """Reject two hubs polling the same device on the same CAN bus.
 
@@ -308,6 +331,7 @@ CONFIG_SCHEMA = cv.All(
     ).extend(cv.COMPONENT_SCHEMA),
     _validate_preset,
     _validate_hub_uniqueness,
+    _reserve_component_slots,
 )
 
 
@@ -451,6 +475,11 @@ async def _generate_refresh_button(hub_var):
     await cg.register_component(var, cfg)
 
 
+@coroutine_with_priority(CoroPriority.LATE)
+async def _configure_hub_late(var):
+    cg.add(var.configure_hub())
+
+
 async def to_code(config):
     cbus = await cg.get_variable(config[CONF_CANBUS_ID])
     var = cg.new_Pvariable(config[CONF_ID], cbus)
@@ -480,4 +509,7 @@ async def to_code(config):
     # computed from CORE.component_ids before preset entities are registered, so
     # a hub can be silently dropped from components_ and setup() never runs.
     # Config-phase statements always run for every hub.
-    cg.add(var.configure_hub())
+    # Emitted at LATE priority so that toptronic entities declared directly in YAML
+    # (sensor/number/select platforms, not presets) have already called add_sensor() /
+    # add_input() when register_sensor_callbacks() and link_inputs_() run.
+    CORE.add_job(_configure_hub_late, var)

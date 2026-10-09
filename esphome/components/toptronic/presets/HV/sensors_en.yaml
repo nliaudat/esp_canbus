@@ -2,7 +2,6 @@ sensor:
   - platform: toptronic
     name: Normal ventilation modulation
     device_type: HV
-    device_addr: ${TT_HV_addr}
     function_group: 50
     function_number: 0
     datapoint: 40651
@@ -16,7 +15,6 @@ sensor:
   - platform: toptronic
     name: Eco ventilation modulation
     device_type: HV
-    device_addr: ${TT_HV_addr}
     function_group: 50
     function_number: 0
     datapoint: 40686
@@ -30,7 +28,6 @@ sensor:
   - platform: toptronic
     name: Ventilation modulation
     device_type: HV
-    device_addr: ${TT_HV_addr}
     function_group: 50
     function_number: 0
     datapoint: 38606
@@ -43,7 +40,6 @@ sensor:
   - platform: toptronic
     name: Humidity set value
     device_type: HV
-    device_addr: ${TT_HV_addr}
     function_group: 50
     function_number: 0
     datapoint: 40687
@@ -57,7 +53,6 @@ sensor:
   - platform: toptronic
     name: Humidity extract air
     device_type: HV
-    device_addr: ${TT_HV_addr}
     function_group: 50
     function_number: 0
     datapoint: 37600
@@ -70,7 +65,6 @@ sensor:
   - platform: toptronic
     name: Outside air temp.
     device_type: HV
-    device_addr: ${TT_HV_addr}
     function_group: 50
     function_number: 0
     datapoint: 0
@@ -86,7 +80,6 @@ sensor:
   - platform: toptronic
     name: Extract air temp.
     device_type: HV
-    device_addr: ${TT_HV_addr}
     function_group: 50
     function_number: 0
     datapoint: 37602
@@ -102,7 +95,6 @@ sensor:
   - platform: toptronic
     name: Fan exhaust air set
     device_type: HV
-    device_addr: ${TT_HV_addr}
     function_group: 50
     function_number: 0
     datapoint: 38600
@@ -115,26 +107,25 @@ sensor:
   - platform: toptronic
     name: Maint.ctr.value message maint. (op. wks)
     device_type: HV
-    device_addr: ${TT_HV_addr}
     function_group: 0
     function_number: 0
     datapoint: 20037
     id: HV_0_0_20037
     type: U32
+    ignore_extended: true
   - platform: toptronic
     name: Cleaning count value message cleaning (operating weeks)
     device_type: HV
-    device_addr: ${TT_HV_addr}
     function_group: 0
     function_number: 0
     datapoint: 41613
     id: HV_0_0_41613
     type: U32
+    ignore_extended: true
 text_sensor:
   - platform: toptronic
     name: Op. choice ventilation
     device_type: HV
-    device_addr: ${TT_HV_addr}
     function_group: 50
     function_number: 0
     datapoint: 40650
@@ -154,7 +145,6 @@ text_sensor:
   - platform: toptronic
     name: Status vent. regulation
     device_type: HV
-    device_addr: ${TT_HV_addr}
     function_group: 50
     function_number: 0
     datapoint: 39652

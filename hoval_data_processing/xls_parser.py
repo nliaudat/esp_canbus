@@ -8,7 +8,8 @@ import yaml
 class Datapoint:
     def __init__(self, row: int, name: str, unit_name: str, unit_id: int, function_group: int, 
                 function_number: int, datapoint: int, type_name: str, decimal: int, 
-                steps: int, min: int, max: int, writable: bool, unit: str, text: dict[int, str]):
+                steps: int, min: int, max: int, writable: bool, unit: str, text: dict[int, str],
+                ignore_extended: bool = False):
         self.row = row
         self.unit_name = unit_name
         self.unit_id = unit_id
@@ -24,6 +25,8 @@ class Datapoint:
         self.unit = unit
         self.text = text
         self.name = name
+        # Use only plain 0x42 RESPONSE records (emitted as `ignore_extended: true`).
+        self.ignore_extended = ignore_extended
 
     def get_id(self) -> str:
         return f'{self.unit_name}_{self.function_group}_{self.function_number}_{self.datapoint}'
@@ -67,6 +70,10 @@ class Datapoint:
             'internal': True,
         } if self.writable else {} 
 
+        ignore_extended = {
+            'ignore_extended': True,
+        } if self.ignore_extended else {}
+
         return {
             **self.__toptronic_base(),
             'id': self.get_id(),
@@ -74,6 +81,7 @@ class Datapoint:
             **decimals,
             **device_units,
             **internal,
+            **ignore_extended,
         }
       
     
@@ -84,7 +92,8 @@ class Datapoint:
             **self.__toptronic_base(),
             'id': self.get_id(),
             'options': [option for option in self.text.values()],
-            'values': [value for value in self.text]
+            'values': [value for value in self.text],
+            **({'ignore_extended': True} if self.ignore_extended else {}),
         }
 
 

@@ -74,6 +74,11 @@ std::vector<uint8_t> build_set_request(uint8_t function_group, uint8_t function_
 // inherited by every entity registered on it.
 class TopTronicBase : public PollingComponent {
  public:
+  // Ignore 0x56 (extended) records for this entity and only use plain 0x42 responses.
+  // Exposed on sensor and text_sensor, the entities that receive RESPONSE records;
+  // number/select mirror their linked read entity (link_inputs_()), so set it there.
+  void set_ignore_extended(bool v) { this->ignore_extended_ = v; }
+  bool ignore_extended() const { return this->ignore_extended_; }
   void set_function_group(uint8_t function_group) { this->function_group_ = function_group; }
   void set_function_number(uint8_t function_number) { this->function_number_ = function_number; }
   void set_datapoint(uint16_t datapoint) { this->datapoint_ = datapoint; }
@@ -99,6 +104,7 @@ class TopTronicBase : public PollingComponent {
   virtual const StringRef &get_name() const = 0;
 
  protected:
+  bool ignore_extended_{false};
   uint8_t function_group_;
   uint8_t function_number_;
   uint16_t datapoint_;
@@ -553,6 +559,11 @@ class TopTronic : public Component {
 
   // Timestamp of the last stale-fragment sweep in loop().
   uint32_t last_cleanup_ms_{0};
+
+  // Send a SET request, applying the write-safety rate limit (deferring early
+  // writes, last value wins) and the cold-cache guard.
+  void handle_set_(canbus::Canbus *canbus, uint32_t can_id, uint32_t device_id, TopTronicBase *input,
+                   const std::vector<uint8_t> &data);
 
   // Write safety state.
   // Last SET timestamp per datapoint (keyed by get_id()) for the rate limit.
