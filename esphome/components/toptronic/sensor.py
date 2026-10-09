@@ -7,14 +7,13 @@ from . import (
     CONF_DATAPOINT,
     CONF_FUNCTION_GROUP,
     CONF_FUNCTION_NUMBER,
+    CONF_IGNORE_EXTENDED,
     CONF_TOPTRONIC_ID,
     TT_TYPE_OPTIONS,
     TopTronicComponent,
     config_schema_polling,
     toptronic,
 )
-
-CONF_IGNORE_EXTENDED = "ignore_extended"
 
 TopTronicSensor = toptronic.class_(
     "TopTronicSensor",

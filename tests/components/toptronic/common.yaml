@@ -82,3 +82,18 @@ sensor:
     ignore_extended: true
   - platform: uptime
     name: "Uptime"
+
+text_sensor:
+  - platform: toptronic
+    toptronic_id: tt_hv
+    name: "HV CoolVent enabled"
+    function_group: 50
+    function_number: 0
+    datapoint: 39617
+    options:
+      - "Off"
+      - "On"
+    values:
+      - 0
+      - 1
+    ignore_extended: true

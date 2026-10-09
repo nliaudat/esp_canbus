@@ -75,6 +75,8 @@ std::vector<uint8_t> build_set_request(uint8_t function_group, uint8_t function_
 class TopTronicBase : public PollingComponent {
  public:
   // Ignore 0x56 (extended) records for this entity and only use plain 0x42 responses.
+  // Exposed on sensor and text_sensor, the entities that receive RESPONSE records;
+  // number/select mirror their linked read entity (link_inputs_()), so set it there.
   void set_ignore_extended(bool v) { this->ignore_extended_ = v; }
   bool ignore_extended() const { return this->ignore_extended_; }
   void set_function_group(uint8_t function_group) { this->function_group_ = function_group; }

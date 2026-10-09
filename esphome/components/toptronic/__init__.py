@@ -44,6 +44,7 @@ CONF_MAX_REFRESH_RETRIES = "max_refresh_retries"
 CONF_REFRESH_RETRY_INTERVAL_MS = "refresh_retry_interval_ms"
 CONF_WRITE_MIN_INTERVAL = "write_min_interval"
 CONF_REJECT_WRITES_BEFORE_READ = "reject_writes_before_read"
+CONF_IGNORE_EXTENDED = "ignore_extended"
 
 LANGS = ("de", "en", "fr", "it")
 
