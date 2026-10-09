@@ -215,8 +215,11 @@ def _reserve_component_slots(config):
     never set up and never updates. Reserve one placeholder slot per preset entity
     (plus the refresh button) at validation time so the count is large enough.
     """
+    bus, device_type, addr = _hub_identity(config)
     n = len(_load_entities(config["device_type"], config[CONF_LANGUAGE])) + 1
-    tag = f"{config['device_type']}_{config[CONF_DEVICE_ADDR]}"
+    # Keyed by the full hub identity: two hubs with the same type and address on
+    # different CAN buses each need their own slots.
+    tag = f"{bus}_{device_type}_{addr}"
     for i in range(n):
         CORE.component_ids.add(f"__toptronic_slot_{tag}_{i}")
     return config
