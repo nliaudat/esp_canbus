@@ -560,6 +560,11 @@ class TopTronic : public Component {
   // Timestamp of the last stale-fragment sweep in loop().
   uint32_t last_cleanup_ms_{0};
 
+  // Send a SET request, applying the write-safety rate limit (deferring early
+  // writes, last value wins) and the cold-cache guard.
+  void handle_set_(canbus::Canbus *canbus, uint32_t can_id, uint32_t device_id, TopTronicBase *input,
+                   const std::vector<uint8_t> &data);
+
   // Write safety state.
   // Last SET timestamp per datapoint (keyed by get_id()) for the rate limit.
   std::unordered_map<uint32_t, uint32_t> last_write_ms_;

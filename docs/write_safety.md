@@ -6,7 +6,7 @@ controller and the 50 kbps bus from bad or over-eager writes:
 
 | Option | Default | Meaning |
 |---|---|---|
-| `write_min_interval` | `2s` | Minimum spacing between two SET requests to the **same datapoint**. Writes arriving faster are ignored and logged at WARN. `0` disables the rate limit. |
+| `write_min_interval` | `2s` | Minimum spacing between two SET requests to the **same datapoint**. A write arriving earlier is deferred until the interval has elapsed, and a newer value replaces a pending one (last value wins), so a quick sequence of changes ends on the last value. `0` disables the rate limit. |
 | `reject_writes_before_read` | `true` | **Cold-cache guard**: a SET is rejected (WARN log) until that datapoint has delivered at least one RESPONSE to a GET since boot, so the gateway never writes blind. Datapoints with **no registered read sensor** (e.g. the HV *Acknowledge filter maintenance* button) are exempt — there is nothing to have read. |
 
 Both are per-hub options:
@@ -21,9 +21,12 @@ toptronic:
     reject_writes_before_read: true
 ```
 
-Implementation: the rate limit lives in `TopTronic::register_input_callbacks()`
-(per-datapoint `last_write_ms_` map); the cold-cache state (`read_ok_ids_`) is
-updated in `interpret_message_()` every time a sensor publishes a value.
+Implementation: both guards live in `TopTronic::handle_set_()`, called by the
+input callbacks registered in `register_input_callbacks()`. The rate limit uses
+the per-datapoint `last_write_ms_` map; a deferred write is a `set_timeout()`
+keyed by the datapoint id, so re-arming it replaces the pending value and a write
+that goes out cancels it. The cold-cache state (`read_ok_ids_`) is updated in
+`interpret_message_()` every time a sensor publishes a value.
 
 ## Verified-writable datapoints
 

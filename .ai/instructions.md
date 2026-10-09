@@ -432,8 +432,9 @@ CONFIG_SCHEMA = cv.All(
 )
 ```
 
-**Write safety** (`register_input_callbacks()`): per-datapoint SET rate limit
-(`write_min_interval`, default 2s) and a cold-cache guard
+**Write safety** (`handle_set_()`, called from the callbacks set up in
+`register_input_callbacks()`): per-datapoint SET rate limit (`write_min_interval`,
+default 2s; an early write is deferred, last value wins) and a cold-cache guard
 (`reject_writes_before_read`, default true — no SET until the datapoint
 answered a GET since boot; datapoints without a read sensor, e.g. buttons,
 are exempt).
