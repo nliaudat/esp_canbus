@@ -60,6 +60,34 @@ def hv_before_translate(datapoints: list[Datapoint], _: str):
         if dp.datapoint == 39652:
             dp.type_name = 'LIST'
 
+# Labels the workbook is missing for a locale, keyed by (fg, fn, dp) then locale.
+# Workbook texts win; these only fill gaps.  The Italiano sheet lists values 7
+# and 8 of "Status vent. regulation" only on the first HV unit row (22704), not
+# on the row this preset uses (22795); the texts below are copied from row 22704.
+_HV_TEXT_ADDITIONS = {
+    (50, 0, 39652): {
+        'it': {7: 'Umidità estiva', 8: 'Stop spegnimento valore nominale'},
+    },
+}
+
+# Datapoints answered with a plain 0x42 value plus a non-zero 0x56 record that
+# carries the datapoint's limits (52 = maximum of the operating-week counters),
+# so only the 0x42 value is published (docs/toptronic_internals.md §2.4).
+_HV_IGNORE_EXTENDED = {
+    (0, 0, 20037),  # Maint.ctr.value message maint. (op. wks)
+    (0, 0, 41613),  # Cleaning count value message cleaning (operating weeks)
+}
+
+def hv_before_dump(datapoints: list[Datapoint], locale: str):
+    for dp in datapoints:
+        key = (dp.function_group, dp.function_number, dp.datapoint)
+        additions = _HV_TEXT_ADDITIONS.get(key, {}).get(locale)
+        if additions:
+            # keep values ascending: into_text_sensor/into_select emit dict order
+            dp.text = dict(sorted({**additions, **dp.text}.items()))
+        if key in _HV_IGNORE_EXTENDED:
+            dp.ignore_extended = True
+
 # Status-word maps (ported from the independent HoxPi project, MIT license):
 # human-readable labels for numeric status datapoints that Hoval does not type
 # as LIST.  German is the master map; English mirrors it; fr/it fall back to
@@ -417,7 +445,7 @@ if __name__ == "__main__":
             28099, # Maint.ctr.value message maint. (op. wks)
             # 28101, # Rem. run time maint. counter (op. weeks) # not relevant
             28110, # Cleaning count value message cleaning (operating weeks)
-        ]), hv_before_translate),
+        ]), hv_before_translate, before_dump=hv_before_dump),
         Preset('BM', [
             Datapoint(
                 row=0,
