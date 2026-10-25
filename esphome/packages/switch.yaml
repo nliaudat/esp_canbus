@@ -4,6 +4,9 @@ switch:
     icon: "mdi:restart"
     id: canbus_controller_reboot
 
+  # PR #20900 exposes both CAN debug logs as sub-switches of the hub (one
+  # platform entry per hub instead of one entry per debug log, which is what
+  # the main-branch component did with debug_mode: CANDUMP/FIND_CAN_ID).
   - platform: toptronic
     # Warning: candump logs EVERY CAN frame with a per-frame string build on the
     # loop task — it adds noticeable bus/log latency (see docs/candump.md §8).
@@ -15,22 +18,19 @@ switch:
     # starves the loop task). The flag also resets to OFF on every reboot.
     # Turning the switch OFF always works — publishing the requested state keeps
     # the HA entity in sync even when the flag was already off.
-    name: "${friendly_name} candump debug"
-    id: candump_debug_switch
-    icon: "mdi:bug"
-    entity_category: "diagnostic"
     toptronic_id: toptronic_HV
-    debug_mode: CANDUMP
-
-  - platform: toptronic
+    candump:
+      name: "${friendly_name} candump debug"
+      id: candump_debug_switch
+      icon: "mdi:bug"
+      entity_category: "diagnostic"
     # Warning: find can_id logs only 0x42/0x40 frames as WARN lines that also
     # land in the "main logs" text sensor. Use only for short debug sessions.
     #
     # Same soft momentary control as candump, with a 120 s self-disable (checked
     # per received frame) and OFF on reboot. Turning the switch OFF always works.
-    name: "${friendly_name} find can_id debug"
-    id: find_can_id_debug_switch
-    icon: "mdi:magnify"
-    entity_category: "diagnostic"
-    toptronic_id: toptronic_HV
-    debug_mode: FIND_CAN_ID
+    find_can_id:
+      name: "${friendly_name} find can_id debug"
+      id: find_can_id_debug_switch
+      icon: "mdi:magnify"
+      entity_category: "diagnostic"
