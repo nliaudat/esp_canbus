@@ -15,16 +15,24 @@ substitutions:
 
   ### time
   TZ: "Europe/Zurich"  # timezone
+  
+# cd /d C:\Users\nl\Dropbox\home_automation\esp32_canbus\esp_canbus_git\esphome
+# d:\esphome\.venv\Scripts\esphome.exe compile config.yaml
 
+
+# local shadow copy of PR #20900 with an ESPHOME_LOG_TAG fallback for pre-2026.10 cores
 # external_components:
-# - source: github://pr#18858
-# components: [toptronic]
-# refresh: 0s
+  # - source:
+      # type: local
+      # path: components-pr
+    # components: [toptronic]
 
 external_components:
-  - source:
-      type: local
-      path: components
+  - source: github://pr#20900
+    components: [toptronic]
+    refresh: always
+      
+      
 
 toptronic:
 
