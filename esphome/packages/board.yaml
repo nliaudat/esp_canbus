@@ -15,7 +15,7 @@ esp32:
     version: recommended  # latest
     sdkconfig_options:
       CONFIG_COMPILER_OPTIMIZATION_PERF: y
-      CONFIG_ESP32_DEFAULT_CPU_FREQ_240: y
+      # CONFIG_ESP32_DEFAULT_CPU_FREQ_240: y
       CONFIG_MBEDTLS_SSL_PROTO_TLS1_3: "y"
       CONFIG_TASK_WDT: "y"  # prevents watchdog timeouts
       CONFIG_TASK_WDT_TIMEOUT_S: "30"  # prevents watchdog timeouts
