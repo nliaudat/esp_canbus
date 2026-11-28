@@ -4,6 +4,19 @@ The `toptronic:` component talks to Hoval TopTronic heating / ventilation device
 over the CAN bus (50 kbps). It is configured once **per device** (device type +
 address) and auto-generates all its entities from the bundled presets.
 
+> **Component source:** `config.yaml` loads the component from
+> [ESPHome PR #20900](https://github.com/esphome/esphome/pull/20900), and this page
+> describes that version. The copy in `esphome/components/toptronic/` is not used,
+> and parts of [`docs`](../docs/) still describe it. The PR needs an ESPHome
+> development version dated 2026-10-24 or later.
+>
+> ```yaml
+> external_components:
+>   - source: github://pr#20900
+>     components: [toptronic]
+>     refresh: always  # re-fetch on every build; use 1d once validated
+> ```
+
 > **Note for users of the `legacy` branch** — the core was refactored:
 > device addressing moved from each entity to the hub, presets moved into the
 > component, and you can now declare multiple `toptronic:` blocks in `config.yaml`.
@@ -24,11 +37,10 @@ files in the `esphome/` folder (full checklist in the root
 | `packages/wifi.yaml` | WiFi network list (`!secret` references) | Almost always |
 | `packages/board.yaml` | ESP-IDF, watchdog/sdkconfig, API/OTA | Rarely |
 | `packages/canbus.yaml` | 50 kbps `esp32_can` bus | Rarely |
-| `packages/debug.yaml` | Opt-in synthetic-frame test buttons + CRC logging | Only for reverse-engineering |
+| `packages/debug.yaml` | Opt-in raw GET request test button | Only for reverse-engineering |
 
-> The refresh button and the OTA pause/resume lambdas call fan-out methods
-> (`refresh_all()` / `request_pause_all()` / `request_resume_all()`), so they
-> work with any hub id and any number of hubs — no per-hub list to maintain.
+> The component pauses CAN traffic during OTA updates by itself and generates the
+> "Refresh all" button, so there is no per-hub list to maintain.
 
 ---
 
@@ -65,47 +77,41 @@ toptronic:
 
 | Option | Required | Default | Description |
 |---|---|---|---|
-| `id` | yes | — | Unique hub id (used by `board.yaml` OTA pause/resume and the auto-generated refresh-all button). |
-| `canbus_id` | yes | — | Id of the `canbus:` component. Must run at **50 kbps**. |
-| `device_type` | yes | — | One of `WEZ`, `SOL`, `PS`, `FW`, `HK`, `MWA`, `GLT`, `HV`, `BM`, `GW` (`BD` is an alias for `BM`; use `BM`). |
-| `device_addr` | yes | — | Bus address (typical defaults: `HV=8`, `BM=8`, `WEZ=1` — find it on the room control unit). |
+| `id` | no | generated | Hub id. Set it to reference the hub from `toptronic_id` (switches, manual entities). |
+| `canbus_id` | no | the only `canbus:` | Id of the `canbus:` component. Must run at **50 kbps**. |
+| `device_type` | yes | — | One of `WEZ`, `SOL`, `PS`, `FW`, `HK`, `MWA`, `GLT`, `HV`, `BM`, `GW` (`BD` is accepted as an alias for `BM`). |
+| `device_addr` | yes | — | Bus address, `0`–`63` (typical defaults: `HV=8`, `BM=8`, `WEZ=1` — find it on the room control unit). |
 | `language` | no | `en` | Preset language: `de`, `en`, `fr`, `it`. |
-| `name_prefix` | no | device type | Prefix prepended to every entity name generated from this hub's presets. Defaults to the device type when more than one hub is configured (the address is appended when two hubs share a type) and is empty for a single-hub build. Set it explicitly to override. See [`docs/toptronic_internals.md`](../docs/toptronic_internals.md) §1 for the full resolution order. |
-| `boot_refresh_delay` | no | `30s` | One-shot full refresh after boot; `0` disables it. |
-| `max_pending_messages` | no | `32` | Max concurrently reassembled multi-frame messages (per hub). Raise on a large multi-hub bus. |
+| `boot_refresh_delay` | no | `30s` | One-shot full refresh after boot; `0s` disables it. |
+| `max_pending_messages` | no | `2` | Multi-frame messages reassembled at the same time (per hub), `1`–`16`. |
 | `max_pending_age` | no | `5000ms` | A pending message with no continuation frame this long is considered lost. |
-| `cleanup_interval` | no | `5000ms` | Interval between stale-fragment sweeps in `loop()`. |
-| `max_refresh_per_loop` | no | `8` | GET burst budget per `refresh_gap_ms` window. Combined with `refresh_gap_ms` it sets the effective per-GET spacing (`refresh_gap_ms / max_refresh_per_loop`). |
-| `max_frames_per_message` | no | `8` | Max total frames a start frame may claim; larger counts are rejected as corrupted headers. |
-| `refresh_gap_ms` | no | `50ms` | Refresh window length. The burst budget (`max_refresh_per_loop`) GETs are spread across it; effective spacing = `refresh_gap_ms / max_refresh_per_loop` (default 6.25 ms), keeping responses interleaved so the main loop is not swamped. |
-| `max_refresh_retries` | no | `0` | Re-sends of an unanswered GET during a refresh burst (`0` = single-pass, no retries; the normal 30 s poll is the backstop). |
-| `refresh_retry_interval_ms` | no | `200ms` | Wall-clock delay before an unanswered GET in a burst is re-sent (only used when `max_refresh_retries` > 0). |
-| `write_min_interval` | no | `2s` | Write-safety: minimum spacing between two SET requests to the **same datapoint**; an earlier write is deferred until the interval has elapsed and a newer value replaces a pending one (last value wins). `0` disables the rate limit. |
-| `reject_writes_before_read` | no | `true` | Write-safety (cold-cache guard): reject a SET until that datapoint has delivered at least one RESPONSE since boot, so the gateway never writes blind. Datapoints with no read sensor (e.g. the filter-maintenance button) are exempt. |
-| `update_interval` | no | `30s` | Polling interval for the read-only entities (`sensor`/`text_sensor`) generated from this hub's presets; each poll sends a GET_REQUEST. Entity-level key (configured in the preset files), not a hub configuration key — write entities never poll. |
+| `max_frames_per_message` | no | `8` | Max total frames a start frame may claim, `3`–`31`; larger counts are dropped as corrupted headers. |
+| `refresh_interval` | no | `50ms` | Spacing between two GETs of a refresh burst, at least `16ms`. |
+| `max_refresh_retries` | no | `1` | Re-sends of an unanswered GET during a refresh burst, `0`–`10`. The regular poll still covers sensors that never answer. |
+| `refresh_retry_interval` | no | `200ms` | Delay before an unanswered GET in a burst is re-sent. |
+| `write_min_interval` | no | `2s` | Write safety: minimum time between two writes to the **same datapoint**. An earlier write is **rejected** with a warning, not queued. `0s` disables the limit. |
+| `reject_writes_before_read` | no | `true` | Write safety: reject a write until its datapoint has answered a read since boot. Datapoints with no read entity are exempt. |
 
-`MULTI_CONF = true` — declare as many hubs as you have devices.
+`update_interval` (default `30s`) is not a hub option. It is set on each read-only
+entity (`sensor`/`text_sensor`) in the preset files; write entities never poll.
+
+Declare as many hubs as you have devices.
 
 > **Multiple devices:** preset entity names are only unique within one device
-> type (e.g. `FW` and `WEZ` both expose `AF1 - outdoor sensor 1`). Because
-> ESPHome requires entity names to be unique build-wide, each hub's generated
-> entities are prefixed with the device type whenever more than one hub is
-> configured (see `name_prefix`). A single-hub build is left unchanged, so its
-> entity names and object ids are unaffected.
+> type. When more than one hub is configured, every generated name is prefixed
+> with the device type and address (`HV 8: Outside air temp.`). A single hub keeps
+> the bare names. The prefix is not configurable.
 >
-> Generated entity names never contain `/` (ESPHome's reserved URL path
-> separator) — any `/` in a preset name is rewritten to `_`.
->
-> See [`docs/toptronic_internals.md`](../docs/toptronic_internals.md) §1 for the
-> full prefix rules, unique entity ids for same-type hubs, and the
-> duplicate-hub validation.
+> Two read entities, or two write entities, on the same datapoint of one hub are
+> rejected at validation.
 
 ---
 
 ## Presets
 
-Entities are generated from YAML files in
-`esphome/components/toptronic/presets/<DEVICE_TYPE>/`:
+Entities are generated from the YAML files that ship with the component, in
+`esphome/components/toptronic/presets/<DEVICE_TYPE>/` of the
+[PR](https://github.com/esphome/esphome/pull/20900):
 
 ```
 presets/
@@ -145,23 +151,39 @@ an alias for `BM`), and `GW` Modbus/KNX gateway. `BM`, `GLT`, `GW` and `MWA` pre
 read-only (sensors only); the others also expose writable inputs, and `HV` additionally
 exposes buttons.
 
-Each file defines the entities of one platform (`sensor`, `text_sensor`, `number`,
-`select`, `button`). The `_load_entities()` codegen strips `platform`,
-`device_type`, and `device_addr` from each entry — the hub config is authoritative.
+`sensors_<lang>.yaml` holds the read-only entities, `inputs_<lang>.yaml` the
+writable ones (`number`, `select` and the `text_sensor` a select reads from), and
+`buttons_<lang>.yaml` the buttons. A text sensor that only feeds a select is hidden
+from Home Assistant. The hub configuration sets the device type and address of
+every generated entity.
 
-To regenerate or extend presets, see
-[`hoval_data_processing`](../hoval_data_processing/readme.md):
+[`hoval_data_processing`](../hoval_data_processing/readme.md) regenerates the
+presets of the **local** component copy:
 
 ```bash
 python hoval_data_processing/generate_presets.py esphome/components/toptronic/presets
 ```
 
+The build does not use that copy while `external_components` points at the PR.
+
 ### Manual entities
 
-You can also declare entities manually instead of relying on a preset, using the
-same keys as the preset files (`function_group`, `function_number`, `datapoint`,
-plus the platform-specific options). Read-only entities accept the standard
-`update_interval` key (default `30s`); write entities ignore it.
+You can also declare entities manually with the `toptronic` platform of `sensor`,
+`text_sensor`, `number`, `select` or `button`. Each takes `toptronic_id`,
+`function_group`, `function_number` and `datapoint`, plus the platform-specific
+options (such as `type`). Read-only entities accept the standard `update_interval`
+key (default `30s`).
+
+```yaml
+sensor:
+  - platform: toptronic
+    toptronic_id: toptronic_HV
+    name: My datapoint
+    function_group: 50
+    function_number: 0
+    datapoint: 40652
+    type: U16
+```
 
 ---
 
@@ -172,37 +194,25 @@ plus the platform-specific options). Read-only entities accept the standard
   frame for its datapoint. Write entities (`number`/`select`/`button`) never poll
   — they only send SET_REQUEST frames on user action (and mirror their linked
   read sensor), so they carry no scheduler tick.
-- **Post-boot refresh** — `boot_refresh_delay` (default `30s`) after setup the hub
-  fires a one-shot `update_all()` to catch values that changed while the CAN
-  gateway was settling; `0` disables it.
-- **Throttled refresh** — `update_all()` enqueues sensors and `loop()` spreads
-  `max_refresh_per_loop` GETs (default 8) across each `refresh_gap_ms` window
-  (default 50 ms), so the effective per-GET spacing is
-  `refresh_gap_ms / max_refresh_per_loop` (default 6.25 ms). Large presets do
-  not saturate the 50 kbps bus and the boiler's responses come back interleaved
-  instead of as a single main-loop-stalling avalanche. Both knobs drive the
-  refresh throughput.
-- **Refresh-burst monitoring** - every `update_all()` burst logs a completion
-  summary (`N queued, A answered, D dropped`). If a burst ever stops making
-  progress for > 5 s (no GETs sent, no responses), `loop()` aborts it so the
-  next refresh can start fresh instead of wedging the queue.
-- **Multi-frame reassembly** — long responses (U32/S32/S64) are reassembled with
-  CRC-16 validation (lookup-table accelerated); stale fragments are evicted after
-  `max_pending_age` (default 5 s) by the throttled `loop()` sweep.
-- **OTA** — `board.yaml` calls `pause()` / `resume()` on every hub during OTA so
-  frame processing does not starve the update path.
-- **Refresh button** — the component auto-generates one "Refresh all" button
-  (`TopTronicRefreshButton`). Pressing it calls `refresh_all()`, which fans out
-  to every hub and staggers each hub's batch by 15 s.
-- **Debug switches** — `switch.yaml` provides two on/off toggles: **"candump
-  debug"** logs every CAN frame (tag `candump`, including the gateway's own
-  GET/SET request frames) and **"find can_id debug"** logs
-  only 0x42/0x40 frames (tag `toptronic` WARN, also routed to the `main_logs`
-  text sensor). Both reset to OFF on reboot and must not be left on permanently;
-  they supersede the old commented `on_frame` blocks in `canbus.yaml`.
-- **Thread-safe command bridge** — `request_refresh()`, `request_pause()`,
-  `request_resume()` may be called from any FreeRTOS task; they enqueue a command
-  that the main loop task executes (no blocking, no data races).
+- **Post-boot refresh** — `boot_refresh_delay` (default `30s`) after setup, every
+  hub that did not disable it is refreshed once.
+- **Throttled refresh** — a refresh sends one GET every `refresh_interval`
+  (default 50 ms) and retries unanswered ones, so large presets do not saturate the
+  50 kbps bus. Each burst logs how many sensors were queued, answered and dropped.
+  A burst that makes no progress for about 5 s is abandoned.
+- **Multi-frame reassembly** — long responses are reassembled in fixed slots and
+  checked with CRC-16. A stale slot is reused when a new message needs it.
+- **OTA** — every hub pauses polling, writes and frame processing while an OTA
+  update runs, then resumes. No YAML is needed.
+- **Refresh button** — the component generates one "Refresh all" button. It
+  refreshes every hub, 15 s apart.
+- **Debug switches** — `switch.yaml` declares the `candump` and `find_can_id`
+  switches of the `toptronic` switch platform. **candump** logs CAN frames (tag
+  `candump`), including the gateway's own GET/SET requests; received frames are
+  rate limited and the skipped ones counted. **find_can_id** logs the sender of
+  received single-frame 0x40/0x42 messages (tag `toptronic`, warning level, also
+  routed to the `main_logs` text sensor). Both turn off after two minutes and are
+  off after a reboot.
 
 ---
 
@@ -215,4 +225,4 @@ plus the platform-specific options). Read-only entities accept the standard
 | Language | Code only | Presets per language (`de`/`en`/`fr`/`it`) |
 | Sender CAN id | Based on `device_type` | Always `GW` (0x481) + `device_addr` — matches gateway behaviour |
 | Button support | Not available | `button` platform with `value`/`type` |
-| Update trigger | Template button only | `update_all()` + 30 s post-boot `set_timeout` + thread-safe `request_*()` bridge |
+| Update trigger | Template button only | Polling + post-boot refresh + generated "Refresh all" button |

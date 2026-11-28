@@ -11,18 +11,22 @@
 >
 > Key changes:
 >
-> - **Presets moved into the component** (`esphome/components/toptronic/presets/`),
->   with multi-language support (`de`/`en`/`fr`/`it`) and many upgrades.
+> - **The `next` branch builds the component from
+>   [ESPHome PR #20900](https://github.com/esphome/esphome/pull/20900)** through
+>   `external_components`. The copy in `esphome/components/toptronic/` is not used
+>   by `config.yaml`.
+> - **Presets ship with the component**, in four languages (`de`/`en`/`fr`/`it`).
 > - **`config.yaml` changed** — you can now define **multiple `toptronic:` components**
 >   (one per CAN device - presets for `WEZ`, `SOL`, `PS`, `FW`, `HK`, `MWA`, `GLT`, `HV`, `BM` and `GW`).
-> - Improved multi-frame reassembly, CRC validation, OTA pause/resume, a non-blocking
->   post-boot refresh, and a thread-safe FreeRTOS command bridge.
+> - Fixed-slot multi-frame reassembly with CRC validation, automatic pause during
+>   OTA updates and a throttled post-boot refresh.
 
 **Migrating from `legacy`?** Device addressing moved from each entity to the hub,
 entities are now auto-generated from the presets, and the config is multi-hub.
 See the [component reference](esphome/readme.md) for details. Protocol
 documentation, CRC reverse-engineering notes, and review references live in
-the [`docs`](docs/) folder.
+the [`docs`](docs/) folder; parts of it still describe the local component rather
+than the PR version.
 
 ![alt text](pcb/3d_view.PNG "board")
 
@@ -64,11 +68,14 @@ the [`docs`](docs/) folder.
 Make sure you have Python and ESPHome installed. <br />
 To install ESPHome you can follow the [manual installation guide](https://esphome.io/guides/installing_esphome) or use [Docker](https://esphome.io/guides/getting_started_command_line#installation).
 
+The PR currently needs an ESPHome **development** version dated 2026-10-24 or later
+(it relies on [ESPHome PR #21592](https://github.com/esphome/esphome/pull/21592)).
+
 You can validate your installation by running
 
 ```bash
 > esphome version
-Version: 2026.7.0
+Version: 2026.12.0-dev
 ```
 
 #### Firmware configuration
@@ -106,8 +113,8 @@ Open `config.yaml` and adjust:
   - `TZ` — your timezone (default `Europe/Zurich`)
 - `toptronic:` — one block **per device** (device type + address). You can find the
   address of each Hoval device in your room control unit under maintenance
-  (e.g. `HV(8)`, `BM(8)`, `WEZ(1)`). Presets for all supported device types are listed in
-  [`esphome/components/toptronic/presets`](esphome/components/toptronic/presets).
+  (e.g. `HV(8)`, `BM(8)`, `WEZ(1)`). Presets for all supported device types ship with
+  the component in [PR #20900](https://github.com/esphome/esphome/pull/20900).
 
 Example exposing both an HV and a BM device:
 
@@ -122,52 +129,29 @@ toptronic:
     device_type: HV  # WEZ, SOL, PS, FW, HK, MWA, GLT, HV, BM, GW (BD is an alias for BM and BM must be used)
     device_addr: 8  # defaults are : HV=8, BM=8, WEZ=1
     language: en  # de, en, fr, it
-    boot_refresh_delay: 30s  # optional; one-shot full refresh after boot; 0 disables it
-    # max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
+    # boot_refresh_delay: 30s  # optional; one-shot full refresh after boot; 0s disables it
+    # max_pending_messages: 2  # optional; concurrent multi-frame reassemblies per hub (1..16)
     # max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
-    # cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
-    # max_refresh_per_loop: 8  # optional; GET burst budget per refresh_gap_ms window
-    # max_frames_per_message: 8  # optional; max total frames a start frame may claim
-    # refresh_gap_ms: 50ms  # optional; refresh window; GET spacing = window / burst budget
-    # max_refresh_retries: 0  # optional; re-sends of an unanswered GET per refresh burst (0 = single-pass)
-    # refresh_retry_interval_ms: 200ms  # optional; delay before an unanswered GET is re-sent
-    # write_min_interval: 2s  # optional; write-safety: min spacing between SETs to the same datapoint (0 disables)
-    # reject_writes_before_read: true  # optional; write-safety: block SETs until the datapoint was read once since boot
+    # max_frames_per_message: 8  # optional; max total frames a start frame may claim (3..31)
+    # refresh_interval: 50ms  # optional; spacing between two refresh GETs (min 16ms)
+    # max_refresh_retries: 1  # optional; re-sends of an unanswered GET per refresh burst (0..10)
+    # refresh_retry_interval: 200ms  # optional; delay before an unanswered GET is re-sent
+    # write_min_interval: 2s  # optional; min time between two writes to the same datapoint (0s = off)
+    # reject_writes_before_read: true  # optional; refuse writes to datapoints not read since boot
 
   - id: toptronic_BM  # display
-    canbus_id: cbus  # the canbus bit_rate must be 50kbps
+    canbus_id: cbus
     device_type: BM
     device_addr: 8
     language: en
-    # boot_refresh_delay: 30s  # optional; one-shot full refresh after boot; 0 disables it
-    # max_pending_messages: 32  # optional; max concurrent multi-frame reassemblies (per hub)
-    # max_pending_age: 5000ms  # optional; a pending message this old with no continuation is lost
-    # cleanup_interval: 5000ms  # optional; interval between stale-fragment sweeps
-    # max_refresh_per_loop: 8  # optional; GET burst budget per refresh_gap_ms window
-    # max_frames_per_message: 8  # optional; max total frames a start frame may claim
-    # refresh_gap_ms: 50ms  # optional; refresh window; GET spacing = window / burst budget
-    # max_refresh_retries: 0  # optional; re-sends of an unanswered GET per refresh burst (0 = single-pass)
-    # refresh_retry_interval_ms: 200ms  # optional; delay before an unanswered GET is re-sent
-    # write_min_interval: 2s  # optional; write-safety: min spacing between SETs to the same datapoint (0 disables)
-    # reject_writes_before_read: true  # optional; write-safety: block SETs until the datapoint was read once since boot
 ```
 
-All eleven options are optional. Their defaults are: `boot_refresh_delay: 30s`,
-`max_pending_messages: 32`, `max_pending_age: 5000ms`,
-`cleanup_interval: 5000ms`, `max_frames_per_message: 8`,
-`refresh_gap_ms: 50ms`, `max_refresh_per_loop: 8`,
-`max_refresh_retries: 0`, `refresh_retry_interval_ms: 200ms`,
-`write_min_interval: 2s`, `reject_writes_before_read: true`. They tune the
-multi-frame reassembly buffer, the stale-fragment sweep, the throttled refresh
-burst, the bogus-frame-count guard, and the write-safety guards. The effective
-per-GET spacing of a refresh burst is `refresh_gap_ms / max_refresh_per_loop`
-(default 50 ms / 8 = 6.25 ms). See the component reference (`esphome/readme.md`
-- hub configuration table) for the full description of each.
+The commented options are optional, shown with their defaults, and can be set on
+each hub. See the [component reference](esphome/readme.md#hub-configuration) for
+the full description of each.
 
-> There is no `toptronic_hubs` substitution anymore: the refresh button and the
-> OTA pause/resume lambdas call fan-out methods (`refresh_all()` /
-> `request_pause_all()` / `request_resume_all()`) on any hub id, which cover
-> every hub in the build.
+With more than one hub, every preset entity name is prefixed with the device type
+and address (`HV 8: Outside air temp.`). A single hub keeps the bare names.
 
 ##### 3. `esphome/packages/wifi.yaml` — usually REQUIRED
 
@@ -183,26 +167,26 @@ for hidden SSIDs. The fallback hotspot SSID is derived from `name`
   (e.g. `az-delivery-devkit-v4`, `nodemcu-32s`, `esp-wrover-kit`) — change it there,
   not here.
 - The `api:`, `ota:`, and `safe_mode:` blocks are usually left at their defaults.
-- The OTA `on_begin`/`on_end`/`on_error` lambdas call `request_pause_all()` /
-  `request_resume_all()` on any hub id to pause/resume frame processing during
-  updates — no change needed unless you want different watchdog/`sdkconfig` values.
+- No OTA lambdas are needed: the component pauses its CAN traffic during an update
+  and resumes it afterwards.
 
 ##### 5. Other packages — usually leave as-is
 
 `time.yaml` (SNTP + optional weekly reboot), `sensors_others.yaml` (WiFi signal /
 internal temperature), `switch.yaml` (restart + candump/find_can_id debug
 toggles), and `canbus.yaml` (50 kbps `esp32_can` platform). `debug.yaml` is
-**opt-in** — it injects synthetic frames for testing and must be enabled
-manually in `config.yaml`. The "Refresh all" button is auto-generated by the
+**opt-in** — it adds a button that sends a raw GET request, for testing, and must be
+enabled manually in `config.yaml`. The "Refresh all" button is auto-generated by the
 `toptronic` component — there is no `button.yaml` anymore.
 
-> ℹ️ Candump and "find can_id" bus debugging are now available at runtime as two
-> switches (see `esphome/packages/switch.yaml`): **"candump debug"** logs every CAN
-> frame — including the gateway's own GET/SET request frames — and **"find can_id
-> debug"** logs only 0x42/0x40 frames (results also land
-> in the "main logs" text sensor). Turn them on for a short debug session only —
-> they add bus/log latency and reset to off on every reboot. The old commented-out
-> `on_frame` blocks in `canbus.yaml` are kept for reference only and are superseded.
+> ℹ️ Candump and "find can_id" bus debugging are available at runtime as two
+> switches (see `esphome/packages/switch.yaml`): **"candump debug"** logs CAN
+> frames, including the gateway's own GET/SET requests (received frames are rate
+> limited and the skipped ones counted), and **"find can_id debug"** logs the sender
+> of received single-frame 0x40/0x42 messages as warnings, which also show in the
+> "main logs" text sensor. Both turn off after two minutes and are off after a
+> reboot. The old commented-out `on_frame` blocks in `canbus.yaml` are kept for
+> reference only.
 
 If you want to create your own preset or need other datapoints, have a look at
 [`hoval_data_processing`](hoval_data_processing/).
